@@ -1,8 +1,8 @@
-# Sistema de Memoria Persistente por Usuario
+# Sistema de Historial Persistente por Usuario
 
 ## 📋 Descripción
 
-El sistema ahora incluye **memoria persistente individual por usuario**, permitiendo que cada persona tenga su propio historial de conversaciones que se guarda automáticamente y se restaura en futuras sesiones.
+El sistema ahora incluye **historial persistente individual por usuario**, permitiendo que cada persona tenga su propio historial de conversaciones que se guarda automáticamente y se restaura en futuras sesiones.
 
 ## ✨ Características
 
@@ -12,9 +12,9 @@ El sistema ahora incluye **memoria persistente individual por usuario**, permiti
 - ✅ Cierre de sesión
 - ✅ Eliminación de historial personal
 
-### 2. **Persistencia Automática**
+### 2. **Persistencia Automática (solo historial)**
 - 🔄 Guardado automático después de cada interacción
-- 💾 Almacenamiento en formato JSON legible
+- 💾 Almacenamiento en formato JSON legible (mensajes)
 - 📂 Archivos separados por usuario en `/user_memories/`
 - 🔐 Nombres sanitizados para seguridad
 
@@ -64,7 +64,7 @@ El sistema ahora incluye **memoria persistente individual por usuario**, permiti
 persistence = UserMemoryPersistence(storage_dir="./user_memories")
 
 # Guardar memoria
-persistence.save_user_memory(user_id, messages, metadata)
+persistence.save_user_memory(user_id, messages)
 
 # Cargar memoria
 memory_data = persistence.load_user_memory(user_id)
@@ -135,8 +135,7 @@ user_memories/
         "additional_kwargs": {}
       }
     }
-  ],
-  "metadata": {}
+  ]
 }
 ```
 

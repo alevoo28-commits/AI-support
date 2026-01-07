@@ -35,8 +35,7 @@ Cada usuario tiene su propio archivo JSON:
         "additional_kwargs": {}
       }
     }
-  ],
-  "metadata": {}
+  ]
 }
 ```
 

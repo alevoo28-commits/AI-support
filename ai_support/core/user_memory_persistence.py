@@ -4,6 +4,7 @@ Guarda y restaura *solo* el historial de conversación (mensajes) por usuario.
 No persiste perfiles, resúmenes, entidades u otros metadatos.
 """
 
+import os
 import json
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -15,11 +16,26 @@ from langchain_core.messages import BaseMessage, messages_from_dict, messages_to
 class UserMemoryPersistence:
     """Gestiona la persistencia de memoria conversacional por usuario."""
 
-    def __init__(self, storage_dir: str = "./user_memories"):
+    def __init__(self, storage_dir: Optional[str] = None):
         """
         Args:
             storage_dir: Directorio donde se guardan las memorias de usuarios
         """
+        if storage_dir is None:
+            # Permite override explícito por entorno
+            env_dir = os.getenv("AI_SUPPORT_USER_MEMORY_DIR")
+            if env_dir:
+                storage_dir = env_dir
+            else:
+                # Por defecto: carpeta por-perfil del SO
+                # Windows: %LOCALAPPDATA%\AI-support\user_memories
+                # Otros: ~/.ai_support/user_memories
+                local_app = os.getenv("LOCALAPPDATA")
+                if local_app:
+                    storage_dir = str(Path(local_app) / "AI-support" / "user_memories")
+                else:
+                    storage_dir = str(Path.home() / ".ai_support" / "user_memories")
+
         self.storage_dir = Path(storage_dir)
         self.storage_dir.mkdir(parents=True, exist_ok=True)
         

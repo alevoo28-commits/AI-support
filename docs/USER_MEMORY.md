@@ -6,10 +6,9 @@ El sistema ahora incluye **historial persistente individual por usuario**, permi
 
 ## ✨ Características
 
-### 1. **Gestión de Usuarios**
-- ✅ Inicio de sesión con usuarios existentes
-- ✅ Creación de nuevos usuarios
-- ✅ Cierre de sesión
+### 1. **Gestión de Usuario (modo seguro)**
+- ✅ Usuario automático: se usa el usuario del sistema operativo
+- ✅ No hay selector manual (evita ver historiales ajenos)
 - ✅ Eliminación de historial personal
 
 ### 2. **Persistencia Automática (solo historial)**
@@ -25,19 +24,10 @@ El sistema ahora incluye **historial persistente individual por usuario**, permi
 
 ## 🚀 Uso
 
-### Crear un Nuevo Usuario
+### Usuario automático
 
-1. En el sidebar, selecciona **"Nuevo usuario"**
-2. Ingresa un nombre (solo letras, números, `-`, `_`, `.`)
-3. Haz clic en **"✨ Crear usuario"**
-4. ¡Listo! Tu sesión está activa
-
-### Iniciar Sesión con Usuario Existente
-
-1. En el sidebar, selecciona **"Usuario existente"**
-2. Elige tu nombre de la lista desplegable
-3. Haz clic en **"🔓 Iniciar sesión"**
-4. Se cargará tu historial anterior
+- El sistema toma el usuario del sistema operativo (por ejemplo, el usuario de Windows).
+- El historial se guarda en una carpeta del perfil del usuario (por defecto en Windows: `%LOCALAPPDATA%\AI-support\user_memories`).
 
 ### Ver Estadísticas
 
@@ -148,9 +138,9 @@ safe_user_id = "".join(c for c in user_id if c.isalnum() or c in "_-.")
 ```
 
 ### Control de Acceso
-- Cada usuario solo puede ver/modificar su propia memoria
+- Cada usuario usa el usuario del sistema operativo (no hay selector manual)
+- Los archivos quedan en una carpeta por-perfil del usuario
 - Los archivos están en `.gitignore` para no subirlos al repositorio
-- No hay autenticación de contraseña (apropiado para entorno controlado)
 
 ### Privacidad
 - ⚠️ Los archivos contienen todo el historial de conversaciones
@@ -240,7 +230,20 @@ print(f"Stats: {stats}")
 
 ## 📝 Variables de Entorno
 
-No hay variables nuevas específicas para este feature. El directorio de almacenamiento se puede cambiar en el código:
+El directorio de almacenamiento se puede cambiar por variable de entorno:
+
+- `AI_SUPPORT_USER_MEMORY_DIR`: ruta absoluta o relativa del directorio donde se guardan los historiales.
+
+Si no se define, usa por defecto una carpeta por-perfil del usuario.
+
+### Google OAuth (recomendado en servidor compartido)
+
+Si el sistema se usa desde un servidor (varios usuarios accediendo por navegador), habilita Google OAuth para que el `user_id` sea el email verificado del usuario (y así cada uno vea solo su historial).
+
+- `AI_SUPPORT_GOOGLE_CLIENT_ID`
+- `AI_SUPPORT_GOOGLE_CLIENT_SECRET`
+- `AI_SUPPORT_GOOGLE_REDIRECT_URI` (debe coincidir EXACTO con la URL donde se abre Streamlit; ejemplo: `http://localhost:8504`)
+- `AI_SUPPORT_GOOGLE_ALLOWED_DOMAIN` (default: `uchile.cl`)
 
 ```python
 # En streamlit_app.py

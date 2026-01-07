@@ -7,6 +7,8 @@ import time
 import threading
 import queue
 import re
+import getpass
+import secrets
 
 import streamlit as st
 from langsmith import Client
@@ -32,6 +34,13 @@ from ai_support.core.printer_diagnostics import (
 )
 from ai_support.core.printer_inventory_mysql import fetch_printers_from_mysql, mysql_enabled
 from ai_support.core.user_memory_persistence import UserMemoryPersistence
+from ai_support.core.google_auth import (
+    build_google_auth_url,
+    exchange_code_for_tokens,
+    google_auth_enabled,
+    google_redirect_uri,
+    verify_id_token_and_get_email,
+)
 
 
 _IPV4_IN_TEXT_RE = re.compile(r"(?:\d{1,3}\.){3}\d{1,3}")
@@ -250,92 +259,108 @@ def main() -> None:
 
     # --- Selección de modelo/proveedor (antes de crear orquestador) ---
     with st.sidebar:
-        # Sistema de usuarios - NUEVO
+        # Historial por usuario (modo seguro): usuario del sistema operativo
         st.markdown("### 👤 Usuario")
         st.markdown("---")
-        
-        # Inicializar sistema de persistencia
+
+        google_enabled = google_auth_enabled()
+
+        # Inicializar sistema de persistencia (por-perfil)
         if "user_persistence" not in st.session_state:
             st.session_state["user_persistence"] = UserMemoryPersistence()
-        
+
         persistence = st.session_state["user_persistence"]
-        
-        # Lista de usuarios existentes
-        existing_users = persistence.list_users()
-        
-        # Modo: Login o Nuevo Usuario
-        login_mode = st.radio(
-            "Modo",
-            options=["Usuario existente", "Nuevo usuario"],
-            horizontal=True,
-            label_visibility="collapsed"
-        )
-        
-        current_user = None
-        
-        if login_mode == "Usuario existente":
-            if existing_users:
-                selected_user = st.selectbox(
-                    "Selecciona tu usuario",
-                    options=existing_users,
-                    help="Cargará tu historial de conversaciones anterior"
-                )
-                
-                # Botón para cargar usuario
-                if st.button("🔓 Iniciar sesión", use_container_width=True, type="primary"):
-                    st.session_state["current_user"] = selected_user
-                    st.session_state["orquestador"] = None  # Forzar recreación con nuevo user_id
-                    st.rerun()
-                
-                # Mostrar stats si hay usuario seleccionado
-                if selected_user:
-                    stats = persistence.get_user_stats(selected_user)
-                    if stats:
-                        st.caption(f"📊 {stats['total_messages']} mensajes | {stats['file_size_kb']} KB")
-            else:
-                st.info("No hay usuarios registrados. Crea uno nuevo.")
-        
-        else:  # Nuevo usuario
-            new_username = st.text_input(
-                "Nombre de usuario",
-                placeholder="ej: juan.perez",
-                help="Solo letras, números, guiones y puntos"
-            )
-            
-            if st.button("✨ Crear usuario", use_container_width=True, type="primary"):
-                if new_username:
-                    # Sanitizar
-                    safe_name = "".join(c for c in new_username if c.isalnum() or c in "_-.")
-                    if safe_name:
-                        st.session_state["current_user"] = safe_name
-                        st.session_state["orquestador"] = None  # Forzar recreación
-                        st.success(f"Usuario '{safe_name}' creado")
-                        st.rerun()
-                    else:
-                        st.error("Nombre inválido")
+
+        # --- Google OAuth (si está configurado) ---
+        if google_enabled:
+            if "google_oauth_state" not in st.session_state:
+                st.session_state["google_oauth_state"] = secrets.token_urlsafe(24)
+
+            # Procesar callback si viene code/state
+            try:
+                qp = st.experimental_get_query_params()
+            except Exception:
+                qp = {}
+
+            code = (qp.get("code") or [None])[0]
+            state = (qp.get("state") or [None])[0]
+            oauth_error = (qp.get("error") or [None])[0]
+
+            if oauth_error:
+                st.error(f"Google OAuth error: {oauth_error}")
+                try:
+                    st.experimental_set_query_params()
+                except Exception:
+                    pass
+
+            if code and state and not st.session_state.get("_google_oauth_done"):
+                if state != st.session_state.get("google_oauth_state"):
+                    st.error("OAuth inválido (state no coincide).")
                 else:
-                    st.error("Ingresa un nombre de usuario")
-        
-        # Mostrar usuario actual
-        current_user = st.session_state.get("current_user")
-        if current_user:
-            st.success(f"👤 Sesión: **{current_user}**")
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("🚪 Cerrar sesión", use_container_width=True):
-                    st.session_state["current_user"] = None
-                    st.session_state["orquestador"] = None
-                    st.rerun()
-            
-            with col2:
-                if st.button("🗑️ Borrar historial", use_container_width=True):
-                    if persistence.delete_user_memory(current_user):
-                        st.success("Historial borrado")
+                    try:
+                        tokens = exchange_code_for_tokens(code=code)
+                        raw_id_token = tokens.get("id_token")
+                        if not raw_id_token:
+                            raise ValueError("Respuesta de Google no incluye id_token")
+                        email = verify_id_token_and_get_email(raw_id_token=raw_id_token)
+                        st.session_state["current_user"] = email
+                        st.session_state["_google_oauth_done"] = True
                         st.session_state["orquestador"] = None
-                        st.rerun()
+                    except Exception as e:
+                        st.error(f"No se pudo autenticar: {e}")
+
+                # Limpiar query params para no re-procesar
+                try:
+                    st.experimental_set_query_params()
+                except Exception:
+                    pass
+
+                st.rerun()
+
+            current_user = st.session_state.get("current_user")
+            if not current_user:
+                if not google_redirect_uri():
+                    st.error("Falta `AI_SUPPORT_GOOGLE_REDIRECT_URI` para Google OAuth.")
+                else:
+                    try:
+                        auth_url = build_google_auth_url(state=st.session_state["google_oauth_state"])
+                        st.markdown(f"[🔐 Iniciar sesión con Google]({auth_url})")
+                        st.caption("Debes usar tu correo @uchile.cl")
+                    except Exception as e:
+                        st.error(f"Google OAuth no configurado: {e}")
+
+                st.warning("⚠️ Inicia sesión para usar el chat")
+                st.markdown("---")
+                st.stop()
+
+            st.success(f"👤 Sesión: **{current_user}**")
+            if st.button("🚪 Cerrar sesión", use_container_width=True):
+                st.session_state.pop("current_user", None)
+                st.session_state.pop("_google_oauth_done", None)
+                st.session_state["orquestador"] = None
+                st.rerun()
+
+            if st.button("🗑️ Borrar historial", use_container_width=True):
+                if persistence.delete_user_memory(current_user):
+                    st.success("Historial borrado")
+                st.session_state["orquestador"] = None
+                st.rerun()
+
+        # --- Fallback local (sin Google OAuth) ---
         else:
-            st.warning("⚠️ Inicia sesión para guardar tu historial")
+            if "current_user" not in st.session_state or not st.session_state.get("current_user"):
+                st.session_state["current_user"] = getpass.getuser()
+
+            current_user = st.session_state["current_user"]
+
+            st.success(f"👤 Sesión: **{current_user}**")
+            st.caption("Historial guardado localmente en tu perfil.")
+
+            if st.button("🗑️ Borrar historial", use_container_width=True):
+                if persistence.delete_user_memory(current_user):
+                    st.success("Historial borrado")
+                st.session_state["orquestador"] = None
+                st.rerun()
         
         st.markdown("---")
         

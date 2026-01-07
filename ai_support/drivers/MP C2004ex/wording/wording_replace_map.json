@@ -1,0 +1,20 @@
+{
+	"dom" : {
+		"$ricoh_device_software_manager___"         : "リコーカンタンドライバーインストーラー",
+		"$device_software_manager_setup___________" : "リコーカンタンドライバーインストーラーセットアップ",
+		"$manager"                                  : "管理",
+		"$rorchcdn"                                 : "管理",
+		"$device_software_manager_web_installer___" : "リコーカンタンドライバーインストーラー Web Installer",
+		"$driver_installer_______"                  : "ドライバーインストーラー",
+		"$rorchsva"                                 : "ドライバーインストーラー"
+	},
+	"exp" : {
+		"$ricoh_device_software_manager___"         : "Device Software Manager",
+		"$device_software_manager_setup___________" : "Device Software Manager Setup",
+		"$manager"                                  : "Manager",
+		"$rorchcdn"                                 : "Manager",
+		"$device_software_manager_web_installer___" : "Device Software Manager Web Installer",
+		"$driver_installer_______"                  : "Driver Installer",
+		"$rorchsva"                                 : "Driver Installer"
+	}
+}

@@ -1,0 +1,219 @@
+;------------------------------------------------------------
+; Copyright (c) 2007-2024 RICOH COMPANY, LTD
+; All Rights Reserved
+; Printer Driver Setup Information File
+;------------------------------------------------------------
+
+[Version]
+Signature   = "$Windows NT$"
+Provider    = %Ricoh%
+ClassGUID   = {4D36E979-E325-11CE-BFC1-08002BE10318}
+Class       = Printer
+DriverVer	= 06/03/2024,3.0.0.0
+CatalogFile	= RICOHJBP.cat
+
+[Manufacturer]
+%LANIER%=LANIER,NTamd64,NTamd64.6.0
+%NRG%=NRG,NTamd64,NTamd64.6.0
+%Ricoh%=Ricoh,NTamd64,NTamd64.6.0
+%SAVIN%=SAVIN,NTamd64,NTamd64.6.0
+
+
+;WindowsXP(amd64)
+[LANIER.NTamd64]
+"LANIER SP C352DN PS"=LANIER_SP_C352DN_64.dat,USBPRINT\LANIERSP_C352DN8ADD,LPTENUM\LANIERSP_C352DN8ADD,LANIERSP_C352DN8ADD
+
+[NRG.NTamd64]
+"NRG SP C352DN PS"=NRG_SP_C352DN_64.dat,USBPRINT\NRGSP_C352DN4B0B,LPTENUM\NRGSP_C352DN4B0B,NRGSP_C352DN4B0B
+
+[Ricoh.NTamd64]
+"RICOH SP C352DN PS"=RICOH_SP_C352DN_64.dat,USBPRINT\RICOHSP_C352DN5F09,LPTENUM\RICOHSP_C352DN5F09,RICOHSP_C352DN5F09
+
+[SAVIN.NTamd64]
+"SAVIN SP C352DN PS"=SAVIN_SP_C352DN_64.dat,USBPRINT\SAVINSP_C352DNB225,LPTENUM\SAVINSP_C352DNB225,SAVINSP_C352DNB225
+
+
+[LANIER.NTamd64.6.0]
+"LANIER SP C352DN PS"=LANIER_SP_C352DN_64_6.0.dat,USBPRINT\LANIERSP_C352DN8ADD,LPTENUM\LANIERSP_C352DN8ADD,LANIERSP_C352DN8ADD
+
+[NRG.NTamd64.6.0]
+"NRG SP C352DN PS"=NRG_SP_C352DN_64_6.0.dat,USBPRINT\NRGSP_C352DN4B0B,LPTENUM\NRGSP_C352DN4B0B,NRGSP_C352DN4B0B
+
+[Ricoh.NTamd64.6.0]
+"RICOH SP C352DN PS"=RICOH_SP_C352DN_64_6.0.dat,USBPRINT\RICOHSP_C352DN5F09,LPTENUM\RICOHSP_C352DN5F09,RICOHSP_C352DN5F09
+
+[SAVIN.NTamd64.6.0]
+"SAVIN SP C352DN PS"=SAVIN_SP_C352DN_64_6.0.dat,USBPRINT\SAVINSP_C352DNB225,LPTENUM\SAVINSP_C352DNB225,SAVINSP_C352DNB225
+
+
+[LANIER_SP_C352DN_64.dat]
+CopyFiles   	= @lanp2Pd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp2Pd0.ppd
+LanguageMonitor = ricp2Plm,ricp2Plm.dll
+PrintProcessor	= "ricp2Ppp,ricp2Ppp.dll"
+
+[NRG_SP_C352DN_64.dat]
+CopyFiles   	= @nrgp2Pd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp2Pd0.ppd
+LanguageMonitor = ricp2Plm,ricp2Plm.dll
+PrintProcessor	= "ricp2Ppp,ricp2Ppp.dll"
+
+[RICOH_SP_C352DN_64.dat]
+CopyFiles   	= @ricp2Pd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp2Pd0.ppd
+LanguageMonitor = ricp2Plm,ricp2Plm.dll
+PrintProcessor	= "ricp2Ppp,ricp2Ppp.dll"
+
+[SAVIN_SP_C352DN_64.dat]
+CopyFiles   	= @savp2Pd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp2Pd0.ppd
+LanguageMonitor = ricp2Plm,ricp2Plm.dll
+PrintProcessor	= "ricp2Ppp,ricp2Ppp.dll"
+
+
+[LANIER_SP_C352DN_64_6.0.dat]
+CopyFiles   	= @lanp2Pd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp2Pd0.ppd
+LanguageMonitor	= ricp2Plm,ricp2Plm.dll
+PrintProcessor	= "ricp2Ppp,ricp2Ppp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[NRG_SP_C352DN_64_6.0.dat]
+CopyFiles   	= @nrgp2Pd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp2Pd0.ppd
+LanguageMonitor	= ricp2Plm,ricp2Plm.dll
+PrintProcessor	= "ricp2Ppp,ricp2Ppp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[RICOH_SP_C352DN_64_6.0.dat]
+CopyFiles   	= @ricp2Pd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp2Pd0.ppd
+LanguageMonitor	= ricp2Plm,ricp2Plm.dll
+PrintProcessor	= "ricp2Ppp,ricp2Ppp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[SAVIN_SP_C352DN_64_6.0.dat]
+CopyFiles   	= @savp2Pd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp2Pd0.ppd
+LanguageMonitor	= ricp2Plm,ricp2Plm.dll
+PrintProcessor	= "ricp2Ppp,ricp2Ppp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+
+[LANIER_SP_C352DN_64.dat.Services]
+AddService = ,0x2
+
+[NRG_SP_C352DN_64.dat.Services]
+AddService = ,0x2
+
+[RICOH_SP_C352DN_64.dat.Services]
+AddService = ,0x2
+
+[SAVIN_SP_C352DN_64.dat.Services]
+AddService = ,0x2
+
+
+[LANIER_SP_C352DN_64_6.0.dat.Services]
+AddService = ,0x2
+
+[NRG_SP_C352DN_64_6.0.dat.Services]
+AddService = ,0x2
+
+[RICOH_SP_C352DN_64_6.0.dat.Services]
+AddService = ,0x2
+
+[SAVIN_SP_C352DN_64_6.0.dat.Services]
+AddService = ,0x2
+
+
+[RPD_FILES]
+ricp2Pui.dll,ricp5Xui.dll
+ricp2Pui.irj,SPC352DN.irj
+ricp2Pui.rdj
+ricp2Pui.rcf,SPC352DN.rcf
+ricp2Pug.dll,ricp5Xug.dll
+ricp2Pug.miz
+ricp2Pur.dll,ricp5Xur.dll
+ricp2Ppu.dll,ricp5Xpu.dll
+ricp2Pgl.dll,ricp5Xgl.dll
+ricp2Ppr.dll,ricp5Xpr.dll
+ricp2Pcd.dll,ricp5Xcd.dll
+ricp2Pcd.psz
+ricp2Pcz.dlz,ricp5Xcz.dlz
+ricp2Pcf.cfz
+ricp2Pcl.ini
+ricp2Pch.chm,ricp5Xch.chm
+ricp2Pci.dll,ricp5Xci.dll
+ricp2Pcj.dll,ricp5Xcj.dll
+ricp2Pcb.dll,ricp5Xcb.dll
+ricp2Ptl.exe,ricp5Xtl.exe
+ricp2Ptc.exe,ricp5Xtc.exe
+ricp2Ptt.exe,ricp5Xtt.exe
+ricp2Ptf.exe,ricp5Xtf.exe
+
+[PRTPROCS]
+ricp2Ppp.dll,ricp5Xpp.dll,,0x00000020
+
+[RPD_COMMON_SYS32]
+ricp2Plm.dll,ricp5Xlm.dll,,0x00000020
+
+[RPD_COMMON]
+ricdb64.dll,ricdb64.dll,,0x00000020
+mfricr64.dll,mfricr64.dll,,0x00000020
+RD02Pd64.dll,RD02Pd64.dll,,0x00000020
+
+[DestinationDirs]
+DefaultDestDir	= 66000
+PRTPROCS	= 66001
+RPD_COMMON_SYS32	 	= 66002
+
+[SourceDisksNames.amd64]
+1 = %DSK%,RICOHJBP.cab,,
+2 = %DSK%,,,
+
+[PrinterPackageInstallation.amd64]
+PackageAware	=TRUE
+
+CoreDriverDependencies	={D20EA372-DD35-4950-9ED8-A6335AFE79F1}
+
+
+[SourceDisksFiles.amd64]
+ricp5Xui.dll	= 1
+SPC352DN.irj	= 1
+ricp2Pui.rdj	= 1
+SPC352DN.rcf	= 2
+ricp5Xug.dll	= 1
+ricp2Pug.miz	= 1
+ricp5Xur.dll	= 1
+ricp5Xpu.dll	= 1
+ricp5Xgl.dll	= 1
+ricp5Xpr.dll	= 1
+ricp5Xcd.dll	= 1
+ricp2Pcd.psz	= 1
+ricp5Xcz.dlz	= 1
+ricp2Pcf.cfz	= 1
+ricp2Pcl.ini	= 1
+ricp5Xch.chm	= 1
+ricp5Xci.dll	= 1
+ricp5Xcj.dll	= 1
+ricp5Xcb.dll	= 1
+ricp5Xtl.exe	= 1
+lanp2Pd0.ppd = 1
+nrgp2Pd0.ppd = 1
+ricp2Pd0.ppd = 1
+savp2Pd0.ppd = 1
+ricp5Xlm.dll	= 1
+ricdb64.dll	= 1
+mfricr64.dll	= 1
+RD02Pd64.dll	= 1
+ricp5Xpp.dll	= 1
+ricp5Xtc.exe     = 1
+ricp5Xtt.exe     = 1
+ricp5Xtf.exe     = 1
+
+[Strings]
+Ricoh="Ricoh"
+LANIER="LANIER"
+NRG="NRG"
+SAVIN="SAVIN"
+DSK	= "PS Printer Driver Disk1"

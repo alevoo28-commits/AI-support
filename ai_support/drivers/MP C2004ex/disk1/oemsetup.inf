@@ -1,0 +1,19 @@
+;------------------------------------------------------------
+; Copyright (c) 2007 - 2024 RICOH COMPANY, LTD
+; All Rights Reserved
+; JBP Base Information File
+;------------------------------------------------------------
+[Version]
+Signature   = "$Windows NT$"
+Provider    = %Ricoh%
+ClassGUID   = {4D36E979-E325-11CE-BFC1-08002BE10318}
+Class       = Printer
+DriverVer	= 06/03/2024,3.0.0.0
+CatalogFile	= RICOHJBP.cat
+
+%Ricoh%=Ricoh
+
+[Ricoh]
+
+[Strings]
+Ricoh="Ricoh"

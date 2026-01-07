@@ -1,0 +1,307 @@
+;------------------------------------------------------------
+; Copyright (c) 2007-2024 RICOH COMPANY, LTD
+; All Rights Reserved
+; Printer Driver Setup Information File
+;------------------------------------------------------------
+
+[Version]
+Signature   = "$Windows NT$"
+Provider    = %Ricoh%
+ClassGUID   = {4D36E979-E325-11CE-BFC1-08002BE10318}
+Class       = Printer
+DriverVer	= 06/03/2024,3.0.0.0
+CatalogFile	= RICOHJBP.cat
+
+[Manufacturer]
+%LANIER%=LANIER,NTamd64,NTamd64.6.0
+%NRG%=NRG,NTamd64,NTamd64.6.0
+%Ricoh%=Ricoh,NTamd64,NTamd64.6.0
+%SAVIN%=SAVIN,NTamd64,NTamd64.6.0
+
+
+;WindowsXP(amd64)
+[LANIER.NTamd64]
+"LANIER SP C840DN PS"=LANIER_SP_C840DN_64.dat,USBPRINT\LANIERSP_C840DN77D8,LPTENUM\LANIERSP_C840DN77D8,LANIERSP_C840DN77D8
+"LANIER SP C842DN PS"=LANIER_SP_C842DN_64.dat,USBPRINT\LANIERSP_C842DNB779,LPTENUM\LANIERSP_C842DNB779,LANIERSP_C842DNB779
+
+[NRG.NTamd64]
+"NRG SP C840DN PS"=NRG_SP_C840DN_64.dat,USBPRINT\NRGSP_C840DNB60E,LPTENUM\NRGSP_C840DNB60E,NRGSP_C840DNB60E
+"NRG SP C842DN PS"=NRG_SP_C842DN_64.dat,USBPRINT\NRGSP_C842DN76AF,LPTENUM\NRGSP_C842DN76AF,NRGSP_C842DN76AF
+
+[Ricoh.NTamd64]
+"RICOH SP C840DN PS"=RICOH_SP_C840DN_64.dat,USBPRINT\RICOHSP_C840DNA20C,LPTENUM\RICOHSP_C840DNA20C,RICOHSP_C840DNA20C
+"RICOH SP C842DN PS"=RICOH_SP_C842DN_64.dat,USBPRINT\RICOHSP_C842DN62AD,LPTENUM\RICOHSP_C842DN62AD,RICOHSP_C842DN62AD
+
+[SAVIN.NTamd64]
+"SAVIN SP C840DN PS"=SAVIN_SP_C840DN_64.dat,USBPRINT\SAVINSP_C840DN4F20,LPTENUM\SAVINSP_C840DN4F20,SAVINSP_C840DN4F20
+"SAVIN SP C842DN PS"=SAVIN_SP_C842DN_64.dat,USBPRINT\SAVINSP_C842DN8F81,LPTENUM\SAVINSP_C842DN8F81,SAVINSP_C842DN8F81
+
+
+[LANIER.NTamd64.6.0]
+"LANIER SP C840DN PS"=LANIER_SP_C840DN_64_6.0.dat,USBPRINT\LANIERSP_C840DN77D8,LPTENUM\LANIERSP_C840DN77D8,LANIERSP_C840DN77D8
+"LANIER SP C842DN PS"=LANIER_SP_C842DN_64_6.0.dat,USBPRINT\LANIERSP_C842DNB779,LPTENUM\LANIERSP_C842DNB779,LANIERSP_C842DNB779
+
+[NRG.NTamd64.6.0]
+"NRG SP C840DN PS"=NRG_SP_C840DN_64_6.0.dat,USBPRINT\NRGSP_C840DNB60E,LPTENUM\NRGSP_C840DNB60E,NRGSP_C840DNB60E
+"NRG SP C842DN PS"=NRG_SP_C842DN_64_6.0.dat,USBPRINT\NRGSP_C842DN76AF,LPTENUM\NRGSP_C842DN76AF,NRGSP_C842DN76AF
+
+[Ricoh.NTamd64.6.0]
+"RICOH SP C840DN PS"=RICOH_SP_C840DN_64_6.0.dat,USBPRINT\RICOHSP_C840DNA20C,LPTENUM\RICOHSP_C840DNA20C,RICOHSP_C840DNA20C
+"RICOH SP C842DN PS"=RICOH_SP_C842DN_64_6.0.dat,USBPRINT\RICOHSP_C842DN62AD,LPTENUM\RICOHSP_C842DN62AD,RICOHSP_C842DN62AD
+
+[SAVIN.NTamd64.6.0]
+"SAVIN SP C840DN PS"=SAVIN_SP_C840DN_64_6.0.dat,USBPRINT\SAVINSP_C840DN4F20,LPTENUM\SAVINSP_C840DN4F20,SAVINSP_C840DN4F20
+"SAVIN SP C842DN PS"=SAVIN_SP_C842DN_64_6.0.dat,USBPRINT\SAVINSP_C842DN8F81,LPTENUM\SAVINSP_C842DN8F81,SAVINSP_C842DN8F81
+
+
+[LANIER_SP_C840DN_64.dat]
+CopyFiles   	= @lanp6Td0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp6Td0.ppd
+LanguageMonitor = ricp6Tlm,ricp6Tlm.dll
+PrintProcessor	= "ricp6Tpp,ricp6Tpp.dll"
+
+[LANIER_SP_C842DN_64.dat]
+CopyFiles   	= @lanp6Td1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp6Td1.ppd
+LanguageMonitor = ricp6Tlm,ricp6Tlm.dll
+PrintProcessor	= "ricp6Tpp,ricp6Tpp.dll"
+
+[NRG_SP_C840DN_64.dat]
+CopyFiles   	= @nrgp6Td0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp6Td0.ppd
+LanguageMonitor = ricp6Tlm,ricp6Tlm.dll
+PrintProcessor	= "ricp6Tpp,ricp6Tpp.dll"
+
+[NRG_SP_C842DN_64.dat]
+CopyFiles   	= @nrgp6Td1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp6Td1.ppd
+LanguageMonitor = ricp6Tlm,ricp6Tlm.dll
+PrintProcessor	= "ricp6Tpp,ricp6Tpp.dll"
+
+[RICOH_SP_C840DN_64.dat]
+CopyFiles   	= @ricp6Td0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp6Td0.ppd
+LanguageMonitor = ricp6Tlm,ricp6Tlm.dll
+PrintProcessor	= "ricp6Tpp,ricp6Tpp.dll"
+
+[RICOH_SP_C842DN_64.dat]
+CopyFiles   	= @ricp6Td1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp6Td1.ppd
+LanguageMonitor = ricp6Tlm,ricp6Tlm.dll
+PrintProcessor	= "ricp6Tpp,ricp6Tpp.dll"
+
+[SAVIN_SP_C840DN_64.dat]
+CopyFiles   	= @savp6Td0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp6Td0.ppd
+LanguageMonitor = ricp6Tlm,ricp6Tlm.dll
+PrintProcessor	= "ricp6Tpp,ricp6Tpp.dll"
+
+[SAVIN_SP_C842DN_64.dat]
+CopyFiles   	= @savp6Td1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp6Td1.ppd
+LanguageMonitor = ricp6Tlm,ricp6Tlm.dll
+PrintProcessor	= "ricp6Tpp,ricp6Tpp.dll"
+
+
+[LANIER_SP_C840DN_64_6.0.dat]
+CopyFiles   	= @lanp6Td0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp6Td0.ppd
+LanguageMonitor	= ricp6Tlm,ricp6Tlm.dll
+PrintProcessor	= "ricp6Tpp,ricp6Tpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[LANIER_SP_C842DN_64_6.0.dat]
+CopyFiles   	= @lanp6Td1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp6Td1.ppd
+LanguageMonitor	= ricp6Tlm,ricp6Tlm.dll
+PrintProcessor	= "ricp6Tpp,ricp6Tpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[NRG_SP_C840DN_64_6.0.dat]
+CopyFiles   	= @nrgp6Td0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp6Td0.ppd
+LanguageMonitor	= ricp6Tlm,ricp6Tlm.dll
+PrintProcessor	= "ricp6Tpp,ricp6Tpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[NRG_SP_C842DN_64_6.0.dat]
+CopyFiles   	= @nrgp6Td1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp6Td1.ppd
+LanguageMonitor	= ricp6Tlm,ricp6Tlm.dll
+PrintProcessor	= "ricp6Tpp,ricp6Tpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[RICOH_SP_C840DN_64_6.0.dat]
+CopyFiles   	= @ricp6Td0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp6Td0.ppd
+LanguageMonitor	= ricp6Tlm,ricp6Tlm.dll
+PrintProcessor	= "ricp6Tpp,ricp6Tpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[RICOH_SP_C842DN_64_6.0.dat]
+CopyFiles   	= @ricp6Td1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp6Td1.ppd
+LanguageMonitor	= ricp6Tlm,ricp6Tlm.dll
+PrintProcessor	= "ricp6Tpp,ricp6Tpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[SAVIN_SP_C840DN_64_6.0.dat]
+CopyFiles   	= @savp6Td0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp6Td0.ppd
+LanguageMonitor	= ricp6Tlm,ricp6Tlm.dll
+PrintProcessor	= "ricp6Tpp,ricp6Tpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[SAVIN_SP_C842DN_64_6.0.dat]
+CopyFiles   	= @savp6Td1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp6Td1.ppd
+LanguageMonitor	= ricp6Tlm,ricp6Tlm.dll
+PrintProcessor	= "ricp6Tpp,ricp6Tpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+
+[LANIER_SP_C840DN_64.dat.Services]
+AddService = ,0x2
+
+[LANIER_SP_C842DN_64.dat.Services]
+AddService = ,0x2
+
+[NRG_SP_C840DN_64.dat.Services]
+AddService = ,0x2
+
+[NRG_SP_C842DN_64.dat.Services]
+AddService = ,0x2
+
+[RICOH_SP_C840DN_64.dat.Services]
+AddService = ,0x2
+
+[RICOH_SP_C842DN_64.dat.Services]
+AddService = ,0x2
+
+[SAVIN_SP_C840DN_64.dat.Services]
+AddService = ,0x2
+
+[SAVIN_SP_C842DN_64.dat.Services]
+AddService = ,0x2
+
+
+[LANIER_SP_C840DN_64_6.0.dat.Services]
+AddService = ,0x2
+
+[LANIER_SP_C842DN_64_6.0.dat.Services]
+AddService = ,0x2
+
+[NRG_SP_C840DN_64_6.0.dat.Services]
+AddService = ,0x2
+
+[NRG_SP_C842DN_64_6.0.dat.Services]
+AddService = ,0x2
+
+[RICOH_SP_C840DN_64_6.0.dat.Services]
+AddService = ,0x2
+
+[RICOH_SP_C842DN_64_6.0.dat.Services]
+AddService = ,0x2
+
+[SAVIN_SP_C840DN_64_6.0.dat.Services]
+AddService = ,0x2
+
+[SAVIN_SP_C842DN_64_6.0.dat.Services]
+AddService = ,0x2
+
+
+[RPD_FILES]
+ricp6Tui.dll,ricp5Xui.dll
+ricp6Tui.irj,SPC840DN.irj
+ricp6Tui.rdj
+ricp6Tui.rcf,SPC840DN.rcf
+ricp6Tug.dll,ricp5Xug.dll
+ricp6Tug.miz
+ricp6Tur.dll,ricp5Xur.dll
+ricp6Tpu.dll,ricp5Xpu.dll
+ricp6Tgl.dll,ricp5Xgl.dll
+ricp6Tpr.dll,ricp5Xpr.dll
+ricp6Tcd.dll,ricp5Xcd.dll
+ricp6Tcd.psz
+ricp6Tcz.dlz,ricp5Xcz.dlz
+ricp6Tcf.cfz
+ricp6Tcl.ini
+ricp6Tch.chm,ricp5Xch.chm
+ricp6Tci.dll,ricp5Xci.dll
+ricp6Tcj.dll,ricp5Xcj.dll
+ricp6Tcb.dll,ricp5Xcb.dll
+ricp6Ttl.exe,ricp5Xtl.exe
+ricp6Ttc.exe,ricp5Xtc.exe
+ricp6Ttt.exe,ricp5Xtt.exe
+ricp6Ttf.exe,ricp5Xtf.exe
+
+[PRTPROCS]
+ricp6Tpp.dll,ricp5Xpp.dll,,0x00000020
+
+[RPD_COMMON_SYS32]
+ricp6Tlm.dll,ricp5Xlm.dll,,0x00000020
+
+[RPD_COMMON]
+ricdb64.dll,ricdb64.dll,,0x00000020
+mfricr64.dll,mfricr64.dll,,0x00000020
+RD06Td64.dll,RD06Td64.dll,,0x00000020
+
+[DestinationDirs]
+DefaultDestDir	= 66000
+PRTPROCS	= 66001
+RPD_COMMON_SYS32	 	= 66002
+
+[SourceDisksNames.amd64]
+1 = %DSK%,RICOHJBP.cab,,
+2 = %DSK%,,,
+
+[PrinterPackageInstallation.amd64]
+PackageAware	=TRUE
+
+CoreDriverDependencies	={D20EA372-DD35-4950-9ED8-A6335AFE79F1}
+
+
+[SourceDisksFiles.amd64]
+ricp5Xui.dll	= 1
+SPC840DN.irj	= 1
+ricp6Tui.rdj	= 1
+SPC840DN.rcf	= 2
+ricp5Xug.dll	= 1
+ricp6Tug.miz	= 1
+ricp5Xur.dll	= 1
+ricp5Xpu.dll	= 1
+ricp5Xgl.dll	= 1
+ricp5Xpr.dll	= 1
+ricp5Xcd.dll	= 1
+ricp6Tcd.psz	= 1
+ricp5Xcz.dlz	= 1
+ricp6Tcf.cfz	= 1
+ricp6Tcl.ini	= 1
+ricp5Xch.chm	= 1
+ricp5Xci.dll	= 1
+ricp5Xcj.dll	= 1
+ricp5Xcb.dll	= 1
+ricp5Xtl.exe	= 1
+lanp6Td0.ppd = 1
+lanp6Td1.ppd = 1
+nrgp6Td0.ppd = 1
+nrgp6Td1.ppd = 1
+ricp6Td0.ppd = 1
+ricp6Td1.ppd = 1
+savp6Td0.ppd = 1
+savp6Td1.ppd = 1
+ricp5Xlm.dll	= 1
+ricdb64.dll	= 1
+mfricr64.dll	= 1
+RD06Td64.dll	= 1
+ricp5Xpp.dll	= 1
+ricp5Xtc.exe     = 1
+ricp5Xtt.exe     = 1
+ricp5Xtf.exe     = 1
+
+[Strings]
+Ricoh="Ricoh"
+LANIER="LANIER"
+NRG="NRG"
+SAVIN="SAVIN"
+DSK	= "PS Printer Driver Disk1"

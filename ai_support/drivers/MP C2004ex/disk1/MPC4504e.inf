@@ -1,0 +1,561 @@
+;------------------------------------------------------------
+; Copyright (c) 2007-2024 RICOH COMPANY, LTD
+; All Rights Reserved
+; Printer Driver Setup Information File
+;------------------------------------------------------------
+
+[Version]
+Signature   = "$Windows NT$"
+Provider    = %Ricoh%
+ClassGUID   = {4D36E979-E325-11CE-BFC1-08002BE10318}
+Class       = Printer
+DriverVer	= 06/03/2024,3.0.0.0
+CatalogFile	= RICOHJBP.cat
+
+[Manufacturer]
+%Gestetner%=Gestetner,NTamd64,NTamd64.6.0
+%infotec%=infotec,NTamd64,NTamd64.6.0
+%LANIER%=LANIER,NTamd64,NTamd64.6.0
+%NRG%=NRG,NTamd64,NTamd64.6.0
+%Ricoh%=Ricoh,NTamd64,NTamd64.6.0
+%SAVIN%=SAVIN,NTamd64,NTamd64.6.0
+
+
+;WindowsXP(amd64)
+[Gestetner.NTamd64]
+"Gestetner MP C4504ex PS"=Gestetner_MP_C4504ex_64.dat,USBPRINT\GestetnerMP_C4504ex1764,LPTENUM\GestetnerMP_C4504ex1764,GestetnerMP_C4504ex1764
+"Gestetner DSc1245ex PS"=Gestetner_DSc1245ex_64.dat,USBPRINT\GestetnerDSc1245ex937B,LPTENUM\GestetnerDSc1245ex937B,GestetnerDSc1245ex937B
+"Gestetner MP C6004ex PS"=Gestetner_MP_C6004ex_64.dat,USBPRINT\GestetnerMP_C6004exF5A9,LPTENUM\GestetnerMP_C6004exF5A9,GestetnerMP_C6004exF5A9
+"Gestetner DSc1260ex PS"=Gestetner_DSc1260ex_64.dat,USBPRINT\GestetnerDSc1260ex2A6A,LPTENUM\GestetnerDSc1260ex2A6A,GestetnerDSc1260ex2A6A
+
+[infotec.NTamd64]
+"infotec MP C4504ex PS"=infotec_MP_C4504ex_64.dat,USBPRINT\infotecMP_C4504exBDE4,LPTENUM\infotecMP_C4504exBDE4,infotecMP_C4504exBDE4
+"infotec MP C5504ex PS"=infotec_MP_C5504ex_64.dat,USBPRINT\infotecMP_C5504ex6CE5,LPTENUM\infotecMP_C5504ex6CE5,infotecMP_C5504ex6CE5
+"infotec MP C6004ex PS"=infotec_MP_C6004ex_64.dat,USBPRINT\infotecMP_C6004ex3F28,LPTENUM\infotecMP_C6004ex3F28,infotecMP_C6004ex3F28
+
+[LANIER.NTamd64]
+"LANIER MP C4504ex PS"=LANIER_MP_C4504ex_64.dat,USBPRINT\LANIERMP_C4504exFF4C,LPTENUM\LANIERMP_C4504exFF4C,LANIERMP_C4504exFF4C
+"LANIER MP C5504ex PS"=LANIER_MP_C5504ex_64.dat,USBPRINT\LANIERMP_C5504ex2E4D,LPTENUM\LANIERMP_C5504ex2E4D,LANIERMP_C5504ex2E4D
+"LANIER MP C6004ex PS"=LANIER_MP_C6004ex_64.dat,USBPRINT\LANIERMP_C6004ex1D83,LPTENUM\LANIERMP_C6004ex1D83,LANIERMP_C6004ex1D83
+
+[NRG.NTamd64]
+"NRG MP C4504ex PS"=NRG_MP_C4504ex_64.dat,USBPRINT\NRGMP_C4504exA175,LPTENUM\NRGMP_C4504exA175,NRGMP_C4504exA175
+"NRG MP C5504ex PS"=NRG_MP_C5504ex_64.dat,USBPRINT\NRGMP_C5504exB1F5,LPTENUM\NRGMP_C5504exB1F5,NRGMP_C5504exB1F5
+"NRG MP C6004ex PS"=NRG_MP_C6004ex_64.dat,USBPRINT\NRGMP_C6004ex41B8,LPTENUM\NRGMP_C6004ex41B8,NRGMP_C6004ex41B8
+
+[Ricoh.NTamd64]
+"RICOH MP C4504ex PS"=RICOH_MP_C4504ex_64.dat,USBPRINT\RICOHMP_C4504exA099,LPTENUM\RICOHMP_C4504exA099,RICOHMP_C4504exA099
+"RICOH MP C5504ex PS"=RICOH_MP_C5504ex_64.dat,USBPRINT\RICOHMP_C5504ex70B8,LPTENUM\RICOHMP_C5504ex70B8,RICOHMP_C5504ex70B8
+"RICOH MP C6004ex PS"=RICOH_MP_C6004ex_64.dat,USBPRINT\RICOHMP_C6004ex4054,LPTENUM\RICOHMP_C6004ex4054,RICOHMP_C6004ex4054
+
+[SAVIN.NTamd64]
+"SAVIN MP C4504ex PS"=SAVIN_MP_C4504ex_64.dat,USBPRINT\SAVINMP_C4504exBD0C,LPTENUM\SAVINMP_C4504exBD0C,SAVINMP_C4504exBD0C
+"SAVIN MP C5504ex PS"=SAVIN_MP_C5504ex_64.dat,USBPRINT\SAVINMP_C5504ex6C0D,LPTENUM\SAVINMP_C5504ex6C0D,SAVINMP_C5504ex6C0D
+"SAVIN MP C6004ex PS"=SAVIN_MP_C6004ex_64.dat,USBPRINT\SAVINMP_C6004ex5FC1,LPTENUM\SAVINMP_C6004ex5FC1,SAVINMP_C6004ex5FC1
+
+
+[Gestetner.NTamd64.6.0]
+"Gestetner MP C4504ex PS"=Gestetner_MP_C4504ex_64_6.0.dat,USBPRINT\GestetnerMP_C4504ex1764,LPTENUM\GestetnerMP_C4504ex1764,GestetnerMP_C4504ex1764
+"Gestetner DSc1245ex PS"=Gestetner_DSc1245ex_64_6.0.dat,USBPRINT\GestetnerDSc1245ex937B,LPTENUM\GestetnerDSc1245ex937B,GestetnerDSc1245ex937B
+"Gestetner MP C6004ex PS"=Gestetner_MP_C6004ex_64_6.0.dat,USBPRINT\GestetnerMP_C6004exF5A9,LPTENUM\GestetnerMP_C6004exF5A9,GestetnerMP_C6004exF5A9
+"Gestetner DSc1260ex PS"=Gestetner_DSc1260ex_64_6.0.dat,USBPRINT\GestetnerDSc1260ex2A6A,LPTENUM\GestetnerDSc1260ex2A6A,GestetnerDSc1260ex2A6A
+
+[infotec.NTamd64.6.0]
+"infotec MP C4504ex PS"=infotec_MP_C4504ex_64_6.0.dat,USBPRINT\infotecMP_C4504exBDE4,LPTENUM\infotecMP_C4504exBDE4,infotecMP_C4504exBDE4
+"infotec MP C5504ex PS"=infotec_MP_C5504ex_64_6.0.dat,USBPRINT\infotecMP_C5504ex6CE5,LPTENUM\infotecMP_C5504ex6CE5,infotecMP_C5504ex6CE5
+"infotec MP C6004ex PS"=infotec_MP_C6004ex_64_6.0.dat,USBPRINT\infotecMP_C6004ex3F28,LPTENUM\infotecMP_C6004ex3F28,infotecMP_C6004ex3F28
+
+[LANIER.NTamd64.6.0]
+"LANIER MP C4504ex PS"=LANIER_MP_C4504ex_64_6.0.dat,USBPRINT\LANIERMP_C4504exFF4C,LPTENUM\LANIERMP_C4504exFF4C,LANIERMP_C4504exFF4C
+"LANIER MP C5504ex PS"=LANIER_MP_C5504ex_64_6.0.dat,USBPRINT\LANIERMP_C5504ex2E4D,LPTENUM\LANIERMP_C5504ex2E4D,LANIERMP_C5504ex2E4D
+"LANIER MP C6004ex PS"=LANIER_MP_C6004ex_64_6.0.dat,USBPRINT\LANIERMP_C6004ex1D83,LPTENUM\LANIERMP_C6004ex1D83,LANIERMP_C6004ex1D83
+
+[NRG.NTamd64.6.0]
+"NRG MP C4504ex PS"=NRG_MP_C4504ex_64_6.0.dat,USBPRINT\NRGMP_C4504exA175,LPTENUM\NRGMP_C4504exA175,NRGMP_C4504exA175
+"NRG MP C5504ex PS"=NRG_MP_C5504ex_64_6.0.dat,USBPRINT\NRGMP_C5504exB1F5,LPTENUM\NRGMP_C5504exB1F5,NRGMP_C5504exB1F5
+"NRG MP C6004ex PS"=NRG_MP_C6004ex_64_6.0.dat,USBPRINT\NRGMP_C6004ex41B8,LPTENUM\NRGMP_C6004ex41B8,NRGMP_C6004ex41B8
+
+[Ricoh.NTamd64.6.0]
+"RICOH MP C4504ex PS"=RICOH_MP_C4504ex_64_6.0.dat,USBPRINT\RICOHMP_C4504exA099,LPTENUM\RICOHMP_C4504exA099,RICOHMP_C4504exA099
+"RICOH MP C5504ex PS"=RICOH_MP_C5504ex_64_6.0.dat,USBPRINT\RICOHMP_C5504ex70B8,LPTENUM\RICOHMP_C5504ex70B8,RICOHMP_C5504ex70B8
+"RICOH MP C6004ex PS"=RICOH_MP_C6004ex_64_6.0.dat,USBPRINT\RICOHMP_C6004ex4054,LPTENUM\RICOHMP_C6004ex4054,RICOHMP_C6004ex4054
+
+[SAVIN.NTamd64.6.0]
+"SAVIN MP C4504ex PS"=SAVIN_MP_C4504ex_64_6.0.dat,USBPRINT\SAVINMP_C4504exBD0C,LPTENUM\SAVINMP_C4504exBD0C,SAVINMP_C4504exBD0C
+"SAVIN MP C5504ex PS"=SAVIN_MP_C5504ex_64_6.0.dat,USBPRINT\SAVINMP_C5504ex6C0D,LPTENUM\SAVINMP_C5504ex6C0D,SAVINMP_C5504ex6C0D
+"SAVIN MP C6004ex PS"=SAVIN_MP_C6004ex_64_6.0.dat,USBPRINT\SAVINMP_C6004ex5FC1,LPTENUM\SAVINMP_C6004ex5FC1,SAVINMP_C6004ex5FC1
+
+
+[Gestetner_MP_C4504ex_64.dat]
+CopyFiles   	= @gesp5Rd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= gesp5Rd0.ppd
+LanguageMonitor = ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+
+[Gestetner_DSc1245ex_64.dat]
+CopyFiles   	= @gesp5Rd1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= gesp5Rd1.ppd
+LanguageMonitor = ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+
+[Gestetner_MP_C6004ex_64.dat]
+CopyFiles   	= @gesp5Rd3.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= gesp5Rd3.ppd
+LanguageMonitor = ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+
+[Gestetner_DSc1260ex_64.dat]
+CopyFiles   	= @gesp5Rd4.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= gesp5Rd4.ppd
+LanguageMonitor = ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+
+[infotec_MP_C4504ex_64.dat]
+CopyFiles   	= @infp5Rd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= infp5Rd0.ppd
+LanguageMonitor = ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+
+[infotec_MP_C5504ex_64.dat]
+CopyFiles   	= @infp5Rd2.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= infp5Rd2.ppd
+LanguageMonitor = ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+
+[infotec_MP_C6004ex_64.dat]
+CopyFiles   	= @infp5Rd3.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= infp5Rd3.ppd
+LanguageMonitor = ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+
+[LANIER_MP_C4504ex_64.dat]
+CopyFiles   	= @lanp5Rd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp5Rd0.ppd
+LanguageMonitor = ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+
+[LANIER_MP_C5504ex_64.dat]
+CopyFiles   	= @lanp5Rd2.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp5Rd2.ppd
+LanguageMonitor = ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+
+[LANIER_MP_C6004ex_64.dat]
+CopyFiles   	= @lanp5Rd3.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp5Rd3.ppd
+LanguageMonitor = ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+
+[NRG_MP_C4504ex_64.dat]
+CopyFiles   	= @nrgp5Rd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp5Rd0.ppd
+LanguageMonitor = ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+
+[NRG_MP_C5504ex_64.dat]
+CopyFiles   	= @nrgp5Rd2.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp5Rd2.ppd
+LanguageMonitor = ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+
+[NRG_MP_C6004ex_64.dat]
+CopyFiles   	= @nrgp5Rd3.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp5Rd3.ppd
+LanguageMonitor = ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+
+[RICOH_MP_C4504ex_64.dat]
+CopyFiles   	= @ricp5Rd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp5Rd0.ppd
+LanguageMonitor = ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+
+[RICOH_MP_C5504ex_64.dat]
+CopyFiles   	= @ricp5Rd2.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp5Rd2.ppd
+LanguageMonitor = ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+
+[RICOH_MP_C6004ex_64.dat]
+CopyFiles   	= @ricp5Rd3.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp5Rd3.ppd
+LanguageMonitor = ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+
+[SAVIN_MP_C4504ex_64.dat]
+CopyFiles   	= @savp5Rd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp5Rd0.ppd
+LanguageMonitor = ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+
+[SAVIN_MP_C5504ex_64.dat]
+CopyFiles   	= @savp5Rd2.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp5Rd2.ppd
+LanguageMonitor = ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+
+[SAVIN_MP_C6004ex_64.dat]
+CopyFiles   	= @savp5Rd3.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp5Rd3.ppd
+LanguageMonitor = ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+
+
+[Gestetner_MP_C4504ex_64_6.0.dat]
+CopyFiles   	= @gesp5Rd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= gesp5Rd0.ppd
+LanguageMonitor	= ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[Gestetner_DSc1245ex_64_6.0.dat]
+CopyFiles   	= @gesp5Rd1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= gesp5Rd1.ppd
+LanguageMonitor	= ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[Gestetner_MP_C6004ex_64_6.0.dat]
+CopyFiles   	= @gesp5Rd3.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= gesp5Rd3.ppd
+LanguageMonitor	= ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[Gestetner_DSc1260ex_64_6.0.dat]
+CopyFiles   	= @gesp5Rd4.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= gesp5Rd4.ppd
+LanguageMonitor	= ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[infotec_MP_C4504ex_64_6.0.dat]
+CopyFiles   	= @infp5Rd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= infp5Rd0.ppd
+LanguageMonitor	= ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[infotec_MP_C5504ex_64_6.0.dat]
+CopyFiles   	= @infp5Rd2.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= infp5Rd2.ppd
+LanguageMonitor	= ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[infotec_MP_C6004ex_64_6.0.dat]
+CopyFiles   	= @infp5Rd3.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= infp5Rd3.ppd
+LanguageMonitor	= ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[LANIER_MP_C4504ex_64_6.0.dat]
+CopyFiles   	= @lanp5Rd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp5Rd0.ppd
+LanguageMonitor	= ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[LANIER_MP_C5504ex_64_6.0.dat]
+CopyFiles   	= @lanp5Rd2.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp5Rd2.ppd
+LanguageMonitor	= ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[LANIER_MP_C6004ex_64_6.0.dat]
+CopyFiles   	= @lanp5Rd3.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp5Rd3.ppd
+LanguageMonitor	= ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[NRG_MP_C4504ex_64_6.0.dat]
+CopyFiles   	= @nrgp5Rd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp5Rd0.ppd
+LanguageMonitor	= ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[NRG_MP_C5504ex_64_6.0.dat]
+CopyFiles   	= @nrgp5Rd2.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp5Rd2.ppd
+LanguageMonitor	= ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[NRG_MP_C6004ex_64_6.0.dat]
+CopyFiles   	= @nrgp5Rd3.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp5Rd3.ppd
+LanguageMonitor	= ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[RICOH_MP_C4504ex_64_6.0.dat]
+CopyFiles   	= @ricp5Rd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp5Rd0.ppd
+LanguageMonitor	= ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[RICOH_MP_C5504ex_64_6.0.dat]
+CopyFiles   	= @ricp5Rd2.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp5Rd2.ppd
+LanguageMonitor	= ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[RICOH_MP_C6004ex_64_6.0.dat]
+CopyFiles   	= @ricp5Rd3.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp5Rd3.ppd
+LanguageMonitor	= ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[SAVIN_MP_C4504ex_64_6.0.dat]
+CopyFiles   	= @savp5Rd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp5Rd0.ppd
+LanguageMonitor	= ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[SAVIN_MP_C5504ex_64_6.0.dat]
+CopyFiles   	= @savp5Rd2.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp5Rd2.ppd
+LanguageMonitor	= ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[SAVIN_MP_C6004ex_64_6.0.dat]
+CopyFiles   	= @savp5Rd3.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp5Rd3.ppd
+LanguageMonitor	= ricp5Rlm,ricp5Rlm.dll
+PrintProcessor	= "ricp5Rpp,ricp5Rpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+
+[Gestetner_MP_C4504ex_64.dat.Services]
+AddService = ,0x2
+
+[Gestetner_DSc1245ex_64.dat.Services]
+AddService = ,0x2
+
+[Gestetner_MP_C6004ex_64.dat.Services]
+AddService = ,0x2
+
+[Gestetner_DSc1260ex_64.dat.Services]
+AddService = ,0x2
+
+[infotec_MP_C4504ex_64.dat.Services]
+AddService = ,0x2
+
+[infotec_MP_C5504ex_64.dat.Services]
+AddService = ,0x2
+
+[infotec_MP_C6004ex_64.dat.Services]
+AddService = ,0x2
+
+[LANIER_MP_C4504ex_64.dat.Services]
+AddService = ,0x2
+
+[LANIER_MP_C5504ex_64.dat.Services]
+AddService = ,0x2
+
+[LANIER_MP_C6004ex_64.dat.Services]
+AddService = ,0x2
+
+[NRG_MP_C4504ex_64.dat.Services]
+AddService = ,0x2
+
+[NRG_MP_C5504ex_64.dat.Services]
+AddService = ,0x2
+
+[NRG_MP_C6004ex_64.dat.Services]
+AddService = ,0x2
+
+[RICOH_MP_C4504ex_64.dat.Services]
+AddService = ,0x2
+
+[RICOH_MP_C5504ex_64.dat.Services]
+AddService = ,0x2
+
+[RICOH_MP_C6004ex_64.dat.Services]
+AddService = ,0x2
+
+[SAVIN_MP_C4504ex_64.dat.Services]
+AddService = ,0x2
+
+[SAVIN_MP_C5504ex_64.dat.Services]
+AddService = ,0x2
+
+[SAVIN_MP_C6004ex_64.dat.Services]
+AddService = ,0x2
+
+
+[Gestetner_MP_C4504ex_64_6.0.dat.Services]
+AddService = ,0x2
+
+[Gestetner_DSc1245ex_64_6.0.dat.Services]
+AddService = ,0x2
+
+[Gestetner_MP_C6004ex_64_6.0.dat.Services]
+AddService = ,0x2
+
+[Gestetner_DSc1260ex_64_6.0.dat.Services]
+AddService = ,0x2
+
+[infotec_MP_C4504ex_64_6.0.dat.Services]
+AddService = ,0x2
+
+[infotec_MP_C5504ex_64_6.0.dat.Services]
+AddService = ,0x2
+
+[infotec_MP_C6004ex_64_6.0.dat.Services]
+AddService = ,0x2
+
+[LANIER_MP_C4504ex_64_6.0.dat.Services]
+AddService = ,0x2
+
+[LANIER_MP_C5504ex_64_6.0.dat.Services]
+AddService = ,0x2
+
+[LANIER_MP_C6004ex_64_6.0.dat.Services]
+AddService = ,0x2
+
+[NRG_MP_C4504ex_64_6.0.dat.Services]
+AddService = ,0x2
+
+[NRG_MP_C5504ex_64_6.0.dat.Services]
+AddService = ,0x2
+
+[NRG_MP_C6004ex_64_6.0.dat.Services]
+AddService = ,0x2
+
+[RICOH_MP_C4504ex_64_6.0.dat.Services]
+AddService = ,0x2
+
+[RICOH_MP_C5504ex_64_6.0.dat.Services]
+AddService = ,0x2
+
+[RICOH_MP_C6004ex_64_6.0.dat.Services]
+AddService = ,0x2
+
+[SAVIN_MP_C4504ex_64_6.0.dat.Services]
+AddService = ,0x2
+
+[SAVIN_MP_C5504ex_64_6.0.dat.Services]
+AddService = ,0x2
+
+[SAVIN_MP_C6004ex_64_6.0.dat.Services]
+AddService = ,0x2
+
+
+[RPD_FILES]
+ricp5Rui.dll,ricp5Xui.dll
+ricp5Rui.irj,MPC4504e.irj
+ricp5Rui.rdj
+ricp5Rui.rcf,MPC4504e.rcf
+ricp5Rug.dll,ricp5Xug.dll
+ricp5Rug.miz
+ricp5Rur.dll,ricp5Xur.dll
+ricp5Rpu.dll,ricp5Xpu.dll
+ricp5Rgl.dll,ricp5Xgl.dll
+ricp5Rpr.dll,ricp5Xpr.dll
+ricp5Rcd.dll,ricp5Xcd.dll
+ricp5Rcd.psz
+ricp5Rcz.dlz,ricp5Xcz.dlz
+ricp5Rcf.cfz
+ricp5Rcl.ini
+ricp5Rch.chm,ricp5Xch.chm
+ricp5Rci.dll,ricp5Xci.dll
+ricp5Rcj.dll,ricp5Xcj.dll
+ricp5Rcb.dll,ricp5Xcb.dll
+ricp5Rtl.exe,ricp5Xtl.exe
+ricp5Rtc.exe,ricp5Xtc.exe
+ricp5Rtt.exe,ricp5Xtt.exe
+ricp5Rtf.exe,ricp5Xtf.exe
+
+[PRTPROCS]
+ricp5Rpp.dll,ricp5Xpp.dll,,0x00000020
+
+[RPD_COMMON_SYS32]
+ricp5Rlm.dll,ricp5Xlm.dll,,0x00000020
+
+[RPD_COMMON]
+ricdb64.dll,ricdb64.dll,,0x00000020
+mfricr64.dll,mfricr64.dll,,0x00000020
+RD05Rd64.dll,RD05Rd64.dll,,0x00000020
+
+[DestinationDirs]
+DefaultDestDir	= 66000
+PRTPROCS	= 66001
+RPD_COMMON_SYS32	 	= 66002
+
+[SourceDisksNames.amd64]
+1 = %DSK%,RICOHJBP.cab,,
+2 = %DSK%,,,
+
+[PrinterPackageInstallation.amd64]
+PackageAware	=TRUE
+
+CoreDriverDependencies	={D20EA372-DD35-4950-9ED8-A6335AFE79F1}
+
+
+[SourceDisksFiles.amd64]
+ricp5Xui.dll	= 1
+MPC4504e.irj	= 1
+ricp5Rui.rdj	= 1
+MPC4504e.rcf	= 2
+ricp5Xug.dll	= 1
+ricp5Rug.miz	= 1
+ricp5Xur.dll	= 1
+ricp5Xpu.dll	= 1
+ricp5Xgl.dll	= 1
+ricp5Xpr.dll	= 1
+ricp5Xcd.dll	= 1
+ricp5Rcd.psz	= 1
+ricp5Xcz.dlz	= 1
+ricp5Rcf.cfz	= 1
+ricp5Rcl.ini	= 1
+ricp5Xch.chm	= 1
+ricp5Xci.dll	= 1
+ricp5Xcj.dll	= 1
+ricp5Xcb.dll	= 1
+ricp5Xtl.exe	= 1
+gesp5Rd0.ppd = 1
+gesp5Rd1.ppd = 1
+gesp5Rd3.ppd = 1
+gesp5Rd4.ppd = 1
+infp5Rd0.ppd = 1
+infp5Rd2.ppd = 1
+infp5Rd3.ppd = 1
+lanp5Rd0.ppd = 1
+lanp5Rd2.ppd = 1
+lanp5Rd3.ppd = 1
+nrgp5Rd0.ppd = 1
+nrgp5Rd2.ppd = 1
+nrgp5Rd3.ppd = 1
+ricp5Rd0.ppd = 1
+ricp5Rd2.ppd = 1
+ricp5Rd3.ppd = 1
+savp5Rd0.ppd = 1
+savp5Rd2.ppd = 1
+savp5Rd3.ppd = 1
+ricp5Xlm.dll	= 1
+ricdb64.dll	= 1
+mfricr64.dll	= 1
+RD05Rd64.dll	= 1
+ricp5Xpp.dll	= 1
+ricp5Xtc.exe	= 1
+ricp5Xtt.exe	= 1
+ricp5Xtf.exe	= 1
+
+[Strings]
+Ricoh="Ricoh"
+Gestetner="Gestetner"
+infotec="infotec"
+LANIER="LANIER"
+NRG="NRG"
+SAVIN="SAVIN"
+DSK	= "PS Printer Driver Disk1"

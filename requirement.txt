@@ -1,0 +1,15 @@
+pandas
+plotly
+streamlit>=1.29.0
+openai>=1.32.2
+langchain-core>=1.1.0
+langchain-openai>=1.0.3
+langchain-community>=0.0.30
+langchain-text-splitters>=0.0.1
+faiss-cpu>=1.7.4
+tiktoken>=0.4.0
+langsmith>=0.0.20
+psutil>=5.9.0
+azure-ai-inference
+azure-core
+mysql-connector-python

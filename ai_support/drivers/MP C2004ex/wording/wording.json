@@ -1,0 +1,225 @@
+{
+   "locales" : [
+      {
+         "language" : "japanese",
+         "locale_id" : [
+            "0x0411"
+         ]
+      },
+      {
+         "language" : "German",
+         "locale_id" : [
+            "0x0407",
+            "0x0c07",
+            "0x1407",
+            "0x1007",
+            "0x0807"
+         ]
+      },
+      {
+         "language" : "French",
+         "locale_id" : [
+            "0x040c",
+            "0x080c",
+            "0x2c0c",
+            "0x0c0c",
+            "0x240c",
+            "0x300c",
+            "0x3c0c",
+            "0x140c",
+            "0x340c",
+            "0x180c",
+            "0x380c",
+            "0xe40c",
+            "0x200c",
+            "0x280c",
+            "0x100c",
+            "0x1c0c",
+            "0x0462"
+         ]
+      },
+      {
+         "language" : "Italian",
+         "locale_id" : [
+            "0x0410",
+            "0x0810"
+         ]
+      },
+      {
+         "language" : "Spanish",
+         "locale_id" : [
+            "0x0c0a",
+            "0x040a",
+            "0x2c0a",
+            "0x400a",
+            "0x340a",
+            "0x240a",
+            "0x140a",
+            "0x1c0a",
+            "0x300a",
+            "0x440a",
+            "0x100a",
+            "0x480a",
+            "0xe40a",
+            "0x080a",
+            "0x4c0a",
+            "0x180a",
+            "0x3c0a",
+            "0x280a",
+            "0x500a",
+            "0x540a",
+            "0x380a",
+            "0x200a"
+         ]
+      },
+      {
+         "language" : "Dutch",
+         "locale_id" : [
+            "0x0413",
+            "0x0813"
+         ]
+      },
+      {
+         "language" : "Swedish",
+         "locale_id" : [
+            "0x041d",
+            "0x081d"
+         ]
+      },
+      {
+         "language" : "Danish",
+         "locale_id" : [
+            "0x0406"
+         ]
+      },
+      {
+         "language" : "Norwegian",
+         "locale_id" : [
+            "0x0414",
+            "0x0814"
+         ]
+      },
+      {
+         "language" : "Polish",
+         "locale_id" : [
+            "0x0415"
+         ]
+      },
+      {
+         "language" : "Portuguese",
+         "locale_id" : [
+            "0x0816"
+         ]
+      },
+      {
+         "language" : "Czech",
+         "locale_id" : [
+            "0x0405"
+         ]
+      },
+      {
+         "language" : "Hungarian",
+         "locale_id" : [
+            "0x040e"
+         ]
+      },
+      {
+         "language" : "Finnish",
+         "locale_id" : [
+            "0x040b"
+         ]
+      },
+      {
+         "language" : "Korean",
+         "locale_id" : [
+            "0x0412"
+         ]
+      },
+      {
+         "language" : "SimplifiedChinese",
+         "locale_id" : [
+            "0x0804",
+            "0x1004"
+         ]
+      },
+      {
+         "language" : "TraditionalChinese",
+         "locale_id" : [
+            "0x0404",
+            "0x0c04",
+            "0x1404"
+         ]
+      },
+      {
+         "language" : "Russian",
+         "locale_id" : [
+            "0x0419",
+            "0x0819"
+         ]
+      },
+      {
+         "language" : "Catalan",
+         "locale_id" : [
+            "0x0403"
+         ]
+      },
+      {
+         "language" : "Turkish",
+         "locale_id" : [
+            "0x041f"
+         ]
+      },
+      {
+         "language" : "Brazilian",
+         "locale_id" : [
+            "0x0416"
+         ]
+      },
+      {
+         "language" : "Greek",
+         "locale_id" : [
+            "0x0408"
+         ]
+      },
+      {
+         "language" : "Arabic",
+         "locale_id" : [
+            "0x3801",
+            "0x3C01",
+            "0x1401",
+            "0x0C01",
+            "0x0801",
+            "0x2C01",
+            "0x3401",
+            "0x3001",
+            "0x1001",
+            "0x1801",
+            "0x2001",
+            "0x4001",
+            "0x0401",
+            "0x2801",
+            "0x1C01",
+            "0x2401"
+         ]
+      },
+      {
+         "language" : "Thai",
+         "locale_id" : [
+            "0x041E"
+         ]
+      },
+      {
+         "language" : "Vietnamese",
+         "locale_id" : [
+            "0x042A"
+         ]
+      },
+      {
+         "language" : "Slovak",
+         "locale_id" : [
+            "0x041B"
+         ]
+      }
+   ],
+   "default" : "english"
+}

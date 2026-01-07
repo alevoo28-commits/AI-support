@@ -1,0 +1,351 @@
+;------------------------------------------------------------
+; Copyright (c) 2007-2024 RICOH COMPANY, LTD
+; All Rights Reserved
+; Printer Driver Setup Information File
+;------------------------------------------------------------
+
+[Version]
+Signature   = "$Windows NT$"
+Provider    = %Ricoh%
+ClassGUID   = {4D36E979-E325-11CE-BFC1-08002BE10318}
+Class       = Printer
+DriverVer	= 06/03/2024,3.0.0.0
+CatalogFile	= RICOHJBP.cat
+
+[Manufacturer]
+%infotec%=infotec,NTamd64,NTamd64.6.0
+%LANIER%=LANIER,NTamd64,NTamd64.6.0
+%NRG%=NRG,NTamd64,NTamd64.6.0
+%Ricoh%=Ricoh,NTamd64,NTamd64.6.0
+%SAVIN%=SAVIN,NTamd64,NTamd64.6.0
+
+
+;WindowsXP(amd64)
+[infotec.NTamd64]
+"infotec Pro C7100S PS"=infotec_Pro_C7100S_64.dat,USBPRINT\infotecPro_C7100S88AE,LPTENUM\infotecPro_C7100S88AE,infotecPro_C7100S88AE
+"infotec Pro C7110S PS"=infotec_Pro_C7110S_64.dat,USBPRINT\infotecPro_C7110S48FF,LPTENUM\infotecPro_C7110S48FF,infotecPro_C7110S48FF
+
+[LANIER.NTamd64]
+"LANIER Pro C7100S PS"=LANIER_Pro_C7100S_64.dat,USBPRINT\LANIERPro_C7100S7207,LPTENUM\LANIERPro_C7100S7207,LANIERPro_C7100S7207
+"LANIER Pro C7110S PS"=LANIER_Pro_C7110S_64.dat,USBPRINT\LANIERPro_C7110SB256,LPTENUM\LANIERPro_C7110SB256,LANIERPro_C7110SB256
+
+[NRG.NTamd64]
+"NRG Pro C7100S PS"=NRG_Pro_C7100S_64.dat,USBPRINT\NRGPro_C7100SEC1D,LPTENUM\NRGPro_C7100SEC1D,NRGPro_C7100SEC1D
+"NRG Pro C7110S PS"=NRG_Pro_C7110S_64.dat,USBPRINT\NRGPro_C7110S2C4C,LPTENUM\NRGPro_C7110S2C4C,NRGPro_C7110S2C4C
+
+[Ricoh.NTamd64]
+"RICOH Pro C7100S PS"=RICOH_Pro_C7100S_64.dat,USBPRINT\RICOHPro_C7100SCE2B,LPTENUM\RICOHPro_C7100SCE2B,RICOHPro_C7100SCE2B
+"RICOH Pro C7110S PS"=RICOH_Pro_C7110S_64.dat,USBPRINT\RICOHPro_C7110S0E7A,LPTENUM\RICOHPro_C7110S0E7A,RICOHPro_C7110S0E7A,RICOHPro_C7110S_E7A
+
+[SAVIN.NTamd64]
+"SAVIN Pro C7100S PS"=SAVIN_Pro_C7100S_64.dat,USBPRINT\SAVINPro_C7100S5044,LPTENUM\SAVINPro_C7100S5044,SAVINPro_C7100S5044
+"SAVIN Pro C7110S PS"=SAVIN_Pro_C7110S_64.dat,USBPRINT\SAVINPro_C7110S9017,LPTENUM\SAVINPro_C7110S9017,SAVINPro_C7110S9017
+
+
+[infotec.NTamd64.6.0]
+"infotec Pro C7100S PS"=infotec_Pro_C7100S_64_6.0.dat,USBPRINT\infotecPro_C7100S88AE,LPTENUM\infotecPro_C7100S88AE,infotecPro_C7100S88AE
+"infotec Pro C7110S PS"=infotec_Pro_C7110S_64_6.0.dat,USBPRINT\infotecPro_C7110S48FF,LPTENUM\infotecPro_C7110S48FF,infotecPro_C7110S48FF
+
+[LANIER.NTamd64.6.0]
+"LANIER Pro C7100S PS"=LANIER_Pro_C7100S_64_6.0.dat,USBPRINT\LANIERPro_C7100S7207,LPTENUM\LANIERPro_C7100S7207,LANIERPro_C7100S7207
+"LANIER Pro C7110S PS"=LANIER_Pro_C7110S_64_6.0.dat,USBPRINT\LANIERPro_C7110SB256,LPTENUM\LANIERPro_C7110SB256,LANIERPro_C7110SB256
+
+[NRG.NTamd64.6.0]
+"NRG Pro C7100S PS"=NRG_Pro_C7100S_64_6.0.dat,USBPRINT\NRGPro_C7100SEC1D,LPTENUM\NRGPro_C7100SEC1D,NRGPro_C7100SEC1D
+"NRG Pro C7110S PS"=NRG_Pro_C7110S_64_6.0.dat,USBPRINT\NRGPro_C7110S2C4C,LPTENUM\NRGPro_C7110S2C4C,NRGPro_C7110S2C4C
+
+[Ricoh.NTamd64.6.0]
+"RICOH Pro C7100S PS"=RICOH_Pro_C7100S_64_6.0.dat,USBPRINT\RICOHPro_C7100SCE2B,LPTENUM\RICOHPro_C7100SCE2B,RICOHPro_C7100SCE2B
+"RICOH Pro C7110S PS"=RICOH_Pro_C7110S_64_6.0.dat,USBPRINT\RICOHPro_C7110S0E7A,LPTENUM\RICOHPro_C7110S0E7A,RICOHPro_C7110S0E7A,RICOHPro_C7110S_E7A
+
+[SAVIN.NTamd64.6.0]
+"SAVIN Pro C7100S PS"=SAVIN_Pro_C7100S_64_6.0.dat,USBPRINT\SAVINPro_C7100S5044,LPTENUM\SAVINPro_C7100S5044,SAVINPro_C7100S5044
+"SAVIN Pro C7110S PS"=SAVIN_Pro_C7110S_64_6.0.dat,USBPRINT\SAVINPro_C7110S9017,LPTENUM\SAVINPro_C7110S9017,SAVINPro_C7110S9017
+
+
+[infotec_Pro_C7100S_64.dat]
+CopyFiles   	= @infp8Hd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= infp8Hd0.ppd
+LanguageMonitor = ricp8Hlm,ricp8Hlm.dll
+PrintProcessor	= "ricp8Hpp,ricp8Hpp.dll"
+
+[infotec_Pro_C7110S_64.dat]
+CopyFiles   	= @infp8Hd1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= infp8Hd1.ppd
+LanguageMonitor = ricp8Hlm,ricp8Hlm.dll
+PrintProcessor	= "ricp8Hpp,ricp8Hpp.dll"
+
+[LANIER_Pro_C7100S_64.dat]
+CopyFiles   	= @lanp8Hd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp8Hd0.ppd
+LanguageMonitor = ricp8Hlm,ricp8Hlm.dll
+PrintProcessor	= "ricp8Hpp,ricp8Hpp.dll"
+
+[LANIER_Pro_C7110S_64.dat]
+CopyFiles   	= @lanp8Hd1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp8Hd1.ppd
+LanguageMonitor = ricp8Hlm,ricp8Hlm.dll
+PrintProcessor	= "ricp8Hpp,ricp8Hpp.dll"
+
+[NRG_Pro_C7100S_64.dat]
+CopyFiles   	= @nrgp8Hd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp8Hd0.ppd
+LanguageMonitor = ricp8Hlm,ricp8Hlm.dll
+PrintProcessor	= "ricp8Hpp,ricp8Hpp.dll"
+
+[NRG_Pro_C7110S_64.dat]
+CopyFiles   	= @nrgp8Hd1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp8Hd1.ppd
+LanguageMonitor = ricp8Hlm,ricp8Hlm.dll
+PrintProcessor	= "ricp8Hpp,ricp8Hpp.dll"
+
+[RICOH_Pro_C7100S_64.dat]
+CopyFiles   	= @ricp8Hd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp8Hd0.ppd
+LanguageMonitor = ricp8Hlm,ricp8Hlm.dll
+PrintProcessor	= "ricp8Hpp,ricp8Hpp.dll"
+
+[RICOH_Pro_C7110S_64.dat]
+CopyFiles   	= @ricp8Hd1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp8Hd1.ppd
+LanguageMonitor = ricp8Hlm,ricp8Hlm.dll
+PrintProcessor	= "ricp8Hpp,ricp8Hpp.dll"
+
+[SAVIN_Pro_C7100S_64.dat]
+CopyFiles   	= @savp8Hd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp8Hd0.ppd
+LanguageMonitor = ricp8Hlm,ricp8Hlm.dll
+PrintProcessor	= "ricp8Hpp,ricp8Hpp.dll"
+
+[SAVIN_Pro_C7110S_64.dat]
+CopyFiles   	= @savp8Hd1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp8Hd1.ppd
+LanguageMonitor = ricp8Hlm,ricp8Hlm.dll
+PrintProcessor	= "ricp8Hpp,ricp8Hpp.dll"
+
+
+[infotec_Pro_C7100S_64_6.0.dat]
+CopyFiles   	= @infp8Hd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= infp8Hd0.ppd
+LanguageMonitor	= ricp8Hlm,ricp8Hlm.dll
+PrintProcessor	= "ricp8Hpp,ricp8Hpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[infotec_Pro_C7110S_64_6.0.dat]
+CopyFiles   	= @infp8Hd1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= infp8Hd1.ppd
+LanguageMonitor	= ricp8Hlm,ricp8Hlm.dll
+PrintProcessor	= "ricp8Hpp,ricp8Hpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[LANIER_Pro_C7100S_64_6.0.dat]
+CopyFiles   	= @lanp8Hd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp8Hd0.ppd
+LanguageMonitor	= ricp8Hlm,ricp8Hlm.dll
+PrintProcessor	= "ricp8Hpp,ricp8Hpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[LANIER_Pro_C7110S_64_6.0.dat]
+CopyFiles   	= @lanp8Hd1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp8Hd1.ppd
+LanguageMonitor	= ricp8Hlm,ricp8Hlm.dll
+PrintProcessor	= "ricp8Hpp,ricp8Hpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[NRG_Pro_C7100S_64_6.0.dat]
+CopyFiles   	= @nrgp8Hd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp8Hd0.ppd
+LanguageMonitor	= ricp8Hlm,ricp8Hlm.dll
+PrintProcessor	= "ricp8Hpp,ricp8Hpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[NRG_Pro_C7110S_64_6.0.dat]
+CopyFiles   	= @nrgp8Hd1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp8Hd1.ppd
+LanguageMonitor	= ricp8Hlm,ricp8Hlm.dll
+PrintProcessor	= "ricp8Hpp,ricp8Hpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[RICOH_Pro_C7100S_64_6.0.dat]
+CopyFiles   	= @ricp8Hd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp8Hd0.ppd
+LanguageMonitor	= ricp8Hlm,ricp8Hlm.dll
+PrintProcessor	= "ricp8Hpp,ricp8Hpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[RICOH_Pro_C7110S_64_6.0.dat]
+CopyFiles   	= @ricp8Hd1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp8Hd1.ppd
+LanguageMonitor	= ricp8Hlm,ricp8Hlm.dll
+PrintProcessor	= "ricp8Hpp,ricp8Hpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[SAVIN_Pro_C7100S_64_6.0.dat]
+CopyFiles   	= @savp8Hd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp8Hd0.ppd
+LanguageMonitor	= ricp8Hlm,ricp8Hlm.dll
+PrintProcessor	= "ricp8Hpp,ricp8Hpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[SAVIN_Pro_C7110S_64_6.0.dat]
+CopyFiles   	= @savp8Hd1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp8Hd1.ppd
+LanguageMonitor	= ricp8Hlm,ricp8Hlm.dll
+PrintProcessor	= "ricp8Hpp,ricp8Hpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+
+[infotec_Pro_C7100S_64.dat.Services]
+AddService = ,0x2
+
+[infotec_Pro_C7110S_64.dat.Services]
+AddService = ,0x2
+
+[LANIER_Pro_C7100S_64.dat.Services]
+AddService = ,0x2
+
+[LANIER_Pro_C7110S_64.dat.Services]
+AddService = ,0x2
+
+[NRG_Pro_C7100S_64.dat.Services]
+AddService = ,0x2
+
+[NRG_Pro_C7110S_64.dat.Services]
+AddService = ,0x2
+
+[RICOH_Pro_C7100S_64.dat.Services]
+AddService = ,0x2
+
+[RICOH_Pro_C7110S_64.dat.Services]
+AddService = ,0x2
+
+[SAVIN_Pro_C7100S_64.dat.Services]
+AddService = ,0x2
+
+[SAVIN_Pro_C7110S_64.dat.Services]
+AddService = ,0x2
+
+
+[infotec_Pro_C7100S_64_6.0.dat.Services]
+AddService = ,0x2
+
+[infotec_Pro_C7110S_64_6.0.dat.Services]
+AddService = ,0x2
+
+[LANIER_Pro_C7100S_64_6.0.dat.Services]
+AddService = ,0x2
+
+[LANIER_Pro_C7110S_64_6.0.dat.Services]
+AddService = ,0x2
+
+[NRG_Pro_C7100S_64_6.0.dat.Services]
+AddService = ,0x2
+
+[NRG_Pro_C7110S_64_6.0.dat.Services]
+AddService = ,0x2
+
+[RICOH_Pro_C7100S_64_6.0.dat.Services]
+AddService = ,0x2
+
+[RICOH_Pro_C7110S_64_6.0.dat.Services]
+AddService = ,0x2
+
+[SAVIN_Pro_C7100S_64_6.0.dat.Services]
+AddService = ,0x2
+
+[SAVIN_Pro_C7110S_64_6.0.dat.Services]
+AddService = ,0x2
+
+
+[RPD_FILES]
+ricp8Hui.dll,ricp5Xui.dll
+ricp8Hui.irj,PRC7100S.irj
+ricp8Hui.rdj
+ricp8Hui.rcf,PRC7100S.rcf
+ricp8Hug.dll,ricp5Xug.dll
+ricp8Hug.miz
+ricp8Hur.dll,ricp5Xur.dll
+ricp8Hpu.dll,ricp5Xpu.dll
+ricp8Hgl.dll,ricp5Xgl.dll
+ricp8Hpr.dll,ricp5Xpr.dll
+ricp8Hcd.dll,ricp5Xcd.dll
+ricp8Hcd.psz
+ricp8Hcz.dlz,ricp4Qcz.dlz
+ricp8Hcf.cfz
+ricp8Hcl.ini
+ricp8Hch.chm,ricp5Xch.chm
+ricp8Hci.dll,ricp5Xci.dll
+ricp8Hcj.dll,ricp5Xcj.dll
+ricp8Hcb.dll,ricp5Xcb.dll
+ricp8Htl.exe,ricp5Xtl.exe
+
+[PRTPROCS]
+ricp8Hpp.dll,ricp5Xpp.dll,,0x00000020
+
+[RPD_COMMON_SYS32]
+ricp8Hlm.dll,ricp5Xlm.dll,,0x00000020
+
+[RPD_COMMON]
+ricdb64.dll,ricdb64.dll,,0x00000020
+mfricr64.dll,mfricr64.dll,,0x00000020
+RD08Hd64.dll,RD08Hd64.dll,,0x00000020
+
+[DestinationDirs]
+DefaultDestDir	= 66000
+PRTPROCS	= 66001
+RPD_COMMON_SYS32	 	= 66002
+
+[SourceDisksNames.amd64]
+1 = %DSK%,RICOHJBP.cab,,
+2 = %DSK%,,,
+
+[PrinterPackageInstallation.amd64]
+PackageAware	=TRUE
+
+CoreDriverDependencies	={D20EA372-DD35-4950-9ED8-A6335AFE79F1}
+
+
+[SourceDisksFiles.amd64]
+ricp5Xui.dll	= 1
+PRC7100S.irj	= 1
+ricp8Hui.rdj	= 1
+PRC7100S.rcf	= 2
+ricp5Xug.dll	= 1
+ricp8Hug.miz	= 1
+ricp5Xur.dll	= 1
+ricp5Xpu.dll	= 1
+ricp5Xgl.dll	= 1
+ricp5Xpr.dll	= 1
+ricp5Xcd.dll	= 1
+ricp8Hcd.psz	= 1
+ricp4Qcz.dlz	= 1
+ricp8Hcf.cfz	= 1
+ricp8Hcl.ini	= 1
+ricp5Xch.chm	= 1
+ricp5Xci.dll	= 1
+ricp5Xcj.dll	= 1
+ricp5Xcb.dll	= 1
+infp8Hd0.ppd = 1
+infp8Hd1.ppd = 1
+lanp8Hd0.ppd = 1
+lanp8Hd1.ppd = 1
+nrgp8Hd0.ppd = 1
+nrgp8Hd1.ppd = 1
+ricp8Hd0.ppd = 1
+ricp8Hd1.ppd = 1
+savp8Hd0.ppd = 1
+savp8Hd1.ppd = 1
+ricp5Xlm.dll	= 1
+ricdb64.dll	= 1
+mfricr64.dll	= 1
+ricp5Xtl.exe              = 1
+RD08Hd64.dll	= 1
+ricp5Xpp.dll	= 1
+
+[Strings]
+Ricoh="Ricoh"
+infotec="infotec"
+LANIER="LANIER"
+NRG="NRG"
+SAVIN="SAVIN"
+DSK	= "PS Printer Driver Disk1"

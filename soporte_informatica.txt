@@ -1,0 +1,66 @@
+
+# Procedimientos de Soporte Informático – Oficinas
+
+## 1. Reinicio y encendido de equipos
+- Antes de reiniciar, **guardar todo el trabajo** y cerrar aplicaciones abiertas.
+- Reiniciar presionando **Ctrl+Alt+Supr → Reiniciar** o desde el menú de inicio.
+- Si un equipo **no enciende**, verificar:
+  - Conexión eléctrica del cable de alimentación.
+  - Encendido del monitor y periféricos.
+  - Indicadores LED del equipo para posibles fallas de hardware.
+- En caso de **reinicio forzado**, mantener presionado el botón de encendido 5-10 segundos.
+
+## 2. Instalación de software
+- Solo **personal autorizado** puede instalar software en los equipos de la oficina.
+- Para instalar software aprobado:
+  - Acceder al **portal interno de descargas**.
+  - Seguir las instrucciones de instalación paso a paso.
+- Antes de instalar:
+  - Verificar compatibilidad con el sistema operativo y versión del equipo.
+  - Asegurarse de tener espacio suficiente en disco.
+- Registrar en el sistema interno la instalación realizada.
+
+## 3. Resolución de problemas de red
+- **Verificación básica**:
+  - Comprobar que los cables de red estén conectados correctamente.
+  - Revisar el estado de los LEDs del router o switch.
+  - Reiniciar el router si no hay conexión a internet.
+- **Problemas de Wi-Fi**:
+  - Confirmar que se está conectado a la red corporativa.
+  - Olvidar la red y volver a conectar si persiste el problema.
+- **Verificación avanzada**:
+  - Ejecutar `ping` a la puerta de enlace para comprobar conectividad interna.
+  - Reportar problemas de servidor o firewall al área de soporte.
+
+## 4. Copias de seguridad y almacenamiento
+- Todos los equipos deben realizar **backup semanal** al servidor central.
+- Guardar documentos importantes en carpetas compartidas de la empresa.
+- Confirmar que los backups automáticos se ejecuten correctamente:
+  - Verificar logs del software de respaldo.
+  - Restaurar archivos de prueba periódicamente para asegurar integridad.
+- No guardar información crítica únicamente en el disco local.
+
+## 5. Mantenimiento de hardware
+- Limpiar equipos y periféricos periódicamente para evitar sobrecalentamiento.
+- Revisar cables y conexiones de mouse, teclado, impresoras y monitores.
+- Reportar fallas físicas o daños al área de soporte antes de intentar reparaciones.
+
+## 6. Seguridad informática
+- No descargar software o archivos desde fuentes no confiables.
+- No abrir correos o adjuntos sospechosos.
+- Cambiar contraseñas corporativas cada 90 días y usar **contraseñas seguras**.
+- Mantener el antivirus y actualizaciones del sistema operativo activadas.
+
+## 7. Contacto de soporte
+- **Correo electrónico:** soporte@empresa.com
+- **Teléfono interno:** +56 2 1234 5678
+- **Horario de atención:** Lunes a Viernes, 08:30 – 18:00
+- Para solicitudes urgentes fuera de horario, enviar correo con asunto **“URGENTE”**.
+
+## 8. Documentación y registro
+- Registrar todos los incidentes y solicitudes en el sistema de tickets.
+- Incluir información detallada:
+  - Nombre del usuario afectado.
+  - Descripción del problema.
+  - Pasos realizados para solucionarlo.
+  - Resultado final y hora de cierre del ticket.

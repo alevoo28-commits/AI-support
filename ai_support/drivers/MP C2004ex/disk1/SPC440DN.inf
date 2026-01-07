@@ -1,0 +1,301 @@
+;------------------------------------------------------------
+; Copyright (c) 2007-2024 RICOH COMPANY, LTD
+; All Rights Reserved
+; Printer Driver Setup Information File
+;------------------------------------------------------------
+
+[Version]
+Signature   = "$Windows NT$"
+Provider    = %Ricoh%
+ClassGUID   = {4D36E979-E325-11CE-BFC1-08002BE10318}
+Class       = Printer
+DriverVer	= 06/03/2024,3.0.0.0
+CatalogFile	= RICOHJBP.cat
+
+[Manufacturer]
+%LANIER%=LANIER,NTamd64,NTamd64.6.0
+%NRG%=NRG,NTamd64,NTamd64.6.0
+%Ricoh%=Ricoh,NTamd64,NTamd64.6.0
+%SAVIN%=SAVIN,NTamd64,NTamd64.6.0
+
+
+;WindowsXP(amd64)
+[LANIER.NTamd64]
+"LANIER SP C440DN PS"=LANIER_SP_C440DN_64.dat,USBPRINT\LANIERSP_C440DN76C8,LPTENUM\LANIERSP_C440DN76C8,LANIERSP_C440DN76C8
+"LANIER SP C435DN PS"=LANIER_SP_C435DN_64.dat,USBPRINT\LANIERSP_C435DN03D9,LPTENUM\LANIERSP_C435DN03D9,LANIERSP_C435DN03D9,LANIERSP_C435DN_3D9
+
+[NRG.NTamd64]
+"NRG SP C440DN PS"=NRG_SP_C440DN_64.dat,USBPRINT\NRGSP_C440DNB71E,LPTENUM\NRGSP_C440DNB71E,NRGSP_C440DNB71E
+"NRG SP C435DN PS"=NRG_SP_C435DN_64.dat,USBPRINT\NRGSP_C435DNC20F,LPTENUM\NRGSP_C435DNC20F,NRGSP_C435DNC20F
+
+[Ricoh.NTamd64]
+"RICOH SP C440DN PS"=RICOH_SP_C440DN_64.dat,USBPRINT\RICOHSP_C440DNA31C,LPTENUM\RICOHSP_C440DNA31C,RICOHSP_C440DNA31C
+"RICOH SP C435DN PS"=RICOH_SP_C435DN_64.dat,USBPRINT\RICOHSP_C435DND60D,LPTENUM\RICOHSP_C435DND60D,RICOHSP_C435DND60D
+
+[SAVIN.NTamd64]
+"SAVIN SP C440DN PS"=SAVIN_SP_C440DN_64.dat,USBPRINT\SAVINSP_C440DN4E30,LPTENUM\SAVINSP_C440DN4E30,SAVINSP_C440DN4E30
+"SAVIN SP C435DN PS"=SAVIN_SP_C435DN_64.dat,USBPRINT\SAVINSP_C435DN3B21,LPTENUM\SAVINSP_C435DN3B21,SAVINSP_C435DN3B21
+
+
+[LANIER.NTamd64.6.0]
+"LANIER SP C440DN PS"=LANIER_SP_C440DN_64_6.0.dat,USBPRINT\LANIERSP_C440DN76C8,LPTENUM\LANIERSP_C440DN76C8,LANIERSP_C440DN76C8
+"LANIER SP C435DN PS"=LANIER_SP_C435DN_64_6.0.dat,USBPRINT\LANIERSP_C435DN03D9,LPTENUM\LANIERSP_C435DN03D9,LANIERSP_C435DN03D9,LANIERSP_C435DN_3D9
+
+[NRG.NTamd64.6.0]
+"NRG SP C440DN PS"=NRG_SP_C440DN_64_6.0.dat,USBPRINT\NRGSP_C440DNB71E,LPTENUM\NRGSP_C440DNB71E,NRGSP_C440DNB71E
+"NRG SP C435DN PS"=NRG_SP_C435DN_64_6.0.dat,USBPRINT\NRGSP_C435DNC20F,LPTENUM\NRGSP_C435DNC20F,NRGSP_C435DNC20F
+
+[Ricoh.NTamd64.6.0]
+"RICOH SP C440DN PS"=RICOH_SP_C440DN_64_6.0.dat,USBPRINT\RICOHSP_C440DNA31C,LPTENUM\RICOHSP_C440DNA31C,RICOHSP_C440DNA31C
+"RICOH SP C435DN PS"=RICOH_SP_C435DN_64_6.0.dat,USBPRINT\RICOHSP_C435DND60D,LPTENUM\RICOHSP_C435DND60D,RICOHSP_C435DND60D
+
+[SAVIN.NTamd64.6.0]
+"SAVIN SP C440DN PS"=SAVIN_SP_C440DN_64_6.0.dat,USBPRINT\SAVINSP_C440DN4E30,LPTENUM\SAVINSP_C440DN4E30,SAVINSP_C440DN4E30
+"SAVIN SP C435DN PS"=SAVIN_SP_C435DN_64_6.0.dat,USBPRINT\SAVINSP_C435DN3B21,LPTENUM\SAVINSP_C435DN3B21,SAVINSP_C435DN3B21
+
+
+[LANIER_SP_C440DN_64.dat]
+CopyFiles   	= @lanp4Sd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp4Sd0.ppd
+LanguageMonitor = ricp4Slm,ricp4Slm.dll
+PrintProcessor	= "ricp4Spp,ricp4Spp.dll"
+
+[LANIER_SP_C435DN_64.dat]
+CopyFiles   	= @lanp4Sd1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp4Sd1.ppd
+LanguageMonitor = ricp4Slm,ricp4Slm.dll
+PrintProcessor	= "ricp4Spp,ricp4Spp.dll"
+
+[NRG_SP_C440DN_64.dat]
+CopyFiles   	= @nrgp4Sd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp4Sd0.ppd
+LanguageMonitor = ricp4Slm,ricp4Slm.dll
+PrintProcessor	= "ricp4Spp,ricp4Spp.dll"
+
+[NRG_SP_C435DN_64.dat]
+CopyFiles   	= @nrgp4Sd1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp4Sd1.ppd
+LanguageMonitor = ricp4Slm,ricp4Slm.dll
+PrintProcessor	= "ricp4Spp,ricp4Spp.dll"
+
+[RICOH_SP_C440DN_64.dat]
+CopyFiles   	= @ricp4Sd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp4Sd0.ppd
+LanguageMonitor = ricp4Slm,ricp4Slm.dll
+PrintProcessor	= "ricp4Spp,ricp4Spp.dll"
+
+[RICOH_SP_C435DN_64.dat]
+CopyFiles   	= @ricp4Sd1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp4Sd1.ppd
+LanguageMonitor = ricp4Slm,ricp4Slm.dll
+PrintProcessor	= "ricp4Spp,ricp4Spp.dll"
+
+[SAVIN_SP_C440DN_64.dat]
+CopyFiles   	= @savp4Sd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp4Sd0.ppd
+LanguageMonitor = ricp4Slm,ricp4Slm.dll
+PrintProcessor	= "ricp4Spp,ricp4Spp.dll"
+
+[SAVIN_SP_C435DN_64.dat]
+CopyFiles   	= @savp4Sd1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp4Sd1.ppd
+LanguageMonitor = ricp4Slm,ricp4Slm.dll
+PrintProcessor	= "ricp4Spp,ricp4Spp.dll"
+
+
+[LANIER_SP_C440DN_64_6.0.dat]
+CopyFiles   	= @lanp4Sd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp4Sd0.ppd
+LanguageMonitor	= ricp4Slm,ricp4Slm.dll
+PrintProcessor	= "ricp4Spp,ricp4Spp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[LANIER_SP_C435DN_64_6.0.dat]
+CopyFiles   	= @lanp4Sd1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp4Sd1.ppd
+LanguageMonitor	= ricp4Slm,ricp4Slm.dll
+PrintProcessor	= "ricp4Spp,ricp4Spp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[NRG_SP_C440DN_64_6.0.dat]
+CopyFiles   	= @nrgp4Sd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp4Sd0.ppd
+LanguageMonitor	= ricp4Slm,ricp4Slm.dll
+PrintProcessor	= "ricp4Spp,ricp4Spp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[NRG_SP_C435DN_64_6.0.dat]
+CopyFiles   	= @nrgp4Sd1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp4Sd1.ppd
+LanguageMonitor	= ricp4Slm,ricp4Slm.dll
+PrintProcessor	= "ricp4Spp,ricp4Spp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[RICOH_SP_C440DN_64_6.0.dat]
+CopyFiles   	= @ricp4Sd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp4Sd0.ppd
+LanguageMonitor	= ricp4Slm,ricp4Slm.dll
+PrintProcessor	= "ricp4Spp,ricp4Spp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[RICOH_SP_C435DN_64_6.0.dat]
+CopyFiles   	= @ricp4Sd1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp4Sd1.ppd
+LanguageMonitor	= ricp4Slm,ricp4Slm.dll
+PrintProcessor	= "ricp4Spp,ricp4Spp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[SAVIN_SP_C440DN_64_6.0.dat]
+CopyFiles   	= @savp4Sd0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp4Sd0.ppd
+LanguageMonitor	= ricp4Slm,ricp4Slm.dll
+PrintProcessor	= "ricp4Spp,ricp4Spp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[SAVIN_SP_C435DN_64_6.0.dat]
+CopyFiles   	= @savp4Sd1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp4Sd1.ppd
+LanguageMonitor	= ricp4Slm,ricp4Slm.dll
+PrintProcessor	= "ricp4Spp,ricp4Spp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+
+[LANIER_SP_C440DN_64.dat.Services]
+AddService = ,0x2
+
+[LANIER_SP_C435DN_64.dat.Services]
+AddService = ,0x2
+
+[NRG_SP_C440DN_64.dat.Services]
+AddService = ,0x2
+
+[NRG_SP_C435DN_64.dat.Services]
+AddService = ,0x2
+
+[RICOH_SP_C440DN_64.dat.Services]
+AddService = ,0x2
+
+[RICOH_SP_C435DN_64.dat.Services]
+AddService = ,0x2
+
+[SAVIN_SP_C440DN_64.dat.Services]
+AddService = ,0x2
+
+[SAVIN_SP_C435DN_64.dat.Services]
+AddService = ,0x2
+
+
+[LANIER_SP_C440DN_64_6.0.dat.Services]
+AddService = ,0x2
+
+[LANIER_SP_C435DN_64_6.0.dat.Services]
+AddService = ,0x2
+
+[NRG_SP_C440DN_64_6.0.dat.Services]
+AddService = ,0x2
+
+[NRG_SP_C435DN_64_6.0.dat.Services]
+AddService = ,0x2
+
+[RICOH_SP_C440DN_64_6.0.dat.Services]
+AddService = ,0x2
+
+[RICOH_SP_C435DN_64_6.0.dat.Services]
+AddService = ,0x2
+
+[SAVIN_SP_C440DN_64_6.0.dat.Services]
+AddService = ,0x2
+
+[SAVIN_SP_C435DN_64_6.0.dat.Services]
+AddService = ,0x2
+
+
+[RPD_FILES]
+ricp4Sui.dll,ricp5Xui.dll
+ricp4Sui.irj,SPC440DN.irj
+ricp4Sui.rdj
+ricp4Sui.rcf,SPC440DN.rcf
+ricp4Sug.dll,ricp5Xug.dll
+ricp4Sug.miz
+ricp4Sur.dll,ricp5Xur.dll
+ricp4Spu.dll,ricp5Xpu.dll
+ricp4Sgl.dll,ricp5Xgl.dll
+ricp4Spr.dll,ricp5Xpr.dll
+ricp4Scd.dll,ricp5Xcd.dll
+ricp4Scd.psz
+ricp4Scz.dlz,ricp4Qcz.dlz
+ricp4Scf.cfz
+ricp4Scl.ini
+ricp4Sch.chm,ricp5Xch.chm
+ricp4Sci.dll,ricp5Xci.dll
+ricp4Scj.dll,ricp5Xcj.dll
+ricp4Scb.dll,ricp5Xcb.dll
+ricp4Stl.exe,ricp5Xtl.exe
+
+[PRTPROCS]
+ricp4Spp.dll,ricp5Xpp.dll,,0x00000020
+
+[RPD_COMMON_SYS32]
+ricp4Slm.dll,ricp5Xlm.dll,,0x00000020
+
+[RPD_COMMON]
+ricdb64.dll,ricdb64.dll,,0x00000020
+mfricr64.dll,mfricr64.dll,,0x00000020
+RD04Sd64.dll,RD04Sd64.dll,,0x00000020
+
+[DestinationDirs]
+DefaultDestDir	= 66000
+PRTPROCS	= 66001
+RPD_COMMON_SYS32	 	= 66002
+
+[SourceDisksNames.amd64]
+1 = %DSK%,RICOHJBP.cab,,
+2 = %DSK%,,,
+
+[PrinterPackageInstallation.amd64]
+PackageAware	=TRUE
+
+CoreDriverDependencies	={D20EA372-DD35-4950-9ED8-A6335AFE79F1}
+
+
+[SourceDisksFiles.amd64]
+ricp5Xui.dll	= 1
+SPC440DN.irj	= 1
+ricp4Sui.rdj	= 1
+SPC440DN.rcf	= 2
+ricp5Xug.dll	= 1
+ricp4Sug.miz	= 1
+ricp5Xur.dll	= 1
+ricp5Xpu.dll	= 1
+ricp5Xgl.dll	= 1
+ricp5Xpr.dll	= 1
+ricp5Xcd.dll	= 1
+ricp4Scd.psz	= 1
+ricp4Qcz.dlz	= 1
+ricp4Scf.cfz	= 1
+ricp4Scl.ini	= 1
+ricp5Xch.chm	= 1
+ricp5Xci.dll	= 1
+ricp5Xcj.dll	= 1
+ricp5Xcb.dll	= 1
+ricp5Xtl.exe	= 1
+lanp4Sd0.ppd = 1
+lanp4Sd1.ppd = 1
+nrgp4Sd0.ppd = 1
+nrgp4Sd1.ppd = 1
+ricp4Sd0.ppd = 1
+ricp4Sd1.ppd = 1
+savp4Sd0.ppd = 1
+savp4Sd1.ppd = 1
+ricp5Xlm.dll	= 1
+ricdb64.dll	= 1
+mfricr64.dll	= 1
+RD04Sd64.dll	= 1
+ricp5Xpp.dll	= 1
+
+[Strings]
+Ricoh="Ricoh"
+LANIER="LANIER"
+NRG="NRG"
+SAVIN="SAVIN"
+DSK	= "PS Printer Driver Disk1"

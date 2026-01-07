@@ -1,0 +1,351 @@
+;------------------------------------------------------------
+; Copyright (c) 2007-2024 RICOH COMPANY, LTD
+; All Rights Reserved
+; Printer Driver Setup Information File
+;------------------------------------------------------------
+
+[Version]
+Signature   = "$Windows NT$"
+Provider    = %Ricoh%
+ClassGUID   = {4D36E979-E325-11CE-BFC1-08002BE10318}
+Class       = Printer
+DriverVer	= 06/03/2024,3.0.0.0
+CatalogFile	= RICOHJBP.cat
+
+[Manufacturer]
+%Gestetner%=Gestetner,NTamd64,NTamd64.6.0
+%LANIER%=LANIER,NTamd64,NTamd64.6.0
+%NRG%=NRG,NTamd64,NTamd64.6.0
+%Ricoh%=Ricoh,NTamd64,NTamd64.6.0
+%SAVIN%=SAVIN,NTamd64,NTamd64.6.0
+
+
+;WindowsXP(amd64)
+[Gestetner.NTamd64]
+"Gestetner MP W7100 PS"=Gestetner_MP_W7100_64.dat,USBPRINT\GestetnerMP_W7100499A,LPTENUM\GestetnerMP_W7100499A,GestetnerMP_W7100499A
+"Gestetner MP W8140 PS"=Gestetner_MP_W8140_64.dat,USBPRINT\GestetnerMP_W81409D9B,LPTENUM\GestetnerMP_W81409D9B,GestetnerMP_W81409D9B
+
+[LANIER.NTamd64]
+"LANIER MP W7100 PS"=LANIER_MP_W7100_64.dat,USBPRINT\LANIERMP_W7100A9F8,LPTENUM\LANIERMP_W7100A9F8,LANIERMP_W7100A9F8
+"LANIER MP W8140 PS"=LANIER_MP_W8140_64.dat,USBPRINT\LANIERMP_W81407DF9,LPTENUM\LANIERMP_W81407DF9,LANIERMP_W81407DF9
+
+[NRG.NTamd64]
+"NRG MP W7100 PS"=NRG_MP_W7100_64.dat,USBPRINT\NRGMP_W71003E5B,LPTENUM\NRGMP_W71003E5B,NRGMP_W71003E5B
+"NRG MP W8140 PS"=NRG_MP_W8140_64.dat,USBPRINT\NRGMP_W8140EA5A,LPTENUM\NRGMP_W8140EA5A,NRGMP_W8140EA5A
+
+[Ricoh.NTamd64]
+"RICOH MP W7100 PS"=RICOH_MP_W7100_64.dat,USBPRINT\RICOHMP_W71003C6B,LPTENUM\RICOHMP_W71003C6B,RICOHMP_W71003C6B
+"RICOH MP W8140 PS"=RICOH_MP_W8140_64.dat,USBPRINT\RICOHMP_W8140E86A,LPTENUM\RICOHMP_W8140E86A,RICOHMP_W8140E86A
+
+[SAVIN.NTamd64]
+"SAVIN MP W7100 PS"=SAVIN_MP_W7100_64.dat,USBPRINT\SAVINMP_W7100D106,LPTENUM\SAVINMP_W7100D106,SAVINMP_W7100D106
+"SAVIN MP W8140 PS"=SAVIN_MP_W8140_64.dat,USBPRINT\SAVINMP_W81400507,LPTENUM\SAVINMP_W81400507,SAVINMP_W81400507,SAVINMP_W8140_507
+
+
+[Gestetner.NTamd64.6.0]
+"Gestetner MP W7100 PS"=Gestetner_MP_W7100_64_6.0.dat,USBPRINT\GestetnerMP_W7100499A,LPTENUM\GestetnerMP_W7100499A,GestetnerMP_W7100499A
+"Gestetner MP W8140 PS"=Gestetner_MP_W8140_64_6.0.dat,USBPRINT\GestetnerMP_W81409D9B,LPTENUM\GestetnerMP_W81409D9B,GestetnerMP_W81409D9B
+
+[LANIER.NTamd64.6.0]
+"LANIER MP W7100 PS"=LANIER_MP_W7100_64_6.0.dat,USBPRINT\LANIERMP_W7100A9F8,LPTENUM\LANIERMP_W7100A9F8,LANIERMP_W7100A9F8
+"LANIER MP W8140 PS"=LANIER_MP_W8140_64_6.0.dat,USBPRINT\LANIERMP_W81407DF9,LPTENUM\LANIERMP_W81407DF9,LANIERMP_W81407DF9
+
+[NRG.NTamd64.6.0]
+"NRG MP W7100 PS"=NRG_MP_W7100_64_6.0.dat,USBPRINT\NRGMP_W71003E5B,LPTENUM\NRGMP_W71003E5B,NRGMP_W71003E5B
+"NRG MP W8140 PS"=NRG_MP_W8140_64_6.0.dat,USBPRINT\NRGMP_W8140EA5A,LPTENUM\NRGMP_W8140EA5A,NRGMP_W8140EA5A
+
+[Ricoh.NTamd64.6.0]
+"RICOH MP W7100 PS"=RICOH_MP_W7100_64_6.0.dat,USBPRINT\RICOHMP_W71003C6B,LPTENUM\RICOHMP_W71003C6B,RICOHMP_W71003C6B
+"RICOH MP W8140 PS"=RICOH_MP_W8140_64_6.0.dat,USBPRINT\RICOHMP_W8140E86A,LPTENUM\RICOHMP_W8140E86A,RICOHMP_W8140E86A
+
+[SAVIN.NTamd64.6.0]
+"SAVIN MP W7100 PS"=SAVIN_MP_W7100_64_6.0.dat,USBPRINT\SAVINMP_W7100D106,LPTENUM\SAVINMP_W7100D106,SAVINMP_W7100D106
+"SAVIN MP W8140 PS"=SAVIN_MP_W8140_64_6.0.dat,USBPRINT\SAVINMP_W81400507,LPTENUM\SAVINMP_W81400507,SAVINMP_W81400507,SAVINMP_W8140_507
+
+
+[Gestetner_MP_W7100_64.dat]
+CopyFiles   	= @gesp1Ud0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= gesp1Ud0.ppd
+LanguageMonitor = ricp1Ulm,ricp1Ulm.dll
+PrintProcessor	= "ricp1Upp,ricp1Upp.dll"
+
+[Gestetner_MP_W8140_64.dat]
+CopyFiles   	= @gesp1Ud1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= gesp1Ud1.ppd
+LanguageMonitor = ricp1Ulm,ricp1Ulm.dll
+PrintProcessor	= "ricp1Upp,ricp1Upp.dll"
+
+[LANIER_MP_W7100_64.dat]
+CopyFiles   	= @lanp1Ud0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp1Ud0.ppd
+LanguageMonitor = ricp1Ulm,ricp1Ulm.dll
+PrintProcessor	= "ricp1Upp,ricp1Upp.dll"
+
+[LANIER_MP_W8140_64.dat]
+CopyFiles   	= @lanp1Ud1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp1Ud1.ppd
+LanguageMonitor = ricp1Ulm,ricp1Ulm.dll
+PrintProcessor	= "ricp1Upp,ricp1Upp.dll"
+
+[NRG_MP_W7100_64.dat]
+CopyFiles   	= @nrgp1Ud0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp1Ud0.ppd
+LanguageMonitor = ricp1Ulm,ricp1Ulm.dll
+PrintProcessor	= "ricp1Upp,ricp1Upp.dll"
+
+[NRG_MP_W8140_64.dat]
+CopyFiles   	= @nrgp1Ud1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp1Ud1.ppd
+LanguageMonitor = ricp1Ulm,ricp1Ulm.dll
+PrintProcessor	= "ricp1Upp,ricp1Upp.dll"
+
+[RICOH_MP_W7100_64.dat]
+CopyFiles   	= @ricp1Ud0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp1Ud0.ppd
+LanguageMonitor = ricp1Ulm,ricp1Ulm.dll
+PrintProcessor	= "ricp1Upp,ricp1Upp.dll"
+
+[RICOH_MP_W8140_64.dat]
+CopyFiles   	= @ricp1Ud1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp1Ud1.ppd
+LanguageMonitor = ricp1Ulm,ricp1Ulm.dll
+PrintProcessor	= "ricp1Upp,ricp1Upp.dll"
+
+[SAVIN_MP_W7100_64.dat]
+CopyFiles   	= @savp1Ud0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp1Ud0.ppd
+LanguageMonitor = ricp1Ulm,ricp1Ulm.dll
+PrintProcessor	= "ricp1Upp,ricp1Upp.dll"
+
+[SAVIN_MP_W8140_64.dat]
+CopyFiles   	= @savp1Ud1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp1Ud1.ppd
+LanguageMonitor = ricp1Ulm,ricp1Ulm.dll
+PrintProcessor	= "ricp1Upp,ricp1Upp.dll"
+
+
+[Gestetner_MP_W7100_64_6.0.dat]
+CopyFiles   	= @gesp1Ud0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= gesp1Ud0.ppd
+LanguageMonitor	= ricp1Ulm,ricp1Ulm.dll
+PrintProcessor	= "ricp1Upp,ricp1Upp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[Gestetner_MP_W8140_64_6.0.dat]
+CopyFiles   	= @gesp1Ud1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= gesp1Ud1.ppd
+LanguageMonitor	= ricp1Ulm,ricp1Ulm.dll
+PrintProcessor	= "ricp1Upp,ricp1Upp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[LANIER_MP_W7100_64_6.0.dat]
+CopyFiles   	= @lanp1Ud0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp1Ud0.ppd
+LanguageMonitor	= ricp1Ulm,ricp1Ulm.dll
+PrintProcessor	= "ricp1Upp,ricp1Upp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[LANIER_MP_W8140_64_6.0.dat]
+CopyFiles   	= @lanp1Ud1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp1Ud1.ppd
+LanguageMonitor	= ricp1Ulm,ricp1Ulm.dll
+PrintProcessor	= "ricp1Upp,ricp1Upp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[NRG_MP_W7100_64_6.0.dat]
+CopyFiles   	= @nrgp1Ud0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp1Ud0.ppd
+LanguageMonitor	= ricp1Ulm,ricp1Ulm.dll
+PrintProcessor	= "ricp1Upp,ricp1Upp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[NRG_MP_W8140_64_6.0.dat]
+CopyFiles   	= @nrgp1Ud1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp1Ud1.ppd
+LanguageMonitor	= ricp1Ulm,ricp1Ulm.dll
+PrintProcessor	= "ricp1Upp,ricp1Upp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[RICOH_MP_W7100_64_6.0.dat]
+CopyFiles   	= @ricp1Ud0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp1Ud0.ppd
+LanguageMonitor	= ricp1Ulm,ricp1Ulm.dll
+PrintProcessor	= "ricp1Upp,ricp1Upp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[RICOH_MP_W8140_64_6.0.dat]
+CopyFiles   	= @ricp1Ud1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp1Ud1.ppd
+LanguageMonitor	= ricp1Ulm,ricp1Ulm.dll
+PrintProcessor	= "ricp1Upp,ricp1Upp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[SAVIN_MP_W7100_64_6.0.dat]
+CopyFiles   	= @savp1Ud0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp1Ud0.ppd
+LanguageMonitor	= ricp1Ulm,ricp1Ulm.dll
+PrintProcessor	= "ricp1Upp,ricp1Upp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[SAVIN_MP_W8140_64_6.0.dat]
+CopyFiles   	= @savp1Ud1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp1Ud1.ppd
+LanguageMonitor	= ricp1Ulm,ricp1Ulm.dll
+PrintProcessor	= "ricp1Upp,ricp1Upp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+
+[Gestetner_MP_W7100_64.dat.Services]
+AddService = ,0x2
+
+[Gestetner_MP_W8140_64.dat.Services]
+AddService = ,0x2
+
+[LANIER_MP_W7100_64.dat.Services]
+AddService = ,0x2
+
+[LANIER_MP_W8140_64.dat.Services]
+AddService = ,0x2
+
+[NRG_MP_W7100_64.dat.Services]
+AddService = ,0x2
+
+[NRG_MP_W8140_64.dat.Services]
+AddService = ,0x2
+
+[RICOH_MP_W7100_64.dat.Services]
+AddService = ,0x2
+
+[RICOH_MP_W8140_64.dat.Services]
+AddService = ,0x2
+
+[SAVIN_MP_W7100_64.dat.Services]
+AddService = ,0x2
+
+[SAVIN_MP_W8140_64.dat.Services]
+AddService = ,0x2
+
+
+[Gestetner_MP_W7100_64_6.0.dat.Services]
+AddService = ,0x2
+
+[Gestetner_MP_W8140_64_6.0.dat.Services]
+AddService = ,0x2
+
+[LANIER_MP_W7100_64_6.0.dat.Services]
+AddService = ,0x2
+
+[LANIER_MP_W8140_64_6.0.dat.Services]
+AddService = ,0x2
+
+[NRG_MP_W7100_64_6.0.dat.Services]
+AddService = ,0x2
+
+[NRG_MP_W8140_64_6.0.dat.Services]
+AddService = ,0x2
+
+[RICOH_MP_W7100_64_6.0.dat.Services]
+AddService = ,0x2
+
+[RICOH_MP_W8140_64_6.0.dat.Services]
+AddService = ,0x2
+
+[SAVIN_MP_W7100_64_6.0.dat.Services]
+AddService = ,0x2
+
+[SAVIN_MP_W8140_64_6.0.dat.Services]
+AddService = ,0x2
+
+
+[RPD_FILES]
+ricp1Uui.dll,ricp5Xui.dll
+ricp1Uui.irj,MP_W7100.irj
+ricp1Uui.rdj
+ricp1Uui.rcf,MP_W7100.rcf
+ricp1Uug.dll,ricp5Xug.dll
+ricp1Uug.miz
+ricp1Uur.dll,ricp5Xur.dll
+ricp1Upu.dll,ricp5Xpu.dll
+ricp1Ugl.dll,ricp5Xgl.dll
+ricp1Upr.dll,ricp5Xpr.dll
+ricp1Ucd.dll,ricp5Xcd.dll
+ricp1Ucd.psz
+ricp1Ucz.dlz,ricp1Ucz.dlz
+ricp1Ucf.cfz
+ricp1Ucl.ini
+ricp1Uch.chm,ricp5Xch.chm
+ricp1Uci.dll,ricp5Xci.dll
+ricp1Ucj.dll,ricp5Xcj.dll
+ricp1Ucb.dll,ricp5Xcb.dll
+ricp1Utl.exe,ricp5Xtl.exe
+
+[PRTPROCS]
+ricp1Upp.dll,ricp5Xpp.dll,,0x00000020
+
+[RPD_COMMON_SYS32]
+ricp1Ulm.dll,ricp5Xlm.dll,,0x00000020
+
+[RPD_COMMON]
+ricdb64.dll,ricdb64.dll,,0x00000020
+mfricr64.dll,mfricr64.dll,,0x00000020
+RD01Ud64.dll,RD01Ud64.dll,,0x00000020
+
+[DestinationDirs]
+DefaultDestDir	= 66000
+PRTPROCS	= 66001
+RPD_COMMON_SYS32	 	= 66002
+
+[SourceDisksNames.amd64]
+1 = %DSK%,RICOHJBP.cab,,
+2 = %DSK%,,,
+
+[PrinterPackageInstallation.amd64]
+PackageAware	=TRUE
+
+CoreDriverDependencies	={D20EA372-DD35-4950-9ED8-A6335AFE79F1}
+
+
+[SourceDisksFiles.amd64]
+ricp5Xui.dll	= 1
+MP_W7100.irj	= 1
+ricp1Uui.rdj	= 1
+MP_W7100.rcf	= 2
+ricp5Xug.dll	= 1
+ricp1Uug.miz	= 1
+ricp5Xur.dll	= 1
+ricp5Xpu.dll	= 1
+ricp5Xgl.dll	= 1
+ricp5Xpr.dll	= 1
+ricp5Xcd.dll	= 1
+ricp1Ucd.psz	= 1
+ricp1Ucz.dlz	= 1
+ricp1Ucf.cfz	= 1
+ricp1Ucl.ini	= 1
+ricp5Xch.chm	= 1
+ricp5Xci.dll	= 1
+ricp5Xcj.dll	= 1
+ricp5Xcb.dll	= 1
+ricp5Xtl.exe	= 1
+gesp1Ud0.ppd = 1
+gesp1Ud1.ppd = 1
+lanp1Ud0.ppd = 1
+lanp1Ud1.ppd = 1
+nrgp1Ud0.ppd = 1
+nrgp1Ud1.ppd = 1
+ricp1Ud0.ppd = 1
+ricp1Ud1.ppd = 1
+savp1Ud0.ppd = 1
+savp1Ud1.ppd = 1
+ricp5Xlm.dll	= 1
+ricdb64.dll	= 1
+mfricr64.dll	= 1
+RD01Ud64.dll	= 1
+ricp5Xpp.dll	= 1
+
+[Strings]
+Ricoh="Ricoh"
+Gestetner="Gestetner"
+LANIER="LANIER"
+NRG="NRG"
+SAVIN="SAVIN"
+DSK	= "PS Printer Driver Disk1"

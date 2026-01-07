@@ -1,0 +1,6 @@
+# Ignorar todos los archivos de memoria de usuarios
+*_memory.json
+
+# Permitir solo el README
+!README.md
+!.gitignore

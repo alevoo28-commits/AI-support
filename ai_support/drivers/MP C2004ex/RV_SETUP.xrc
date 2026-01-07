@@ -1,0 +1,2768 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<resource xmlns="http://www.wxwindows.org/wxxrc" version="2.3.0.1">
+	<object class="wxDialog" name="MainDialog">
+		<style>wxCAPTION|wxDEFAULT_DIALOG_STYLE|wxCLIP_CHILDREN</style>
+		<size>786,520</size>
+		<bg>#ffffff</bg>
+		<fg>#ffffff</fg>
+		<font>
+			<size>8</size>
+			<family>modern</family>
+			<style>normal</style>
+			<weight>normal</weight>
+			<underlined>0</underlined>
+			<face>Tahoma</face>
+		</font>
+		<title>MainDialog</title>
+		<centered>1</centered>
+		<object class="wxPanel" name="MainFrame">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,0</pos>
+			<size>786,520</size>
+		</object>
+	</object>
+	<object class="wxPanel" name="progress">
+		<style>wxCLIP_CHILDREN|wxTAB_TRAVERSAL</style>
+		<size>786,520</size>
+		<bg>#ffffff</bg>
+		<object class="wxPanel" name="progress_area">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,0</pos>
+			<size>189,472</size>
+		</object>
+		<object class="wxStaticText" name="title">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,14</pos>
+			<size>563,29</size>
+			<font>
+				<size>14</size>
+				<family>swiss</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label>title</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticLine" name="title_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>211,45</pos>
+			<size>575,4</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxStaticText" name="status">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,65</pos>
+			<size>550,14</size>
+			<label>status</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticText" name="substatus">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,79</pos>
+			<size>544,14</size>
+			<label>substatus</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxGauge" name="progress_bar" subclass="ProgressBarImpl">
+			<style>wxGA_HORIZONTAL</style>
+			<pos>213,112</pos>
+			<size>550,16</size>
+			<range>250</range>
+			<value>0</value>
+		</object>
+		<object class="wxStaticLine" name="footer_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>0,472</pos>
+			<size>783,1</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxButton" name="progress_cancel" subclass="OwnerDrawButton">
+			<pos>663,484</pos>
+			<size>96,26</size>
+			<label>progress__cancel</label>
+			<default>0</default>
+		</object>
+		<object class="wxPanel" name="footer">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,472</pos>
+			<size>786,48</size>
+			<bg>#4a4b4c</bg>
+		</object>
+	</object>
+	<object class="wxPanel" name="license_agreement">
+		<style>wxCLIP_CHILDREN|wxTAB_TRAVERSAL</style>
+		<size>786,520</size>
+		<bg>#ffffff</bg>
+		<object class="wxPanel" name="progress_area">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,0</pos>
+			<size>189,472</size>
+		</object>
+		<object class="wxStaticText" name="license_agreement_title">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,14</pos>
+			<size>563,29</size>
+			<font>
+				<size>14</size>
+				<family>swiss</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label>license__agreement__title</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticLine" name="license_agreement_title_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>211,45</pos>
+			<size>575,4</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxStaticText" name="license_agreement_message">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,65</pos>
+			<size>550,26</size>
+			<label>license__agreement__message</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxTextCtrl" name="license_agreement_license_text" subclass="ProcessEnterKeyTextCtrlImpl">
+			<style>wxTE_MULTILINE|wxTE_READONLY</style>
+			<pos>213,108</pos>
+			<size>550,282</size>
+			<value>license__agreement__license__text</value>
+		</object>
+		<object class="wxStaticLine" name="license_agreement_footer_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>0,472</pos>
+			<size>783,1</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxButton" name="license_agreement_next" subclass="OwnerDrawButton">
+			<pos>477,484</pos>
+			<size>160,26</size>
+			<label>license__agreement__next</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="license_agreement_cancel" subclass="OwnerDrawButton">
+			<pos>663,484</pos>
+			<size>96,26</size>
+			<label>license__agreement__cancel</label>
+			<default>0</default>
+		</object>
+		<object class="wxPanel" name="license_agreement_footer">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,472</pos>
+			<size>786,48</size>
+			<bg>#4a4b4c</bg>
+		</object>
+	</object>
+	<object class="wxPanel" name="setup_type">
+		<style>wxCLIP_CHILDREN|wxTAB_TRAVERSAL</style>
+		<size>786,520</size>
+		<bg>#ffffff</bg>
+		<object class="wxPanel" name="progress_area">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,0</pos>
+			<size>189,472</size>
+		</object>
+		<object class="wxStaticText" name="setup_type_title">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,14</pos>
+			<size>563,29</size>
+			<font>
+				<size>14</size>
+				<family>swiss</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label>setup__type__title</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticLine" name="setup_type_title_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>211,45</pos>
+			<size>575,4</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxStaticText" name="setup_type_message">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,65</pos>
+			<size>550,26</size>
+			<label>setup__type__message</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxRadioButton" name="setup_type_network">
+			<style>wxRB_GROUP</style>
+			<pos>213,108</pos>
+			<size>225,16</size>
+			<label>setup__type__network</label>
+			<value>0</value>
+		</object>
+		<object class="wxStaticText" name="setup_type_network_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>229,134</pos>
+			<size>532,26</size>
+			<label>setup__type__network__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticBitmap" name="setup_type_network_image">
+			<pos>213,169</pos>
+			<size>553,86</size>
+			<bitmap />
+		</object>
+		<object class="wxRadioButton" name="setup_type_usb">
+			<pos>213,269</pos>
+			<size>225,16</size>
+			<label>setup__type__usb</label>
+			<value>0</value>
+		</object>
+		<object class="wxStaticText" name="setup_type_usb_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>229,295</pos>
+			<size>532,26</size>
+			<label>setup__type__usb__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticBitmap" name="setup_type_usb_image">
+			<pos>213,329</pos>
+			<size>553,86</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticLine" name="setup_type_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>213,424</pos>
+			<size>550,1</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxButton" name="setup_type_update" subclass="OwnerDrawButton">
+			<pos>213,435</pos>
+			<size>180,26</size>
+			<label>setup__type__update</label>
+			<default>0</default>
+		</object>
+		<object class="wxStaticText" name="setup_type_update_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>403,442</pos>
+			<size>349,13</size>
+			<label>setup__type__update__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticLine" name="setup_type_footer_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>0,472</pos>
+			<size>783,1</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxButton" name="setup_type_back" subclass="OwnerDrawButton">
+			<pos>435,484</pos>
+			<size>96,26</size>
+			<label>setup__type__back</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="setup_type_next" subclass="OwnerDrawButton">
+			<pos>543,484</pos>
+			<size>96,26</size>
+			<label>setup__type__next</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="setup_type_cancel" subclass="OwnerDrawButton">
+			<pos>663,484</pos>
+			<size>96,26</size>
+			<label>setup__type__cancel</label>
+			<default>0</default>
+		</object>
+		<object class="wxPanel" name="setup_type_footer">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,472</pos>
+			<size>786,48</size>
+			<bg>#4a4b4c</bg>
+		</object>
+	</object>
+	<object class="wxPanel" name="printer_search_on_local_network">
+		<style>wxCLIP_CHILDREN|wxTAB_TRAVERSAL</style>
+		<size>786,520</size>
+		<bg>#ffffff</bg>
+		<object class="wxPanel" name="progress_area">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,0</pos>
+			<size>189,472</size>
+		</object>
+		<object class="wxStaticText" name="printer_search_on_local_network_title">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,14</pos>
+			<size>563,29</size>
+			<font>
+				<size>14</size>
+				<family>swiss</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label>printer__search__on__local__network__title</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticLine" name="printer_search_on_local_network_title_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>211,45</pos>
+			<size>575,4</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxStaticText" name="printer_search_on_local_network_message">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,65</pos>
+			<size>550,26</size>
+			<label>printer__search__on__local__network__message</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticText" name="printer_search_on_local_network_printer_search_status">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,107</pos>
+			<size>550,13</size>
+			<label>printer__search__on__local__network__printer__search__status</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxGauge" name="printer_search_on_local_network_printer_search_progress" subclass="ProgressBarImpl">
+			<style>wxGA_HORIZONTAL</style>
+			<pos>213,131</pos>
+			<size>417,16</size>
+			<range>100</range>
+			<value>0</value>
+		</object>
+		<object class="wxButton" name="printer_search_on_local_network_start_stop_searching" subclass="OwnerDrawButton">
+			<pos>633,126</pos>
+			<size>132,26</size>
+			<label>printer__search__on__local__network__start__stop__searching</label>
+			<default>0</default>
+		</object>
+		<object class="wxListCtrl" name="printer_search_on_local_network_found_printers">
+			<style>wxLC_REPORT|wxSIMPLE_BORDER</style>
+			<pos>213,157</pos>
+			<size>550,188</size>
+		</object>
+		<object class="wxButton" name="printer_search_on_local_network_other_method" subclass="OwnerDrawButton">
+			<pos>213,355</pos>
+			<size>322,26</size>
+			<label>printer__search__on__local__network__other__method</label>
+			<default>0</default>
+		</object>
+		<object class="wxCheckBox" name="printer_search_on_local_network_recommended_settings">
+			<pos>213,419</pos>
+			<size>-1,16</size>
+			<label>printer__search__on__local__network__recommended__settings</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxStaticBitmap" name="printer_search_on_local_network_recommended_settings_tooltip">
+			<pos>700,419</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticLine" name="printer_search_on_local_network_footer_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>0,472</pos>
+			<size>783,1</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxButton" name="printer_search_on_local_network_back" subclass="OwnerDrawButton">
+			<pos>435,484</pos>
+			<size>96,26</size>
+			<label>printer__search__on__local__network__back</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="printer_search_on_local_network_next" subclass="OwnerDrawButton">
+			<pos>543,484</pos>
+			<size>96,26</size>
+			<label>printer__search__on__local__network__next</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="printer_search_on_local_network_cancel" subclass="OwnerDrawButton">
+			<pos>663,484</pos>
+			<size>96,26</size>
+			<label>printer__search__on__local__network__cancel</label>
+			<default>0</default>
+		</object>
+		<object class="wxPanel" name="printer_search_on_local_network_footer">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,472</pos>
+			<size>786,48</size>
+			<bg>#4a4b4c</bg>
+		</object>
+	</object>
+	<object class="wxPanel" name="model_selection_method">
+		<style>wxCLIP_CHILDREN|wxTAB_TRAVERSAL</style>
+		<size>786,520</size>
+		<bg>#ffffff</bg>
+		<object class="wxPanel" name="progress_area">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,0</pos>
+			<size>189,472</size>
+		</object>
+		<object class="wxStaticText" name="model_selection_method_title">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,14</pos>
+			<size>563,29</size>
+			<font>
+				<size>14</size>
+				<family>swiss</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label>model__selection__method__title</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticLine" name="model_selection_method_title_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>211,45</pos>
+			<size>575,4</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxStaticText" name="model_selection_method_message">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,65</pos>
+			<size>550,26</size>
+			<label>model__selection__method__message</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxRadioButton" name="model_selection_method_ip">
+			<style>wxRB_GROUP</style>
+			<pos>213,115</pos>
+			<size>225,16</size>
+			<label>model__selection__method__ip</label>
+			<value>0</value>
+		</object>
+		<object class="wxRadioButton" name="model_selection_method_other">
+			<pos>213,269</pos>
+			<size>225,16</size>
+			<label>その他の方法</label>
+			<value>0</value>
+		</object>
+		<object class="wxStaticLine" name="model_selection_method_footer_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>0,472</pos>
+			<size>783,1</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxButton" name="model_selection_method_back" subclass="OwnerDrawButton">
+			<pos>435,484</pos>
+			<size>96,26</size>
+			<label>戻る</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="model_selection_method_next" subclass="OwnerDrawButton">
+			<pos>543,484</pos>
+			<size>96,26</size>
+			<label>次へ</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="model_selection_method_cancel" subclass="OwnerDrawButton">
+			<pos>663,484</pos>
+			<size>96,26</size>
+			<label>キャンセル</label>
+			<default>0</default>
+		</object>
+		<object class="wxPanel" name="model_selection_method_footer">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,472</pos>
+			<size>786,48</size>
+			<bg>#4a4b4c</bg>
+		</object>
+	</object>
+	<object class="wxPanel" name="printer_search_with_ip_address">
+		<style>wxCLIP_CHILDREN|wxTAB_TRAVERSAL</style>
+		<size>786,520</size>
+		<bg>#ffffff</bg>
+		<object class="wxPanel" name="progress_area">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,0</pos>
+			<size>189,472</size>
+		</object>
+		<object class="wxStaticText" name="printer_search_with_ip_address_title">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,14</pos>
+			<size>563,29</size>
+			<font>
+				<size>14</size>
+				<family>swiss</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label>printer__search__with__ip__address__title</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticLine" name="printer_search_with_ip_address_title_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>211,45</pos>
+			<size>575,4</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxStaticText" name="printer_search_with_ip_address_message_of_input_ip_address">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,65</pos>
+			<size>550,26</size>
+			<label>printer__search__with__ip__address__message__of__input__ip__address</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticText" name="printer_search_with_ip_address_ip_address_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,107</pos>
+			<size>150,13</size>
+			<label>printer__search__with__ip__address__ip__address__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="unknown" name="printer_search_with_ip_address_ip_address" />
+		<object class="wxButton" name="printer_search_with_ip_address_start_searching" subclass="OwnerDrawButton">
+			<pos>531,100</pos>
+			<size>96,26</size>
+			<label>printer__search__with__ip__address__start__searching</label>
+			<default>0</default>
+		</object>
+		<object class="wxStaticText" name="printer_search_with_ip_address_printer_search_status">
+			<pos>213,154</pos>
+			<size>550,13</size>
+			<label>printer__search__with__ip__address__printer__search__status</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxGauge" name="printer_search_with_ip_address_printer_search_progress" subclass="ProgressBarImpl">
+			<style>wxGA_HORIZONTAL</style>
+			<pos>213,182</pos>
+			<size>550,16</size>
+			<range>100</range>
+			<value>0</value>
+		</object>
+		<object class="wxListCtrl" name="printer_search_with_ip_address_found_printers" subclass="ProcessEnterKeyListCtrlImpl">
+			<style>wxLC_REPORT|wxSIMPLE_BORDER</style>
+			<pos>213,206</pos>
+			<size>550,55</size>
+		</object>
+		<object class="wxCheckBox" name="printer_search_with_ip_address_recommended_settings">
+			<pos>213,297</pos>
+			<size>-1,16</size>
+			<label>printer__search__with__ip__address__recommended__settings</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxStaticBitmap" name="printer_search_with_ip_address_recommended_settings_tooltip">
+			<pos>700,297</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticLine" name="printer_search_with_ip_address_footer_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>0,472</pos>
+			<size>783,1</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxButton" name="printer_search_with_ip_address_back" subclass="OwnerDrawButton">
+			<pos>435,484</pos>
+			<size>96,26</size>
+			<label>printer__search__with__ip__address__back</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="printer_search_with_ip_address_next" subclass="OwnerDrawButton">
+			<pos>543,484</pos>
+			<size>96,26</size>
+			<label>printer__search__with__ip__address__next</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="printer_search_with_ip_address_cancel" subclass="OwnerDrawButton">
+			<pos>663,484</pos>
+			<size>96,26</size>
+			<label>printer__search__with__ip__address__cancel</label>
+			<default>0</default>
+		</object>
+		<object class="wxPanel" name="printer_search_with_ip_address_footer">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,472</pos>
+			<size>786,48</size>
+			<bg>#4a4b4c</bg>
+		</object>
+	</object>
+	<object class="wxPanel" name="select_model_in_orchestra">
+		<style>wxCLIP_CHILDREN|wxTAB_TRAVERSAL</style>
+		<size>786,520</size>
+		<bg>#ffffff</bg>
+		<object class="wxPanel" name="progress_area">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,0</pos>
+			<size>189,472</size>
+		</object>
+		<object class="wxStaticText" name="select_model_in_orchestra_title">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,14</pos>
+			<size>563,29</size>
+			<font>
+				<size>14</size>
+				<family>swiss</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label>select__model__in__orchestra__title</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticLine" name="select_model_in_orchestra_title_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>211,45</pos>
+			<size>575,4</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxStaticText" name="select_model_in_orchestra_model_search_description">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,65</pos>
+			<size>550,26</size>
+			<label>select__model__in__orchestra__model__search__description</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticText" name="select_model_in_orchestra_model_search_input_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,107</pos>
+			<size>150,13</size>
+			<label>select__model__in__orchestra__model__search__input__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxTextCtrl" name="select_model_in_orchestra_model_search_input">
+			<pos>372,104</pos>
+			<size>234,19</size>
+			<value>select__model__in__orchestra__model__search__input</value>
+		</object>
+		<object class="wxStaticText" name="select_model_in_orchestra_model_select_list_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,159</pos>
+			<size>550,13</size>
+			<label>select__model__in__orchestra__model__select__list__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxListCtrl" name="select_model_in_orchestra_model_select_list">
+			<style>wxLC_REPORT|wxSIMPLE_BORDER</style>
+			<pos>213,178</pos>
+			<size>550,261</size>
+		</object>
+		<object class="wxStaticLine" name="select_model_in_orchestra_footer_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>0,472</pos>
+			<size>783,1</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxButton" name="select_model_in_orchestra_back" subclass="OwnerDrawButton">
+			<pos>435,484</pos>
+			<size>96,26</size>
+			<label>select__model__in__orchestra__back</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="select_model_in_orchestra_next" subclass="OwnerDrawButton">
+			<pos>543,484</pos>
+			<size>96,26</size>
+			<label>select__model__in__orchestra__next</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="select_model_in_orchestra_cancel" subclass="OwnerDrawButton">
+			<pos>663,484</pos>
+			<size>96,26</size>
+			<label>select__model__in__orchestra__cancel</label>
+			<default>0</default>
+		</object>
+		<object class="wxPanel" name="select_model_in_orchestra_footer">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,472</pos>
+			<size>786,48</size>
+			<bg>#4a4b4c</bg>
+		</object>
+	</object>
+	<object class="wxPanel" name="select_model_in_orchestra_for_usb">
+		<style>wxCLIP_CHILDREN|wxTAB_TRAVERSAL</style>
+		<size>786,520</size>
+		<bg>#ffffff</bg>
+		<object class="wxPanel" name="progress_area">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,0</pos>
+			<size>189,472</size>
+		</object>
+		<object class="wxStaticText" name="select_model_in_orchestra_for_usb_title">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,14</pos>
+			<size>563,29</size>
+			<font>
+				<size>14</size>
+				<family>swiss</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label>select__model__in__orchestra__title</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticLine" name="select_model_in_orchestra_for_usb_title_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>211,45</pos>
+			<size>575,4</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxStaticText" name="select_model_in_orchestra_for_usb_model_search_description">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,65</pos>
+			<size>550,39</size>
+			<label>select__model__in__orchestra__for__usb__model__search__description</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticText" name="select_model_in_orchestra_for_usb_model_search_input_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,120</pos>
+			<size>150,13</size>
+			<label>select__model__in__orchestra__for__usb__model__search__input__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxTextCtrl" name="select_model_in_orchestra_for_usb_model_search_input">
+			<pos>372,117</pos>
+			<size>234,19</size>
+			<value>select__model__in__orchestra__for__usb__model__search__input</value>
+		</object>
+		<object class="wxStaticText" name="select_model_in_orchestra_for_usb_model_select_list_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,159</pos>
+			<size>550,13</size>
+			<label>select__model__in__orchestra__for__usb__model__select__list__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxListCtrl" name="select_model_in_orchestra_for_usb_model_select_list">
+			<style>wxLC_REPORT|wxSIMPLE_BORDER</style>
+			<pos>213,178</pos>
+			<size>550,261</size>
+		</object>
+		<object class="wxCheckBox" name="select_model_in_orchestra_for_usb_recommended_settings">
+			<pos>213,442</pos>
+			<size>-1,16</size>
+			<label>select__model__in__orchestra__for__usb__recommended__settings</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxStaticBitmap" name="select_model_in_orchestra_for_usb_recommended_settings_tooltip">
+			<pos>700,442</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticLine" name="select_model_in_orchestra_for_usb_footer_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>0,472</pos>
+			<size>783,1</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxButton" name="select_model_in_orchestra_for_usb_back" subclass="OwnerDrawButton">
+			<pos>435,484</pos>
+			<size>96,26</size>
+			<label>select__model__in__orchestra__for__usb__back</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="select_model_in_orchestra_for_usb_next" subclass="OwnerDrawButton">
+			<pos>543,484</pos>
+			<size>96,26</size>
+			<label>select__model__in__orchestra__for__usb__next</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="select_model_in_orchestra_for_usb_cancel" subclass="OwnerDrawButton">
+			<pos>663,484</pos>
+			<size>96,26</size>
+			<label>select__model__in__orchestra__for__usb__cancel</label>
+			<default>0</default>
+		</object>
+		<object class="wxPanel" name="select_model_in_orchestra_for_usb_footer">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,472</pos>
+			<size>786,48</size>
+			<bg>#4a4b4c</bg>
+		</object>
+	</object>
+	<object class="wxPanel" name="select_software_type_to_install">
+		<style>wxCLIP_CHILDREN|wxTAB_TRAVERSAL</style>
+		<size>786,520</size>
+		<bg>#ffffff</bg>
+		<object class="wxPanel" name="progress_area">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,0</pos>
+			<size>189,472</size>
+		</object>
+		<object class="wxStaticText" name="select_software_type_to_install_title">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,14</pos>
+			<size>563,29</size>
+			<font>
+				<size>14</size>
+				<family>swiss</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label>select__software__type__to__install__title</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticLine" name="select_software_type_to_install_title_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>211,45</pos>
+			<size>575,4</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxStaticText" name="select_software_type_to_install_message">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,65</pos>
+			<size>550,26</size>
+			<label>select__software__type__to__install__message</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxCheckBox" name="select_software_type_to_install_use_printer_driver">
+			<pos>213,115</pos>
+			<size>180,16</size>
+			<label>select__software__type__to__install__use__printer__driver</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxCheckBox" name="select_software_type_to_install_use_pcfax_driver">
+			<pos>213,212</pos>
+			<size>180,16</size>
+			<label>select__software__type__to__install__use__pcfax__driver</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxStaticText" name="select_software_type_to_install_driver_pdl_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>229,149</pos>
+			<size>150,13</size>
+			<label>select__software__type__to__install__driver__pdl__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticText" name="select_software_type_to_install_pcfax_driver_pdl_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>229,246</pos>
+			<size>150,13</size>
+			<label>select__software__type__to__install__pcfax__driver__pdl__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxChoice" name="select_software_type_to_install_driver_pdl">
+			<pos>384,146</pos>
+			<size>234,48</size>
+			<selection>0</selection>
+			<content />
+		</object>
+		<object class="wxChoice" name="select_software_type_to_install_pcfax_driver_pdl">
+			<pos>384,243</pos>
+			<size>234,48</size>
+			<selection>0</selection>
+			<content />
+		</object>
+		<object class="wxStaticBitmap" name="select_software_type_to_install_driver_pdl_tooltip">
+			<pos>624,146</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticBitmap" name="select_software_type_to_install_pcfax_driver_pdl_tooltip">
+			<pos>624,243</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticLine" name="select_software_type_to_install_footer_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>0,472</pos>
+			<size>783,1</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxButton" name="select_software_type_to_install_back" subclass="OwnerDrawButton">
+			<pos>435,484</pos>
+			<size>96,26</size>
+			<label>select__software__type__to__install__back</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="select_software_type_to_install_next" subclass="OwnerDrawButton">
+			<pos>543,484</pos>
+			<size>96,26</size>
+			<label>select__software__type__to__install__next</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="select_software_type_to_install_cancel" subclass="OwnerDrawButton">
+			<pos>663,484</pos>
+			<size>96,26</size>
+			<label>select__software__type__to__install__cancel</label>
+			<default>0</default>
+		</object>
+		<object class="wxPanel" name="select_software_type_to_install_footer">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,472</pos>
+			<size>786,48</size>
+			<bg>#4a4b4c</bg>
+		</object>
+	</object>
+	<object class="wxPanel" name="printer_setting">
+		<style>wxCLIP_CHILDREN|wxTAB_TRAVERSAL</style>
+		<size>786,520</size>
+		<bg>#ffffff</bg>
+		<object class="wxPanel" name="progress_area">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,0</pos>
+			<size>189,472</size>
+		</object>
+		<object class="wxStaticText" name="printer_setting_title">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,14</pos>
+			<size>563,29</size>
+			<font>
+				<size>14</size>
+				<family>swiss</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label>printer__setting__title</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticLine" name="printer_setting_title_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>211,45</pos>
+			<size>575,4</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxStaticText" name="printer_setting_printer_setting_description">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,65</pos>
+			<size>550,26</size>
+			<label>printer__setting__printer__setting__description</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticText" name="printer_setting_driver_name_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>232,118</pos>
+			<size>150,13</size>
+			<label>printer__setting__driver__name__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxChoice" name="printer_setting_driver_name">
+			<pos>393,113</pos>
+			<size>234,48</size>
+			<selection>0</selection>
+			<content />
+		</object>
+		<object class="wxStaticBitmap" name="printer_setting_driver_name_tooltip">
+			<pos>633,113</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticBitmap" name="printer_setting_printer_name_require_image">
+			<pos>213,149</pos>
+			<size>12,12</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticText" name="printer_setting_printer_name_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>232,149</pos>
+			<size>150,13</size>
+			<label>printer__setting__printer__name__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxTextCtrl" name="printer_setting_printer_name">
+			<pos>393,146</pos>
+			<size>234,19</size>
+			<value>printer__setting__printer__name</value>
+		</object>
+		<object class="wxStaticBitmap" name="printer_setting_printer_name_tooltip">
+			<pos>633,146</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticText" name="printer_setting_comment_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>232,183</pos>
+			<size>150,13</size>
+			<label>printer__setting__comment__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxTextCtrl" name="printer_setting_comment">
+			<pos>393,178</pos>
+			<size>234,19</size>
+			<value>printer__setting__comment</value>
+		</object>
+		<object class="wxStaticBitmap" name="printer_setting_comment_tooltip">
+			<pos>633,178</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticBitmap" name="printer_setting_port_require_image">
+			<pos>213,217</pos>
+			<size>12,12</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticText" name="printer_setting_port_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>232,217</pos>
+			<size>150,13</size>
+			<label>printer__setting__port__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxChoice" name="printer_setting_port">
+			<pos>393,211</pos>
+			<size>234,48</size>
+			<selection>0</selection>
+			<content />
+		</object>
+		<object class="wxButton" name="printer_setting_add_port" subclass="OwnerDrawButton">
+			<pos>639,208</pos>
+			<size>96,26</size>
+			<label>printer__setting__add__port</label>
+			<default>0</default>
+		</object>
+		<object class="wxStaticBitmap" name="printer_setting_port_tooltip">
+			<pos>739,209</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxCheckBox" name="printer_setting_default_printer">
+			<pos>232,247</pos>
+			<size>-1,16</size>
+			<label>printer__setting__default__printer</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxStaticBitmap" name="printer_setting_default_printer_tooltip">
+			<pos>700,247</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxCheckBox" name="printer_setting_share">
+			<pos>232,305</pos>
+			<size>-1,16</size>
+			<label>printer__setting__share</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxStaticBitmap" name="printer_setting_share_tooltip">
+			<pos>700,336</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticText" name="printer_setting_shared_printer_name_label">
+			<style>wxALIGN_RIGHT|wxST_NO_AUTORESIZE</style>
+			<pos>393,307</pos>
+			<size>126,13</size>
+			<label>printer__setting__shared__printer__name__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxTextCtrl" name="printer_setting_shared_printer_name">
+			<pos>525,303</pos>
+			<size>210,19</size>
+			<value>printer__setting__shared__printer__name</value>
+		</object>
+		<object class="wxStaticBitmap" name="printer_setting_shared_printer_name_tooltip">
+			<pos>739,303</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxCheckBox" name="printer_setting_setup_with_bidi_update">
+			<pos>232,331</pos>
+			<size>-1,16</size>
+			<label>printer__setting__setup__with__bidi__update</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxStaticBitmap" name="printer_setting_setup_with_bidi_update_tooltip">
+			<pos>700,331</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxCheckBox" name="printer_setting_install_alternate_driver">
+			<pos>232,357</pos>
+			<size>-1,16</size>
+			<label>printer__setting__install__alternate__driver</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxStaticBitmap" name="printer_setting_install_alternate_driver_tooltip">
+			<pos>700,357</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticText" name="printer_setting_user_code_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>232,386</pos>
+			<size>150,13</size>
+			<label>printer__setting__user__code__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxTextCtrl" name="printer_setting_user_code">
+			<pos>393,383</pos>
+			<size>234,19</size>
+			<value>printer__setting__user__code</value>
+		</object>
+		<object class="wxStaticBitmap" name="printer_setting_user_code_tooltip">
+			<pos>633,383</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticBitmap" name="printer_setting_attention_require_image">
+			<pos>213,438</pos>
+			<size>12,12</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticText" name="printer_setting_attention">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>232,438</pos>
+			<size>202,13</size>
+			<label>printer__setting__attention</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxButton" name="printer_setting_restore_default" subclass="OwnerDrawButton">
+			<pos>625,432</pos>
+			<size>138,26</size>
+			<label>printer__setting__restore__default</label>
+			<default>0</default>
+		</object>
+		<object class="wxStaticLine" name="printer_setting_footer_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>0,472</pos>
+			<size>783,1</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxButton" name="printer_setting_back" subclass="OwnerDrawButton">
+			<pos>435,484</pos>
+			<size>96,26</size>
+			<label>printer__setting__back</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="printer_setting_next" subclass="OwnerDrawButton">
+			<pos>543,484</pos>
+			<size>96,26</size>
+			<label>printer__setting__next</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="printer_setting_cancel" subclass="OwnerDrawButton">
+			<pos>663,484</pos>
+			<size>96,26</size>
+			<label>printer__setting__cancel</label>
+			<default>0</default>
+		</object>
+		<object class="wxPanel" name="printer_setting_footer">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,472</pos>
+			<size>786,48</size>
+			<bg>#4a4b4c</bg>
+		</object>
+	</object>
+	<object class="wxPanel" name="pcfax_setting">
+		<style>wxCLIP_CHILDREN|wxTAB_TRAVERSAL</style>
+		<size>786,520</size>
+		<bg>#ffffff</bg>
+		<object class="wxPanel" name="progress_area">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,0</pos>
+			<size>189,472</size>
+		</object>
+		<object class="wxStaticText" name="pcfax_setting_title">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,14</pos>
+			<size>563,29</size>
+			<font>
+				<size>14</size>
+				<family>swiss</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label>pcfax__setting__title</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticLine" name="pcfax_setting_title_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>211,45</pos>
+			<size>575,4</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxStaticText" name="pcfax_setting_printer_setting_description">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,65</pos>
+			<size>550,26</size>
+			<label>pcfax__setting__printer__setting__description</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticText" name="pcfax_setting_driver_name_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>232,118</pos>
+			<size>150,13</size>
+			<label>pcfax__setting__driver__name__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxChoice" name="pcfax_setting_driver_name">
+			<pos>393,113</pos>
+			<size>234,48</size>
+			<selection>0</selection>
+			<content />
+		</object>
+		<object class="wxStaticBitmap" name="pcfax_setting_driver_name_tooltip">
+			<pos>633,113</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticBitmap" name="pcfax_setting_printer_name_require_image">
+			<pos>213,149</pos>
+			<size>12,12</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticText" name="pcfax_setting_printer_name_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>232,149</pos>
+			<size>150,13</size>
+			<label>pcfax__setting__printer__name__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxTextCtrl" name="pcfax_setting_printer_name">
+			<pos>393,146</pos>
+			<size>234,19</size>
+			<value>pcfax__setting__printer__name</value>
+		</object>
+		<object class="wxStaticBitmap" name="pcfax_setting_printer_name_tooltip">
+			<pos>633,146</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticText" name="pcfax_setting_comment_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>232,183</pos>
+			<size>150,13</size>
+			<label>pcfax__setting__comment__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxTextCtrl" name="pcfax_setting_comment">
+			<pos>393,178</pos>
+			<size>234,19</size>
+			<value>pcfax__setting__comment</value>
+		</object>
+		<object class="wxStaticBitmap" name="pcfax_setting_comment_tooltip">
+			<pos>633,178</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticBitmap" name="pcfax_setting_port_require_image">
+			<pos>213,217</pos>
+			<size>12,12</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticText" name="pcfax_setting_port_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>232,217</pos>
+			<size>150,13</size>
+			<label>pcfax__setting__port__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxChoice" name="pcfax_setting_port">
+			<pos>393,211</pos>
+			<size>234,48</size>
+			<selection>0</selection>
+			<content />
+		</object>
+		<object class="wxButton" name="pcfax_setting_add_port" subclass="OwnerDrawButton">
+			<pos>639,208</pos>
+			<size>96,26</size>
+			<label>pcfax__setting__add__port</label>
+			<default>0</default>
+		</object>
+		<object class="wxStaticBitmap" name="pcfax_setting_port_tooltip">
+			<pos>739,209</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxCheckBox" name="pcfax_setting_default_printer">
+			<pos>232,247</pos>
+			<size>-1,16</size>
+			<label>pcfax__setting__default__printer</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxStaticBitmap" name="pcfax_setting_default_printer_tooltip">
+			<pos>700,247</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxCheckBox" name="pcfax_setting_share">
+			<pos>232,305</pos>
+			<size>-1,16</size>
+			<label>pcfax__setting__share</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxStaticBitmap" name="pcfax_setting_share_tooltip">
+			<pos>700,336</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticText" name="pcfax_setting_shared_printer_name_label">
+			<style>wxALIGN_RIGHT|wxST_NO_AUTORESIZE</style>
+			<pos>393,307</pos>
+			<size>126,13</size>
+			<label>pcfax__setting__shared__printer__name__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxTextCtrl" name="pcfax_setting_shared_printer_name">
+			<pos>525,303</pos>
+			<size>210,19</size>
+			<value>pcfax__setting__shared__printer__name</value>
+		</object>
+		<object class="wxStaticBitmap" name="pcfax_setting_shared_printer_name_tooltip">
+			<pos>739,303</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxCheckBox" name="pcfax_setting_setup_with_bidi_update">
+			<pos>232,331</pos>
+			<size>-1,16</size>
+			<label>pcfax__setting__setup__with__bidi__update</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxStaticBitmap" name="pcfax_setting_setup_with_bidi_update_tooltip">
+			<pos>700,331</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxCheckBox" name="pcfax_setting_install_alternate_driver">
+			<pos>232,357</pos>
+			<size>-1,16</size>
+			<label>pcfax__setting__install__alternate__driver</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxStaticBitmap" name="pcfax_setting_install_alternate_driver_tooltip">
+			<pos>700,357</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticText" name="pcfax_setting_user_code_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>232,386</pos>
+			<size>150,13</size>
+			<label>pcfax__setting__user__code__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxTextCtrl" name="pcfax_setting_user_code">
+			<pos>393,383</pos>
+			<size>234,19</size>
+			<value>pcfax__setting__user__code</value>
+		</object>
+		<object class="wxStaticBitmap" name="pcfax_setting_user_code_tooltip">
+			<pos>633,383</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticBitmap" name="pcfax_setting_attention_require_image">
+			<pos>213,438</pos>
+			<size>12,12</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticText" name="pcfax_setting_attention">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>232,438</pos>
+			<size>202,13</size>
+			<label>pcfax__setting__attention</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxButton" name="pcfax_setting_restore_default" subclass="OwnerDrawButton">
+			<pos>625,432</pos>
+			<size>138,26</size>
+			<label>pcfax__setting__restore__default</label>
+			<default>0</default>
+		</object>
+		<object class="wxStaticLine" name="pcfax_setting_footer_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>0,472</pos>
+			<size>783,1</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxButton" name="pcfax_setting_back" subclass="OwnerDrawButton">
+			<pos>435,484</pos>
+			<size>96,26</size>
+			<label>pcfax__setting__back</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="pcfax_setting_next" subclass="OwnerDrawButton">
+			<pos>543,484</pos>
+			<size>96,26</size>
+			<label>pcfax__setting__next</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="pcfax_setting_cancel" subclass="OwnerDrawButton">
+			<pos>663,484</pos>
+			<size>96,26</size>
+			<label>pcfax__setting__cancel</label>
+			<default>0</default>
+		</object>
+		<object class="wxPanel" name="pcfax_setting_footer">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,472</pos>
+			<size>786,48</size>
+			<bg>#4a4b4c</bg>
+		</object>
+	</object>
+	<object class="wxPanel" name="status_monitor_setting">
+		<style>wxCLIP_CHILDREN|wxTAB_TRAVERSAL</style>
+		<size>786,520</size>
+		<bg>#ffffff</bg>
+		<object class="wxStaticText" name="status_monitor_setting_title">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,14</pos>
+			<size>570,29</size>
+			<font>
+				<size>14</size>
+				<family>swiss</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label>status__monitor__setting__title</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticText" name="status_monitor_setting_message_1">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,65</pos>
+			<size>550,26</size>
+			<label>status__monitor__setting__message__1</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticText" name="status_monitor_setting_message_2">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>399,95</pos>
+			<size>363,113</size>
+			<label>status__monitor__setting__message__2</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxChoice" name="status_monitor_setting_display_setting">
+			<pos>232,250</pos>
+			<size>321,48</size>
+			<selection>0</selection>
+			<content />
+		</object>
+		<object class="wxCheckBox" name="status_monitor_setting_always_on_top">
+			<pos>232,279</pos>
+			<size>-1,16</size>
+			<label>status__monitor__setting__always__on__top</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxCheckBox" name="status_monitor_setting_only_when_error_occur">
+			<pos>232,299</pos>
+			<size>-1,16</size>
+			<label>status__monitor__setting__only__when__error__occur</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxCheckBox" name="status_monitor_setting_start_monitoring_when_pc_starts">
+			<pos>232,318</pos>
+			<size>-1,16</size>
+			<label>status__monitor__setting__start__monitoring__when__pc__starts</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxCheckBox" name="status_monitor_setting_monitor_by_one_monitor">
+			<pos>232,338</pos>
+			<size>-1,16</size>
+			<label>status__monitor__setting__monitor__by__one__monitor</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxCheckBox" name="status_monitor_setting_always_display_icon">
+			<pos>232,357</pos>
+			<size>-1,16</size>
+			<label>status__monitor__setting__always__display__icon</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxCheckBox" name="status_monitor_setting_notify_cartridge_replacement">
+			<pos>232,377</pos>
+			<size>-1,16</size>
+			<label>status__monitor__setting__notify__cartridge__replacement</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxStaticText" name="status_monitor_setting_refresh_status_monitor">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>232,432</pos>
+			<size>270,13</size>
+			<label>status__monitor__setting__refresh__status__monitor</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxSpinCtrl" name="status_monitor_setting_refresh_interval_seconds_value">
+			<style>wxSP_ARROW_KEYS</style>
+			<pos>508,427</pos>
+			<size>45,22</size>
+			<value>0</value>
+			<min>0</min>
+			<max>10</max>
+		</object>
+		<object class="wxButton" name="status_monitor_setting_restore_default" subclass="OwnerDrawButton">
+			<pos>625,432</pos>
+			<size>138,26</size>
+			<label>status__monitor__setting__restore__default</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="status_monitor_setting_back" subclass="OwnerDrawButton">
+			<pos>435,484</pos>
+			<size>96,26</size>
+			<label>status__monitor__setting__back</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="status_monitor_setting_next" subclass="OwnerDrawButton">
+			<pos>543,484</pos>
+			<size>96,26</size>
+			<label>status__monitor__setting__next</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="status_monitor_setting_cancel" subclass="OwnerDrawButton">
+			<pos>663,484</pos>
+			<size>96,26</size>
+			<label>status__monitor__setting__cancel</label>
+			<default>0</default>
+		</object>
+		<object class="wxPanel" name="progress_area">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,0</pos>
+			<size>189,472</size>
+		</object>
+		<object class="wxStaticLine" name="status_monitor_setting_title_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>211,45</pos>
+			<size>574,4</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxStaticLine" name="status_monitor_setting_footer_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>0,472</pos>
+			<size>783,1</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxStaticBitmap" name="status_monitor_setting_status_monitor_image">
+			<pos>213,95</pos>
+			<size>142,118</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticBitmap" name="status_monitor_setting_display_setting_tooltip">
+			<pos>555,248</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticBitmap" name="status_monitor_setting_monitor_by_one_monitor_tooltip">
+			<pos>700,338</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticBitmap" name="status_monitor_setting_refresh_interval_seconds_value_tooltip">
+			<pos>555,427</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxPanel" name="status_monitor_setting_footer">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,472</pos>
+			<size>786,48</size>
+			<bg>#4a4b4c</bg>
+		</object>
+	</object>
+	<object class="wxPanel" name="online_user_registration">
+		<style>wxCLIP_CHILDREN|wxTAB_TRAVERSAL</style>
+		<size>786,520</size>
+		<bg>#ffffff</bg>
+		<object class="wxStaticText" name="online_user_registration_title">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,14</pos>
+			<size>550,29</size>
+			<font>
+				<size>14</size>
+				<family>swiss</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label>online__user__registration__title</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticText" name="online_user_registration_message">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,65</pos>
+			<size>550,91</size>
+			<label>online__user__registration__message</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticText" name="online_user_registration_message_of_support_information">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,380</pos>
+			<size>550,65</size>
+			<label>online__user__registration__message__of__support__information</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticBitmap" name="online_user_registration_customer_image">
+			<pos>568,173</pos>
+			<size>160,159</size>
+			<bitmap />
+		</object>
+		<object class="wxButton" name="online_user_registration_open_online_user_registration_page" subclass="OwnerDrawButton">
+			<pos>255,245</pos>
+			<size>270,78</size>
+			<label>online__user__registration__open__online__user__registration__page</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="online_user_registration_next" subclass="OwnerDrawButton">
+			<pos>663,484</pos>
+			<size>96,26</size>
+			<label>online__user__registration__next</label>
+			<default>0</default>
+		</object>
+		<object class="wxPanel" name="progress_area">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,0</pos>
+			<size>189,472</size>
+		</object>
+		<object class="wxStaticLine" name="online_user_registration_title_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>211,45</pos>
+			<size>574,4</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxStaticLine" name="online_user_registration_footer_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>0,472</pos>
+			<size>786,1</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxPanel" name="online_user_registration_footer">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,472</pos>
+			<size>786,48</size>
+			<bg>#4a4b4c</bg>
+		</object>
+	</object>
+	<object class="wxPanel" name="device_property">
+		<style>wxCLIP_CHILDREN|wxTAB_TRAVERSAL</style>
+		<size>786,520</size>
+		<bg>#ffffff</bg>
+		<object class="wxStaticText" name="device_property_title">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,14</pos>
+			<size>570,29</size>
+			<font>
+				<size>14</size>
+				<family>swiss</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label>device__property__title</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticText" name="device_property_message">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,65</pos>
+			<size>550,26</size>
+			<label>device__property__message</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticText" name="device_property_message_2">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>435,95</pos>
+			<size>324,269</size>
+			<label>device__property__message__2</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxButton" name="device_property_open_device_property" subclass="OwnerDrawButton">
+			<pos>543,390</pos>
+			<size>220,26</size>
+			<label>device__property__open__device__property</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="device_property_next" subclass="OwnerDrawButton">
+			<pos>663,484</pos>
+			<size>96,26</size>
+			<label>device__property__next</label>
+			<default>0</default>
+		</object>
+		<object class="wxPanel" name="progress_area">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,0</pos>
+			<size>189,472</size>
+		</object>
+		<object class="wxStaticLine" name="device_property_title_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>211,45</pos>
+			<size>574,4</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxStaticLine" name="device_property_footer_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>0,472</pos>
+			<size>786,1</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxPanel" name="device_property_footer">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,472</pos>
+			<size>786,48</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxStaticBitmap" name="device_property_driver_options_image">
+			<pos>213,136</pos>
+			<size>180,136</size>
+			<bitmap />
+		</object>
+	</object>
+	<object class="wxPanel" name="report">
+		<style>wxCLIP_CHILDREN|wxTAB_TRAVERSAL</style>
+		<size>786,520</size>
+		<bg>#ffffff</bg>
+		<object class="wxPanel" name="progress_area">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,0</pos>
+			<size>189,472</size>
+		</object>
+		<object class="wxStaticText" name="report_title">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,14</pos>
+			<size>563,29</size>
+			<font>
+				<size>14</size>
+				<family>swiss</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label>report__title</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticLine" name="report_title_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>211,45</pos>
+			<size>575,4</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxStaticText" name="report_result_description">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,65</pos>
+			<size>550,13</size>
+			<label>report__result__description</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticText" name="report_result_details_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,94</pos>
+			<size>550,13</size>
+			<label>report__result__details__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxTextCtrl" name="report_result_details" subclass="ProcessEnterKeyTextCtrlImpl">
+			<style>wxTE_MULTILINE|wxTE_READONLY</style>
+			<pos>213,113</pos>
+			<size>550,209</size>
+			<value>report__result__details</value>
+		</object>
+		<object class="wxStaticText" name="report_reboot_timing_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,347</pos>
+			<size>550,26</size>
+			<label>report__reboot__timing__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxRadioButton" name="report_reboot_now">
+			<style>wxRB_GROUP</style>
+			<pos>213,396</pos>
+			<size>300,16</size>
+			<label>report__reboot__now</label>
+			<value>0</value>
+		</object>
+		<object class="wxRadioButton" name="report_reboot_later">
+			<pos>213,424</pos>
+			<size>300,16</size>
+			<label>report__reboot__later</label>
+			<value>0</value>
+		</object>
+		<object class="wxStaticText" name="report_test_page_print_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,330</pos>
+			<size>550,13</size>
+			<label>report__test__page__print__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxChoice" name="report_test_page_print_icon_name">
+			<pos>213,350</pos>
+			<size>322,48</size>
+			<selection>0</selection>
+			<content />
+		</object>
+		<object class="wxButton" name="report_test_page_print_execution" subclass="OwnerDrawButton">
+			<pos>213,378</pos>
+			<size>157,26</size>
+			<label>report__test__page__print__execution</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="report_open_document_property" subclass="OwnerDrawButton">
+			<pos>213,410</pos>
+			<size>157,26</size>
+			<label>report__open__document__property</label>
+			<default>0</default>
+		</object>
+		<object class="wxStaticBitmap" name="report_display_two_sided_printing_description_image">
+			<pos>374,410</pos>
+			<size>12,12</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticText" name="report_display_two_sided_printing_description">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>390,410</pos>
+			<size>380,26</size>
+			<label>report__display__two__sided__printing__description</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxCheckBox" name="report_open_html_setting">
+			<pos>213,442</pos>
+			<size>322,16</size>
+			<label>report__open__html__setting</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxStaticLine" name="report_footer_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>0,472</pos>
+			<size>783,1</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxButton" name="report_complete" subclass="OwnerDrawButton">
+			<pos>663,484</pos>
+			<size>96,26</size>
+			<label>完了</label>
+			<default>0</default>
+		</object>
+		<object class="wxPanel" name="report_footer">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,472</pos>
+			<size>786,48</size>
+			<bg>#4a4b4c</bg>
+		</object>
+	</object>
+	<object class="wxPanel" name="select_driver">
+		<style>wxCLIP_CHILDREN|wxTAB_TRAVERSAL</style>
+		<size>786,520</size>
+		<bg>#ffffff</bg>
+		<object class="wxPanel" name="progress_area">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,0</pos>
+			<size>189,472</size>
+		</object>
+		<object class="wxStaticText" name="select_driver_title">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,14</pos>
+			<size>563,29</size>
+			<font>
+				<size>14</size>
+				<family>swiss</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label>select__driver__title</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticLine" name="select_driver_title_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>211,45</pos>
+			<size>575,4</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxStaticText" name="select_driver_message">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,65</pos>
+			<size>550,26</size>
+			<label>select__driver__message</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticText" name="select_driver_driver_name_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,118</pos>
+			<size>150,13</size>
+			<label>printer__setting__driver__name__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxChoice" name="select_driver_driver_name">
+			<pos>367,115</pos>
+			<size>234,48</size>
+			<selection>0</selection>
+			<content />
+		</object>
+		<object class="wxStaticBitmap" name="select_driver_driver_name_tooltip">
+			<pos>607,115</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxCheckBox" name="select_driver_default_printer">
+			<pos>367,152</pos>
+			<size>393,16</size>
+			<label>select__driver__default__printer</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxStaticBitmap" name="select_driver_default_printer_tooltip">
+			<pos>700,152</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxCheckBox" name="select_driver_setup_with_bidi_update">
+			<pos>367,178</pos>
+			<size>393,16</size>
+			<label>select__driver__setup__with__bidi__update</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxStaticBitmap" name="select_driver_setup_with_bidi_update_tooltip">
+			<pos>700,152</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticLine" name="select_driver_footer_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>0,472</pos>
+			<size>783,1</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxButton" name="select_driver_back" subclass="OwnerDrawButton">
+			<pos>435,484</pos>
+			<size>96,26</size>
+			<label>戻る</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="select_driver_next" subclass="OwnerDrawButton">
+			<pos>543,484</pos>
+			<size>96,26</size>
+			<label>次へ</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="select_driver_cancel" subclass="OwnerDrawButton">
+			<pos>663,484</pos>
+			<size>96,26</size>
+			<label>キャンセル</label>
+			<default>0</default>
+		</object>
+		<object class="wxPanel" name="select_driver_footer">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,472</pos>
+			<size>786,48</size>
+			<bg>#4a4b4c</bg>
+		</object>
+	</object>
+	<object class="wxPanel" name="printer_power_off">
+		<style>wxCLIP_CHILDREN|wxTAB_TRAVERSAL</style>
+		<size>786,520</size>
+		<bg>#ffffff</bg>
+		<object class="wxPanel" name="progress_area">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,0</pos>
+			<size>189,472</size>
+		</object>
+		<object class="wxStaticText" name="printer_power_off_title">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,14</pos>
+			<size>563,29</size>
+			<font>
+				<size>14</size>
+				<family>swiss</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label>printer__power__off__title</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticLine" name="printer_power_off_title_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>211,45</pos>
+			<size>575,4</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxStaticText" name="printer_power_off_message">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,65</pos>
+			<size>550,26</size>
+			<label>printer__power__off__message</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticBitmap" name="disconnect_usb_image">
+			<pos>213,139</pos>
+			<size>238,113</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticBitmap" name="number1">
+			<pos>462,141</pos>
+			<size>25,25</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticText" name="printer_power_off_step1_description">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>496,146</pos>
+			<size>270,104</size>
+			<label>printer__power__off__step1__description</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticBitmap" name="printer_power_off_image">
+			<pos>213,302</pos>
+			<size>238,113</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticBitmap" name="number2">
+			<pos>462,302</pos>
+			<size>25,25</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticText" name="printer_power_off_step2_description">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>496,305</pos>
+			<size>270,104</size>
+			<label>printer__power__off__step2__description</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticLine" name="printer_power_off_footer_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>0,472</pos>
+			<size>783,1</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxButton" name="printer_power_off_back" subclass="OwnerDrawButton">
+			<pos>435,484</pos>
+			<size>96,26</size>
+			<label>printer__power__off__back</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="printer_power_off_next" subclass="OwnerDrawButton">
+			<pos>543,484</pos>
+			<size>96,26</size>
+			<label>printer__power__off__next</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="printer_power_off_cancel" subclass="OwnerDrawButton">
+			<pos>663,484</pos>
+			<size>96,26</size>
+			<label>printer__power__off__cancel</label>
+			<default>0</default>
+		</object>
+		<object class="wxPanel" name="printer_power_off_footer">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,472</pos>
+			<size>786,48</size>
+			<bg>#4a4b4c</bg>
+		</object>
+	</object>
+	<object class="wxPanel" name="printer_power_on">
+		<style>wxCLIP_CHILDREN|wxTAB_TRAVERSAL</style>
+		<size>786,520</size>
+		<bg>#ffffff</bg>
+		<object class="wxPanel" name="progress_area">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,0</pos>
+			<size>189,472</size>
+		</object>
+		<object class="wxStaticText" name="printer_power_on_title">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,14</pos>
+			<size>563,29</size>
+			<font>
+				<size>14</size>
+				<family>swiss</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label>printer__power__on__title</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticLine" name="printer_power_on_title_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>211,45</pos>
+			<size>575,4</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxStaticText" name="printer_power_on_message">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,65</pos>
+			<size>550,26</size>
+			<label>printer__power__on__message</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticBitmap" name="connect_usb_image">
+			<pos>216,115</pos>
+			<size>176,76</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticBitmap" name="number1">
+			<pos>402,115</pos>
+			<size>25,25</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticText" name="printer_power_on_step1_description">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>436,117</pos>
+			<size>330,68</size>
+			<label>printer__power__off__step1__description</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticBitmap" name="printer_power_on_image">
+			<pos>216,201</pos>
+			<size>176,76</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticBitmap" name="number2">
+			<pos>402,201</pos>
+			<size>25,25</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticText" name="printer_power_on_step2_description">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>436,206</pos>
+			<size>330,68</size>
+			<label>printer__power__off__step2__description</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticText" name="printer_power_on_status">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,295</pos>
+			<size>550,13</size>
+			<label>printer__power__on__status</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxGauge" name="printer_power_on_progress" subclass="ProgressBarImpl">
+			<style>wxGA_HORIZONTAL</style>
+			<pos>213,323</pos>
+			<size>550,16</size>
+			<range>250</range>
+			<value>0</value>
+		</object>
+		<object class="wxTextCtrl" name="printer_power_on_attention" subclass="ProcessEnterKeyTextCtrlImpl">
+			<style>wxTE_MULTILINE|wxTE_READONLY</style>
+			<pos>213,347</pos>
+			<size>550,107</size>
+			<value>printer__power__on__attention</value>
+		</object>
+		<object class="wxStaticLine" name="printer_power_on_footer_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>0,472</pos>
+			<size>783,1</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxButton" name="printer_power_on_cancel" subclass="OwnerDrawButton">
+			<pos>549,484</pos>
+			<size>210,26</size>
+			<label>printer__power__on__cancel</label>
+			<default>0</default>
+		</object>
+		<object class="wxPanel" name="printer_power_on_footer">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,472</pos>
+			<size>786,48</size>
+			<bg>#4a4b4c</bg>
+		</object>
+	</object>
+	<object class="wxPanel" name="select_update_printer_driver">
+		<style>wxCLIP_CHILDREN|wxTAB_TRAVERSAL</style>
+		<size>786,520</size>
+		<bg>#ffffff</bg>
+		<object class="wxPanel" name="progress_area">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,0</pos>
+			<size>189,472</size>
+		</object>
+		<object class="wxStaticText" name="select_update_printer_driver_title">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,14</pos>
+			<size>563,29</size>
+			<font>
+				<size>14</size>
+				<family>swiss</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label>select__update__printer__driver__title</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticLine" name="select_update_printer_driver_title_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>211,45</pos>
+			<size>575,4</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxStaticText" name="select_update_printer_driver_message">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,65</pos>
+			<size>550,26</size>
+			<label>select__update__printer__driver__message</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticText" name="select_update_printer_driver_updatable_printers_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>214,115</pos>
+			<size>550,13</size>
+			<label>select__update__printer__driver__updatable__printers__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxListCtrl" name="select_update_printer_driver_updatable_printers" subclass="ProcessEnterKeyListCtrlImpl">
+			<style>wxLC_REPORT|wxSIMPLE_BORDER</style>
+			<pos>213,134</pos>
+			<size>550,188</size>
+		</object>
+		<object class="wxRadioButton" name="select_update_printer_driver_update">
+			<style>wxRB_GROUP</style>
+			<pos>213,354</pos>
+			<size>225,16</size>
+			<label>select__update__printer__driver__update</label>
+			<value>0</value>
+		</object>
+		<object class="wxRadioButton" name="select_update_printer_driver_not_update">
+			<pos>213,380</pos>
+			<size>225,16</size>
+			<label>select__update__printer__driver__not__update</label>
+			<value>0</value>
+		</object>
+		<object class="wxStaticLine" name="select_update_printer_driver_footer_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>0,472</pos>
+			<size>783,1</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxButton" name="select_update_printer_driver_back" subclass="OwnerDrawButton">
+			<pos>435,484</pos>
+			<size>96,26</size>
+			<label>select__update__printer__driver__back</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="select_update_printer_driver_next" subclass="OwnerDrawButton">
+			<pos>543,484</pos>
+			<size>96,26</size>
+			<label>select__update__printer__driver__next</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="select_update_printer_driver_cancel" subclass="OwnerDrawButton">
+			<pos>663,484</pos>
+			<size>96,26</size>
+			<label>select__update__printer__driver__cancel</label>
+			<default>0</default>
+		</object>
+		<object class="wxPanel" name="select_update_printer_driver_footer">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,472</pos>
+			<size>786,48</size>
+			<bg>#4a4b4c</bg>
+		</object>
+	</object>
+	<object class="wxPanel" name="select_model_in_web_package">
+		<style>wxCLIP_CHILDREN|wxTAB_TRAVERSAL</style>
+		<size>786,520</size>
+		<bg>#ffffff</bg>
+		<object class="wxPanel" name="progress_area">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,0</pos>
+			<size>189,472</size>
+		</object>
+		<object class="wxStaticText" name="select_model_in_web_package_title">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,14</pos>
+			<size>563,29</size>
+			<font>
+				<size>14</size>
+				<family>swiss</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label>select__model__in__web__package__title</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticLine" name="select_model_in_web_package_title_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>211,45</pos>
+			<size>575,4</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxStaticText" name="select_model_in_web_package_message">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,65</pos>
+			<size>550,26</size>
+			<label>select__model__in__web__package__message</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticText" name="select_model_in_web_package_driver_list_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,118</pos>
+			<size>150,13</size>
+			<label>select__model__in__web__package__driver__list__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxChoice" name="select_model_in_web_package_driver_list">
+			<pos>372,115</pos>
+			<size>234,48</size>
+			<selection>0</selection>
+			<content />
+		</object>
+		<object class="wxStaticLine" name="select_model_in_web_package_footer_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>0,472</pos>
+			<size>783,1</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxButton" name="select_model_in_web_package_back" subclass="OwnerDrawButton">
+			<pos>435,484</pos>
+			<size>96,26</size>
+			<label>select__model__in__web__package__back</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="select_model_in_web_package_next" subclass="OwnerDrawButton">
+			<pos>543,484</pos>
+			<size>96,26</size>
+			<label>select__model__in__web__package__next</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="select_model_in_web_package_cancel" subclass="OwnerDrawButton">
+			<pos>663,484</pos>
+			<size>96,26</size>
+			<label>select__model__in__web__package__cancel</label>
+			<default>0</default>
+		</object>
+		<object class="wxPanel" name="select_model_in_web_package_footer">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,472</pos>
+			<size>786,48</size>
+			<bg>#4a4b4c</bg>
+		</object>
+	</object>
+	<object class="wxPanel" name="select_model_in_web_package_for_usb">
+		<style>wxCLIP_CHILDREN|wxTAB_TRAVERSAL</style>
+		<size>786,520</size>
+		<bg>#ffffff</bg>
+		<object class="wxPanel" name="progress_area">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,0</pos>
+			<size>189,472</size>
+		</object>
+		<object class="wxStaticText" name="select_model_in_web_package_for_usb_title">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,14</pos>
+			<size>563,29</size>
+			<font>
+				<size>14</size>
+				<family>swiss</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label>select__model__in__web__package__for__usb__title</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticLine" name="select_model_in_web_package_for_usb_title_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>211,45</pos>
+			<size>575,4</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxStaticText" name="select_model_in_web_package_for_usb_message">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,65</pos>
+			<size>550,26</size>
+			<label>select__model__in__web__package__for__usb__message</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticText" name="select_model_in_web_package_for_usb_driver_list_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,118</pos>
+			<size>150,13</size>
+			<label>select__model__in__web__package__for__usb__driver__list__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxChoice" name="select_model_in_web_package_for_usb_driver_list">
+			<pos>372,115</pos>
+			<size>234,48</size>
+			<selection>0</selection>
+			<content />
+		</object>
+		<object class="wxCheckBox" name="select_model_in_web_package_for_usb_recommended_settings">
+			<pos>213,178</pos>
+			<size>-1,16</size>
+			<label>select__model__in__web__package__for__usb__recommended__settings</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxStaticBitmap" name="select_model_in_web_package_for_usb_recommended_settings_tooltip">
+			<pos>700,178</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticLine" name="select_model_in_web_package_for_usb_footer_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>0,472</pos>
+			<size>783,1</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxButton" name="select_model_in_web_package_for_usb_back" subclass="OwnerDrawButton">
+			<pos>435,484</pos>
+			<size>96,26</size>
+			<label>select__model__in__web__package__for__usb__back</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="select_model_in_web_package_for_usb_next" subclass="OwnerDrawButton">
+			<pos>543,484</pos>
+			<size>96,26</size>
+			<label>select__model__in__web__package__for__usb__next</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="select_model_in_web_package_for_usb_cancel" subclass="OwnerDrawButton">
+			<pos>663,484</pos>
+			<size>96,26</size>
+			<label>select__model__in__web__package__for__usb__cancel</label>
+			<default>0</default>
+		</object>
+		<object class="wxPanel" name="select_model_in_web_package_for_usb_footer">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,472</pos>
+			<size>786,48</size>
+			<bg>#4a4b4c</bg>
+		</object>
+	</object>
+	<object class="wxDialog" name="UpdateProgramsDialog">
+		<style>wxCAPTION|wxDEFAULT_DIALOG_STYLE|wxCLIP_CHILDREN</style>
+		<size>350,250</size>
+		<title>UpdateProgramsDialog</title>
+		<centered>1</centered>
+		<object class="wxPanel" name="UpdateProgramsFrame">
+			<style>wxTAB_TRAVERSAL</style>
+			<size>350,250</size>
+		</object>
+	</object>
+	<object class="wxPanel" name="update_programs">
+		<style>wxTAB_TRAVERSAL</style>
+		<size>350,250</size>
+		<object class="wxStaticText" name="update_programs_confirmation_message">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>50,20</pos>
+			<size>250,150</size>
+			<label>update__programs__confirmation__message</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxButton" name="update_programs_yes" subclass="OwnerDrawButton">
+			<pos>50,200</pos>
+			<size>86,30</size>
+			<label>update__programs__yes</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="update_programs_no" subclass="OwnerDrawButton">
+			<pos>214,200</pos>
+			<size>86,30</size>
+			<label>update__programs__no</label>
+			<default>0</default>
+		</object>
+	</object>
+	<object class="wxDialog" name="PrinterSearchErrorDialog">
+		<style>wxCAPTION|wxDEFAULT_DIALOG_STYLE|wxCLIP_CHILDREN</style>
+		<size>521,451</size>
+		<title>PrinterSearchErrorDialog</title>
+		<centered>1</centered>
+		<object class="wxPanel" name="PrinterSearchErrorFrame">
+			<style>wxTAB_TRAVERSAL</style>
+			<size>521,451</size>
+		</object>
+	</object>
+	<object class="wxPanel" name="printer_search_error">
+		<style>wxCLIP_CHILDREN|wxTAB_TRAVERSAL</style>
+		<size>521,451</size>
+		<object class="wxStaticBitmap" name="error">
+			<pos>27,19</pos>
+			<size>40,40</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticText" name="printer_search_error_message">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>79,32</pos>
+			<size>427,13</size>
+			<font>
+				<size>8</size>
+				<family>swiss</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label>printer__search__error__message</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticBitmap" name="network_printer_power_on_image">
+			<pos>27,78</pos>
+			<size>165,98</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticBitmap" name="number1">
+			<pos>201,78</pos>
+			<size>25,25</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticText" name="printer_search_error_step1_description">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>237,82</pos>
+			<size>270,87</size>
+			<label>printer__search__error__step1__description</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticBitmap" name="network_connect_lan_image">
+			<pos>27,186</pos>
+			<size>165,98</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticBitmap" name="number2">
+			<pos>201,186</pos>
+			<size>25,25</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticText" name="printer_search_error_step2_description">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>238,191</pos>
+			<size>270,87</size>
+			<label>printer__search__error__step2__description</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticBitmap" name="network_confirm_ip_address_image">
+			<pos>27,295</pos>
+			<size>165,98</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticBitmap" name="number3">
+			<pos>201,297</pos>
+			<size>25,25</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticText" name="printer_search_error_step3_description">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>238,300</pos>
+			<size>270,87</size>
+			<label>printer__search__error__step3__description</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxButton" name="printer_search_error_ok" subclass="OwnerDrawButton">
+			<pos>412,412</pos>
+			<size>96,26</size>
+			<label>printer__search__error__ok</label>
+			<default>0</default>
+		</object>
+	</object>
+	<object class="wxDialog" name="AddPortDialog">
+		<style>wxCAPTION|wxDEFAULT_DIALOG_STYLE|wxCLIP_CHILDREN</style>
+		<size>402,326</size>
+		<title>AddPortDialog</title>
+		<centered>1</centered>
+		<object class="wxPanel" name="AddPortFrame">
+			<style>wxTAB_TRAVERSAL</style>
+			<size>402,326</size>
+		</object>
+	</object>
+	<object class="wxPanel" name="add_port">
+		<style>wxTAB_TRAVERSAL</style>
+		<size>402,326</size>
+		<object class="wxStaticText" name="add_port_message">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>27,22</pos>
+			<size>351,13</size>
+			<label>add__port__message</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticText" name="add_port_port_type_label">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>25,61</pos>
+			<size>351,13</size>
+			<label>add__port__port__type__label</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxListBox" name="add_port_port_type">
+			<pos>25,81</pos>
+			<size>351,183</size>
+			<content />
+		</object>
+		<object class="wxButton" name="add_port_ok" subclass="OwnerDrawButton">
+			<pos>174,284</pos>
+			<size>96,26</size>
+			<label>add__port__ok</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="add_port_cancel" subclass="OwnerDrawButton">
+			<pos>282,284</pos>
+			<size>96,26</size>
+			<label>add__port__cancel</label>
+			<default>0</default>
+		</object>
+	</object>
+	<object class="wxDialog" name="AddIPPPortDialog">
+		<style>wxCAPTION|wxDEFAULT_DIALOG_STYLE|wxCLIP_CHILDREN</style>
+		<size>400,136</size>
+		<title>AddIPPPortDialog</title>
+		<centered>1</centered>
+		<object class="wxPanel" name="AddIPPPortFrame">
+			<style>wxTAB_TRAVERSAL</style>
+			<size>400,136</size>
+		</object>
+	</object>
+	<object class="wxPanel" name="add_ipp_port">
+		<style>wxTAB_TRAVERSAL</style>
+		<size>400,136</size>
+		<object class="wxStaticText" name="add_ipp_port_message">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>16,16</pos>
+			<size>350,16</size>
+			<label>add__ipp__port__message</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxTextCtrl" name="add_ipp_port_port_name">
+			<pos>16,38</pos>
+			<size>355,23</size>
+			<value>add__ipp__port__port__name</value>
+		</object>
+		<object class="wxStaticBitmap" name="add_ipp_port_port_name_tooltip">
+			<pos>372,38</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxCheckBox" name="add_ipp_port_port_authentication">
+			<pos>16,68</pos>
+			<size>150,26</size>
+			<label>Check Me!</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxStaticBitmap" name="add_ipp_port_port_authentication_tooltip">
+			<pos>165,68</pos>
+			<size>21,21</size>
+			<bitmap />
+		</object>
+		<object class="wxButton" name="add_ipp_port_ok" subclass="OwnerDrawButton">
+			<pos>200,96</pos>
+			<size>80,26</size>
+			<label>add__ipp__port__ok</label>
+			<default>0</default>
+		</object>
+		<object class="wxButton" name="add_ipp_port_cancel" subclass="OwnerDrawButton">
+			<pos>300,96</pos>
+			<size>80,26</size>
+			<label>add__ipp__port__cancel</label>
+			<default>0</default>
+		</object>
+	</object>
+	<object class="wxPanel" name="select_to_install_orchestra">
+		<style>wxCLIP_CHILDREN|wxTAB_TRAVERSAL</style>
+		<size>786,520</size>
+		<bg>#ffffff</bg>
+		<object class="wxStaticText" name="select_to_install_orchestra_title">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,14</pos>
+			<size>563,29</size>
+			<font>
+				<size>14</size>
+				<family>swiss</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label>select__to__install__orchestra__title</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticLine" name="select_to_install_orchestra_title_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>211,45</pos>
+			<size>575,4</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxStaticText" name="select_to_install_orchestra_message">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>213,65</pos>
+			<size>550,150</size>
+			<label>select__to__install__orchestra__message</label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxCheckBox" name="select_to_install_orchestra_check">
+			<pos>213,380</pos>
+			<size>530,16</size>
+			<label>select__to__install__orchestra__check</label>
+			<checked>0</checked>
+		</object>
+		<object class="wxStaticBitmap" name="select_to_install_orchestra_image">
+			<pos>213,240</pos>
+			<size>549,116</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticLine" name="select_to_install_orchestra_footer_line">
+			<style>wxLI_HORIZONTAL</style>
+			<pos>0,472</pos>
+			<size>786,1</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxButton" name="select_to_install_orchestra_next" subclass="OwnerDrawButton">
+			<pos>663,484</pos>
+			<size>96,26</size>
+			<label>select__to__install__orchestra__next</label>
+			<default>0</default>
+		</object>
+		<object class="wxPanel" name="select_to_install_orchestra_footer">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,472</pos>
+			<size>786,48</size>
+			<bg>#4a4b4c</bg>
+		</object>
+		<object class="wxPanel" name="progress_area">
+			<style>wxTAB_TRAVERSAL</style>
+			<pos>0,0</pos>
+			<size>189,472</size>
+		</object>
+	</object>
+	<object class="wxPanel" name="open_html_error_panel">
+		<style>wxCLIP_CHILDREN|wxTAB_TRAVERSAL</style>
+		<pos>0,0</pos>
+		<size>402,186</size>
+		<font>
+			<size>8</size>
+			<family>swiss</family>
+			<style>normal</style>
+			<weight>normal</weight>
+			<underlined>0</underlined>
+			<face>Tahoma</face>
+		</font>
+		<object class="wxStaticBitmap" name="open_html_error_image">
+			<pos>27,19</pos>
+			<size>40,40</size>
+			<bitmap />
+		</object>
+		<object class="wxStaticText" name="open_html_error_message">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>79,27</pos>
+			<size>297,26</size>
+			<font>
+				<size>8</size>
+				<family>roman</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label></label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxStaticText" name="open_html_error_details">
+			<style>wxST_NO_AUTORESIZE</style>
+			<pos>27,71</pos>
+			<size>351,13</size>
+			<font>
+				<size>8</size>
+				<family>roman</family>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<face>Tahoma</face>
+			</font>
+			<label></label>
+			<wrap>-1</wrap>
+		</object>
+		<object class="wxTextCtrl" name="open_html_error_path">
+			<style>wxTE_MULTILINE|wxTE_NO_VSCROLL|wxTE_READONLY|wxNO_BORDER</style>
+			<pos>27,85</pos>
+			<size>351,78</size>
+			<bg>#f0f0f0</bg>
+			<value></value>
+		</object>
+	</object>
+</resource>

@@ -1,0 +1,63 @@
+; Copyright (C) RICOH CORPORATION 2017. All rights reserved.
+; 
+[Version]
+Signature       = "$Windows NT$"
+Provider        = %NAME%
+ClassGUID       = {36FC9E60-C465-11CF-8056-444553540000}
+Class           = USB
+DriverVer=12/26/2017,1.0.0.0
+CatalogFile      = RPRNUT.CAT
+
+
+[Manufacturer]
+%NAME% = RICOH_STD,NTx86,NTamd64
+
+
+[DestinationDirs]
+DefaultDestDir=11
+
+
+[SourceDisksNames]
+1=%DISKLABEL%,,
+
+
+[SourceDisksFiles]
+
+
+[RICOH_STD.NTx86]
+%DISKLABEL%=RICOH_Install, USB\vid_05ca&pid_0469&mi_01
+%DISKLABEL%=RICOH_Install, USB\vid_05ca&pid_0469&mi_02
+%DISKLABEL%=RICOH_Install, USB\vid_05ca&pid_0469&mi_03
+%DISKLABEL%=RICOH_Install, USB\vid_05ca&pid_0469&mi_04
+%DISKLABEL%=RICOH_Install, USB\vid_05ca&pid_0469&mi_05
+%DISKLABEL%=RICOH_Install, USB\vid_05ca&pid_046a&mi_02
+%DISKLABEL%=RICOH_Install, USB\vid_05ca&pid_046a&mi_03
+%DISKLABEL%=RICOH_Install, USB\vid_05ca&pid_046a&mi_04
+%DISKLABEL%=RICOH_Install, USB\vid_05ca&pid_046a&mi_05
+
+[RICOH_STD.NTamd64]
+%DISKLABEL%=RICOH_Install, USB\vid_05ca&pid_0469&mi_01
+%DISKLABEL%=RICOH_Install, USB\vid_05ca&pid_0469&mi_02
+%DISKLABEL%=RICOH_Install, USB\vid_05ca&pid_0469&mi_03
+%DISKLABEL%=RICOH_Install, USB\vid_05ca&pid_0469&mi_04
+%DISKLABEL%=RICOH_Install, USB\vid_05ca&pid_0469&mi_05
+%DISKLABEL%=RICOH_Install, USB\vid_05ca&pid_046a&mi_02
+%DISKLABEL%=RICOH_Install, USB\vid_05ca&pid_046a&mi_03
+%DISKLABEL%=RICOH_Install, USB\vid_05ca&pid_046a&mi_04
+%DISKLABEL%=RICOH_Install, USB\vid_05ca&pid_046a&mi_05
+
+[RICOH_Install]
+CopyFiles=Nothing
+AddReg=Nothing
+
+
+[Nothing]
+
+
+[RICOH_Install.Services]
+AddService = ,2;
+
+
+[Strings]
+NAME            = "RICOH"
+DISKLABEL       = "USB Temporary Device"

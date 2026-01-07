@@ -1,0 +1,357 @@
+;------------------------------------------------------------
+; Copyright (c) 2007-2024 RICOH COMPANY, LTD
+; All Rights Reserved
+; Printer Driver Setup Information File
+;------------------------------------------------------------
+
+[Version]
+Signature   = "$Windows NT$"
+Provider    = %Ricoh%
+ClassGUID   = {4D36E979-E325-11CE-BFC1-08002BE10318}
+Class       = Printer
+DriverVer	= 06/03/2024,3.0.0.0
+CatalogFile	= RICOHJBP.cat
+
+[Manufacturer]
+%infotec%=infotec,NTamd64,NTamd64.6.0
+%LANIER%=LANIER,NTamd64,NTamd64.6.0
+%NRG%=NRG,NTamd64,NTamd64.6.0
+%Ricoh%=Ricoh,NTamd64,NTamd64.6.0
+%SAVIN%=SAVIN,NTamd64,NTamd64.6.0
+
+
+;WindowsXP(amd64)
+[infotec.NTamd64]
+"infotec SP 5300 PS"=infotec_SP_5300_64.dat,USBPRINT\infotecSP_53000E2F,LPTENUM\infotecSP_53000E2F,infotecSP_53000E2F,infotecSP_5300_E2F
+"infotec SP 5310 PS"=infotec_SP_5310_64.dat,USBPRINT\infotecSP_53109E2E,LPTENUM\infotecSP_53109E2E,infotecSP_53109E2E
+
+[LANIER.NTamd64]
+"LANIER SP 5300 PS"=LANIER_SP_5300_64.dat,USBPRINT\LANIERSP_5300D10C,LPTENUM\LANIERSP_5300D10C,LANIERSP_5300D10C
+"LANIER SP 5310 PS"=LANIER_SP_5310_64.dat,USBPRINT\LANIERSP_5310430D,LPTENUM\LANIERSP_5310430D,LANIERSP_5310430D
+
+[NRG.NTamd64]
+"NRG SP 5300 PS"=NRG_SP_5300_64.dat,USBPRINT\NRGSP_530033C7,LPTENUM\NRGSP_530033C7,NRGSP_530033C7
+"NRG SP 5310 PS"=NRG_SP_5310_64.dat,USBPRINT\NRGSP_5310A3C6,LPTENUM\NRGSP_5310A3C6,NRGSP_5310A3C6
+
+[Ricoh.NTamd64]
+"RICOH SP 5300 PS"=RICOH_SP_5300_64.dat,USBPRINT\RICOHSP_530081C3,LPTENUM\RICOHSP_530081C3,RICOHSP_530081C3
+"RICOH SP 5310 PS"=RICOH_SP_5310_64.dat,USBPRINT\RICOHSP_531013C2,LPTENUM\RICOHSP_531013C2,RICOHSP_531013C2
+
+[SAVIN.NTamd64]
+"SAVIN SP 5300 PS"=SAVIN_SP_5300_64.dat,USBPRINT\SAVINSP_53002FAC,LPTENUM\SAVINSP_53002FAC,SAVINSP_53002FAC
+"SAVIN SP 5310 PS"=SAVIN_SP_5310_64.dat,USBPRINT\SAVINSP_5310BFAD,LPTENUM\SAVINSP_5310BFAD,SAVINSP_5310BFAD
+
+
+[infotec.NTamd64.6.0]
+"infotec SP 5300 PS"=infotec_SP_5300_64_6.0.dat,USBPRINT\infotecSP_53000E2F,LPTENUM\infotecSP_53000E2F,infotecSP_53000E2F,infotecSP_5300_E2F
+"infotec SP 5310 PS"=infotec_SP_5310_64_6.0.dat,USBPRINT\infotecSP_53109E2E,LPTENUM\infotecSP_53109E2E,infotecSP_53109E2E
+
+[LANIER.NTamd64.6.0]
+"LANIER SP 5300 PS"=LANIER_SP_5300_64_6.0.dat,USBPRINT\LANIERSP_5300D10C,LPTENUM\LANIERSP_5300D10C,LANIERSP_5300D10C
+"LANIER SP 5310 PS"=LANIER_SP_5310_64_6.0.dat,USBPRINT\LANIERSP_5310430D,LPTENUM\LANIERSP_5310430D,LANIERSP_5310430D
+
+[NRG.NTamd64.6.0]
+"NRG SP 5300 PS"=NRG_SP_5300_64_6.0.dat,USBPRINT\NRGSP_530033C7,LPTENUM\NRGSP_530033C7,NRGSP_530033C7
+"NRG SP 5310 PS"=NRG_SP_5310_64_6.0.dat,USBPRINT\NRGSP_5310A3C6,LPTENUM\NRGSP_5310A3C6,NRGSP_5310A3C6
+
+[Ricoh.NTamd64.6.0]
+"RICOH SP 5300 PS"=RICOH_SP_5300_64_6.0.dat,USBPRINT\RICOHSP_530081C3,LPTENUM\RICOHSP_530081C3,RICOHSP_530081C3
+"RICOH SP 5310 PS"=RICOH_SP_5310_64_6.0.dat,USBPRINT\RICOHSP_531013C2,LPTENUM\RICOHSP_531013C2,RICOHSP_531013C2
+
+[SAVIN.NTamd64.6.0]
+"SAVIN SP 5300 PS"=SAVIN_SP_5300_64_6.0.dat,USBPRINT\SAVINSP_53002FAC,LPTENUM\SAVINSP_53002FAC,SAVINSP_53002FAC
+"SAVIN SP 5310 PS"=SAVIN_SP_5310_64_6.0.dat,USBPRINT\SAVINSP_5310BFAD,LPTENUM\SAVINSP_5310BFAD,SAVINSP_5310BFAD
+
+
+[infotec_SP_5300_64.dat]
+CopyFiles   	= @infp5Md0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= infp5Md0.ppd
+LanguageMonitor = ricp5Mlm,ricp5Mlm.dll
+PrintProcessor	= "ricp5Mpp,ricp5Mpp.dll"
+
+[infotec_SP_5310_64.dat]
+CopyFiles   	= @infp5Md1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= infp5Md1.ppd
+LanguageMonitor = ricp5Mlm,ricp5Mlm.dll
+PrintProcessor	= "ricp5Mpp,ricp5Mpp.dll"
+
+[LANIER_SP_5300_64.dat]
+CopyFiles   	= @lanp5Md0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp5Md0.ppd
+LanguageMonitor = ricp5Mlm,ricp5Mlm.dll
+PrintProcessor	= "ricp5Mpp,ricp5Mpp.dll"
+
+[LANIER_SP_5310_64.dat]
+CopyFiles   	= @lanp5Md1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp5Md1.ppd
+LanguageMonitor = ricp5Mlm,ricp5Mlm.dll
+PrintProcessor	= "ricp5Mpp,ricp5Mpp.dll"
+
+[NRG_SP_5300_64.dat]
+CopyFiles   	= @nrgp5Md0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp5Md0.ppd
+LanguageMonitor = ricp5Mlm,ricp5Mlm.dll
+PrintProcessor	= "ricp5Mpp,ricp5Mpp.dll"
+
+[NRG_SP_5310_64.dat]
+CopyFiles   	= @nrgp5Md1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp5Md1.ppd
+LanguageMonitor = ricp5Mlm,ricp5Mlm.dll
+PrintProcessor	= "ricp5Mpp,ricp5Mpp.dll"
+
+[RICOH_SP_5300_64.dat]
+CopyFiles   	= @ricp5Md0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp5Md0.ppd
+LanguageMonitor = ricp5Mlm,ricp5Mlm.dll
+PrintProcessor	= "ricp5Mpp,ricp5Mpp.dll"
+
+[RICOH_SP_5310_64.dat]
+CopyFiles   	= @ricp5Md1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp5Md1.ppd
+LanguageMonitor = ricp5Mlm,ricp5Mlm.dll
+PrintProcessor	= "ricp5Mpp,ricp5Mpp.dll"
+
+[SAVIN_SP_5300_64.dat]
+CopyFiles   	= @savp5Md0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp5Md0.ppd
+LanguageMonitor = ricp5Mlm,ricp5Mlm.dll
+PrintProcessor	= "ricp5Mpp,ricp5Mpp.dll"
+
+[SAVIN_SP_5310_64.dat]
+CopyFiles   	= @savp5Md1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp5Md1.ppd
+LanguageMonitor = ricp5Mlm,ricp5Mlm.dll
+PrintProcessor	= "ricp5Mpp,ricp5Mpp.dll"
+
+
+[infotec_SP_5300_64_6.0.dat]
+CopyFiles   	= @infp5Md0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= infp5Md0.ppd
+LanguageMonitor	= ricp5Mlm,ricp5Mlm.dll
+PrintProcessor	= "ricp5Mpp,ricp5Mpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[infotec_SP_5310_64_6.0.dat]
+CopyFiles   	= @infp5Md1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= infp5Md1.ppd
+LanguageMonitor	= ricp5Mlm,ricp5Mlm.dll
+PrintProcessor	= "ricp5Mpp,ricp5Mpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[LANIER_SP_5300_64_6.0.dat]
+CopyFiles   	= @lanp5Md0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp5Md0.ppd
+LanguageMonitor	= ricp5Mlm,ricp5Mlm.dll
+PrintProcessor	= "ricp5Mpp,ricp5Mpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[LANIER_SP_5310_64_6.0.dat]
+CopyFiles   	= @lanp5Md1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= lanp5Md1.ppd
+LanguageMonitor	= ricp5Mlm,ricp5Mlm.dll
+PrintProcessor	= "ricp5Mpp,ricp5Mpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[NRG_SP_5300_64_6.0.dat]
+CopyFiles   	= @nrgp5Md0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp5Md0.ppd
+LanguageMonitor	= ricp5Mlm,ricp5Mlm.dll
+PrintProcessor	= "ricp5Mpp,ricp5Mpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[NRG_SP_5310_64_6.0.dat]
+CopyFiles   	= @nrgp5Md1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= nrgp5Md1.ppd
+LanguageMonitor	= ricp5Mlm,ricp5Mlm.dll
+PrintProcessor	= "ricp5Mpp,ricp5Mpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[RICOH_SP_5300_64_6.0.dat]
+CopyFiles   	= @ricp5Md0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp5Md0.ppd
+LanguageMonitor	= ricp5Mlm,ricp5Mlm.dll
+PrintProcessor	= "ricp5Mpp,ricp5Mpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[RICOH_SP_5310_64_6.0.dat]
+CopyFiles   	= @ricp5Md1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= ricp5Md1.ppd
+LanguageMonitor	= ricp5Mlm,ricp5Mlm.dll
+PrintProcessor	= "ricp5Mpp,ricp5Mpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[SAVIN_SP_5300_64_6.0.dat]
+CopyFiles   	= @savp5Md0.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp5Md0.ppd
+LanguageMonitor	= ricp5Mlm,ricp5Mlm.dll
+PrintProcessor	= "ricp5Mpp,ricp5Mpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+[SAVIN_SP_5310_64_6.0.dat]
+CopyFiles   	= @savp5Md1.ppd,RPD_FILES,RPD_COMMON,RPD_COMMON_SYS32,PRTPROCS
+DataFile	= savp5Md1.ppd
+LanguageMonitor	= ricp5Mlm,ricp5Mlm.dll
+PrintProcessor	= "ricp5Mpp,ricp5Mpp.dll"
+CoreDriverSections	="{D20EA372-DD35-4950-9ED8-A6335AFE79F1},PSCRIPT.OEM,PSCRIPT_DATA"
+
+
+[infotec_SP_5300_64.dat.Services]
+AddService = ,0x2
+
+[infotec_SP_5310_64.dat.Services]
+AddService = ,0x2
+
+[LANIER_SP_5300_64.dat.Services]
+AddService = ,0x2
+
+[LANIER_SP_5310_64.dat.Services]
+AddService = ,0x2
+
+[NRG_SP_5300_64.dat.Services]
+AddService = ,0x2
+
+[NRG_SP_5310_64.dat.Services]
+AddService = ,0x2
+
+[RICOH_SP_5300_64.dat.Services]
+AddService = ,0x2
+
+[RICOH_SP_5310_64.dat.Services]
+AddService = ,0x2
+
+[SAVIN_SP_5300_64.dat.Services]
+AddService = ,0x2
+
+[SAVIN_SP_5310_64.dat.Services]
+AddService = ,0x2
+
+
+[infotec_SP_5300_64_6.0.dat.Services]
+AddService = ,0x2
+
+[infotec_SP_5310_64_6.0.dat.Services]
+AddService = ,0x2
+
+[LANIER_SP_5300_64_6.0.dat.Services]
+AddService = ,0x2
+
+[LANIER_SP_5310_64_6.0.dat.Services]
+AddService = ,0x2
+
+[NRG_SP_5300_64_6.0.dat.Services]
+AddService = ,0x2
+
+[NRG_SP_5310_64_6.0.dat.Services]
+AddService = ,0x2
+
+[RICOH_SP_5300_64_6.0.dat.Services]
+AddService = ,0x2
+
+[RICOH_SP_5310_64_6.0.dat.Services]
+AddService = ,0x2
+
+[SAVIN_SP_5300_64_6.0.dat.Services]
+AddService = ,0x2
+
+[SAVIN_SP_5310_64_6.0.dat.Services]
+AddService = ,0x2
+
+
+[RPD_FILES]
+ricp5Mui.dll,ricp5Xui.dll
+ricp5Mui.irj,SP_5300_.irj
+ricp5Mui.rdj
+ricp5Mui.rcf,SP_5300_.rcf
+ricp5Mug.dll,ricp5Xug.dll
+ricp5Mug.miz
+ricp5Mur.dll,ricp5Xur.dll
+ricp5Mpu.dll,ricp5Xpu.dll
+ricp5Mgl.dll,ricp5Xgl.dll
+ricp5Mpr.dll,ricp5Xpr.dll
+ricp5Mcd.dll,ricp5Xcd.dll
+ricp5Mcd.psz
+ricp5Mcz.dlz,ricp5Xcz.dlz
+ricp5Mcf.cfz
+ricp5Mcl.ini
+ricp5Mch.chm,ricp5Xch.chm
+ricp5Mci.dll,ricp5Xci.dll
+ricp5Mcj.dll,ricp5Xcj.dll
+ricp5Mcb.dll,ricp5Xcb.dll
+ricp5Mtl.exe,ricp5Xtl.exe
+ricp5Mtc.exe,ricp5Xtc.exe
+ricp5Mtt.exe,ricp5Xtt.exe
+ricp5Mtf.exe,ricp5Xtf.exe
+
+[PRTPROCS]
+ricp5Mpp.dll,ricp5Xpp.dll,,0x00000020
+
+[RPD_COMMON_SYS32]
+ricp5Mlm.dll,ricp5Xlm.dll,,0x00000020
+
+[RPD_COMMON]
+ricdb64.dll,ricdb64.dll,,0x00000020
+mfricr64.dll,mfricr64.dll,,0x00000020
+RD05Md64.dll,RD05Md64.dll,,0x00000020
+
+[DestinationDirs]
+DefaultDestDir	= 66000
+PRTPROCS	= 66001
+RPD_COMMON_SYS32	 	= 66002
+
+[SourceDisksNames.amd64]
+1 = %DSK%,RICOHJBP.cab,,
+2 = %DSK%,,,
+
+[PrinterPackageInstallation.amd64]
+PackageAware	=TRUE
+
+CoreDriverDependencies	={D20EA372-DD35-4950-9ED8-A6335AFE79F1}
+
+
+[SourceDisksFiles.amd64]
+ricp5Xui.dll	= 1
+SP_5300_.irj	= 1
+ricp5Mui.rdj	= 1
+SP_5300_.rcf	= 2
+ricp5Xug.dll	= 1
+ricp5Mug.miz	= 1
+ricp5Xur.dll	= 1
+ricp5Xpu.dll	= 1
+ricp5Xgl.dll	= 1
+ricp5Xpr.dll	= 1
+ricp5Xcd.dll	= 1
+ricp5Mcd.psz	= 1
+ricp5Xcz.dlz	= 1
+ricp5Mcf.cfz	= 1
+ricp5Mcl.ini	= 1
+ricp5Xch.chm	= 1
+ricp5Xci.dll	= 1
+ricp5Xcj.dll	= 1
+ricp5Xcb.dll	= 1
+ricp5Xtl.exe	= 1
+infp5Md0.ppd = 1
+infp5Md1.ppd = 1
+lanp5Md0.ppd = 1
+lanp5Md1.ppd = 1
+nrgp5Md0.ppd = 1
+nrgp5Md1.ppd = 1
+ricp5Md0.ppd = 1
+ricp5Md1.ppd = 1
+savp5Md0.ppd = 1
+savp5Md1.ppd = 1
+ricp5Xlm.dll	= 1
+ricdb64.dll	= 1
+mfricr64.dll	= 1
+RD05Md64.dll	= 1
+ricp5Xpp.dll	= 1
+ricp5Xtc.exe     = 1
+ricp5Xtt.exe     = 1
+ricp5Xtf.exe     = 1
+
+[Strings]
+Ricoh="Ricoh"
+infotec="infotec"
+LANIER="LANIER"
+NRG="NRG"
+SAVIN="SAVIN"
+DSK	= "PS Printer Driver Disk1"

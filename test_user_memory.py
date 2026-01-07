@@ -36,8 +36,7 @@ def test_user_memory_persistence():
     
     # 3. Guardar memoria de usuario
     print("\n3️⃣ Guardando memoria de usuario 'test.user'...")
-    metadata = {"session": "test", "timestamp": "2026-01-07"}
-    success = persistence.save_user_memory("test.user", test_messages, metadata)
+    success = persistence.save_user_memory("test.user", test_messages)
     if success:
         print("✅ Memoria guardada exitosamente")
     else:
@@ -60,7 +59,6 @@ def test_user_memory_persistence():
         print(f"✅ Memoria cargada: {len(loaded_messages)} mensajes")
         print(f"   User ID: {memory_data.get('user_id')}")
         print(f"   Última actualización: {memory_data.get('last_updated')}")
-        print(f"   Metadata: {memory_data.get('metadata')}")
         
         # Verificar que los mensajes coincidan
         if len(loaded_messages) != len(test_messages):
@@ -100,7 +98,7 @@ def test_user_memory_persistence():
         HumanMessage(content="Ya funcionó, gracias"),
         AIMessage(content="¡Excelente! Me alegra que haya funcionado."),
     ]
-    success = persistence.save_user_memory("test.user", extended_messages, metadata)
+    success = persistence.save_user_memory("test.user", extended_messages)
     if success:
         print("✅ Memoria actualizada")
         

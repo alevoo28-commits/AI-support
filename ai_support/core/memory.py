@@ -13,8 +13,8 @@ from langchain_community.vectorstores import FAISS
 
 from .user_memory_persistence import (
     UserMemoryPersistence,
-    restore_user_memory_to_buffer,
     auto_save_user_memory,
+    restore_user_memory_to_buffer,
 )
 
 
@@ -29,18 +29,19 @@ def _env_flag(name: str, default: bool) -> bool:
 
 
 class SistemaMemoriaAvanzada:
-    """Sistema que integra múltiples tipos de memoria de LangChain."""
+    """Sistema que integra múltiples tipos de memoria de LangChain.
+
+    Nota: la persistencia por usuario (si `user_id` está definido) guarda *solo*
+    el historial conversacional del buffer.
+    """
 
     def __init__(self, llm, embeddings: Optional[object], user_id: Optional[str] = None):
         self.llm = llm
         self.embeddings = embeddings
         self.user_id = user_id
-        
-        # Sistema de persistencia por usuario
         self.persistence = UserMemoryPersistence() if user_id else None
 
         # Algunas memorias (Summary/Entity) generan llamadas adicionales al LLM.
-        # En endpoints remotos (GitHub Models) esto puede aumentar mucho la latencia.
         self.enable_summary_memory = _env_flag("AI_SUPPORT_ENABLE_SUMMARY_MEMORY", False)
         self.enable_entity_memory = _env_flag("AI_SUPPORT_ENABLE_ENTITY_MEMORY", False)
         self.enable_window_memory = _env_flag("AI_SUPPORT_ENABLE_WINDOW_MEMORY", True)
@@ -52,17 +53,17 @@ class SistemaMemoriaAvanzada:
         if self.window_k < 1:
             self.window_k = 1
 
-        #
-        
-        # Restaurar memoria del usuario si existe
-        if self.user_id and self.persistence:
-            restored = restore_user_memory_to_buffer(self.user_id, self.buffer_memory, self.persistence)
-            if restored:
-                print(f"✅ Memoria restaurada para usuario: {self.user_id}") 1. ConversationBufferMemory - Historial completo
+        # 1. ConversationBufferMemory - Historial completo
         self.buffer_memory = ConversationBufferMemory(
             memory_key="chat_history",
             return_messages=True,
         )
+
+        # Restaurar historial del usuario si existe
+        if self.user_id and self.persistence:
+            restored = restore_user_memory_to_buffer(self.user_id, self.buffer_memory, self.persistence)
+            if restored:
+                print(f"✅ Historial restaurado para usuario: {self.user_id}")
 
         # 2. ConversationSummaryMemory - Resume cuando es largo
         self.summary_memory = None
@@ -98,51 +99,44 @@ class SistemaMemoriaAvanzada:
             self._inicializar_vectorstore()
 
     def _inicializar_vectorstore(self) -> None:
-        """Inicializa el vectorstore para memoria a largo plazo."""
         if self.embeddings is None:
             self.vectorstore = None
             self.vector_memory = None
             return
+
         try:
             docs = [Document(page_content="Memoria inicial del sistema")]
             self.vectorstore = FAISS.from_documents(docs, self.embeddings)
-
             retriever = self.vectorstore.as_retriever(search_kwargs={"k": 3})
-
             self.vector_memory = VectorStoreRetrieverMemory(
                 retriever=retriever,
                 memory_key="vector_history",
                 return_messages=True,
             )
         except Exception as e:
-            # Evitar spam (se crean varios agentes y Streamlit re-ejecuta scripts)
             signature = f"{type(e).__name__}:{str(e)[:300]}"
             if signature not in _VECTORSTORE_INIT_ERROR_SEEN:
                 _VECTORSTORE_INIT_ERROR_SEEN.add(signature)
                 print(f"⚠️ Error inicializando vectorstore: {e}")
-            # Si embeddings no funcionan (ej. 401/403/no_access), degradar a modo sin embeddings
+
             try:
                 msg = str(e).lower()
                 if "no_access" in msg or "403" in msg or "401" in msg:
                     self.embeddings = None
             except Exception:
                 pass
+
             self.vectorstore = None
             self.vector_memory = None
 
     def agregar_interaccion(self, entrada: str, salida: str) -> None:
-        """Agrega una nueva interacción a todos los tipos de memoria."""
         self.buffer_memory.save_context({"input": entrada}, {"output": salida})
         if self.summary_memory:
             self.summary_memory.save_context({"input": entrada}, {"output": salida})
         if self.window_memory:
             self.window_memory.save_context({"input": entrada}, {"output": salida})
         if self.entity_memory:
-            self.entity_memory.save_context({"input": entrada}, {"
-        
-        # Guardar persistentemente la memoria del usuario
-        if self.user_id and self.persistence:
-            auto_save_user_memory(self.user_id, self.buffer_memory, self.persistence)output": salida})
+            self.entity_memory.save_context({"input": entrada}, {"output": salida})
 
         if self.vector_memory:
             try:
@@ -150,8 +144,11 @@ class SistemaMemoriaAvanzada:
             except Exception as e:
                 print(f"⚠️ Error guardando en vector memory: {e}")
 
+        # Persistir *solo* el buffer conversacional del usuario
+        if self.user_id and self.persistence:
+            auto_save_user_memory(self.user_id, self.buffer_memory, self.persistence)
+
     def obtener_contexto_completo(self) -> Dict[str, Any]:
-        """Obtiene contexto de todos los tipos de memoria."""
         contexto: Dict[str, Any] = {}
 
         try:
@@ -199,23 +196,21 @@ class SistemaMemoriaAvanzada:
         return contexto
 
     def limpiar_memoria(self) -> None:
-        """Limpia todos los tipos de memoria."""
         self.buffer_memory.clear()
         if self.summary_memory:
             self.summary_memory.clear()
         if self.window_memory:
             self.window_memory.clear()
-        
-        # Limpiar también la memoria persistente del usuario
-        if self.user_id and self.persistence:
-            self.persistence.delete_user_memory(self.user_id)
-    
-    def get_user_memory_stats(self) -> Optional[Dict[str, Any]]:
-        """Obtiene estadísticas de la memoria del usuario actual."""
-        if self.user_id and self.persistence:
-            return self.persistence.get_user_stats(self.user_id)
-        return None
         if self.entity_memory:
             self.entity_memory.clear()
         if self.vector_memory:
+            self.vector_memory.clear()
+
+        if self.user_id and self.persistence:
+            self.persistence.delete_user_memory(self.user_id)
+
+    def get_user_memory_stats(self) -> Optional[Dict[str, Any]]:
+        if self.user_id and self.persistence:
+            return self.persistence.get_user_stats(self.user_id)
+        return None
             self.vector_memory.clear()

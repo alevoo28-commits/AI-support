@@ -1,13 +1,10 @@
-"""
-Sistema de persistencia de memoria por usuario.
+"""Sistema de persistencia de historial por usuario.
 
-Permite que cada usuario tenga su propia memoria local de consultas
-para que el agente aprenda de sus interacciones específicas.
+Guarda y restaura *solo* el historial de conversación (mensajes) por usuario.
+No persiste perfiles, resúmenes, entidades u otros metadatos.
 """
 
-import os
 import json
-import pickle
 from pathlib import Path
 from typing import Any, Dict, Optional
 from datetime import datetime
@@ -39,7 +36,6 @@ class UserMemoryPersistence:
         self,
         user_id: str,
         buffer_messages: list[BaseMessage],
-        metadata: Optional[Dict[str, Any]] = None
     ) -> bool:
         """
         Guarda la memoria del buffer de un usuario.
@@ -47,7 +43,6 @@ class UserMemoryPersistence:
         Args:
             user_id: Identificador del usuario
             buffer_messages: Mensajes del ConversationBufferMemory
-            metadata: Información adicional (última actualización, configuración, etc.)
             
         Returns:
             True si se guardó correctamente
@@ -63,7 +58,6 @@ class UserMemoryPersistence:
                 "user_id": user_id,
                 "last_updated": datetime.now().isoformat(),
                 "messages": messages_dict,
-                "metadata": metadata or {},
                 "version": "1.0"
             }
             
@@ -87,7 +81,6 @@ class UserMemoryPersistence:
         Returns:
             Diccionario con:
                 - messages: Lista de BaseMessage
-                - metadata: Información adicional
                 - last_updated: Fecha de última actualización
             O None si no existe o hay error
         """
@@ -106,7 +99,6 @@ class UserMemoryPersistence:
             
             return {
                 "messages": messages,
-                "metadata": data.get("metadata", {}),
                 "last_updated": data.get("last_updated"),
                 "user_id": data.get("user_id")
             }
@@ -217,7 +209,6 @@ def auto_save_user_memory(
     user_id: str,
     buffer_memory,
     persistence: Optional[UserMemoryPersistence] = None,
-    metadata: Optional[Dict[str, Any]] = None
 ) -> bool:
     """
     Guarda automáticamente la memoria actual de un usuario.
@@ -226,7 +217,6 @@ def auto_save_user_memory(
         user_id: Identificador del usuario
         buffer_memory: Instancia de ConversationBufferMemory
         persistence: Instancia de UserMemoryPersistence (crea una por defecto)
-        metadata: Información adicional a guardar
         
     Returns:
         True si se guardó correctamente
@@ -240,7 +230,7 @@ def auto_save_user_memory(
         if hasattr(buffer_memory, "chat_memory"):
             messages = buffer_memory.chat_memory.messages
         
-        return persistence.save_user_memory(user_id, messages, metadata)
+        return persistence.save_user_memory(user_id, messages)
         
     except Exception as e:
         print(f"❌ Error guardando automáticamente memoria de usuario {user_id}: {e}")

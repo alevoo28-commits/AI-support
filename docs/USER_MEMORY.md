@@ -240,6 +240,7 @@ Si no se define, usa por defecto una carpeta por-perfil del usuario.
 
 Si el sistema se usa desde un servidor (varios usuarios accediendo por navegador), habilita Google OAuth para que el `user_id` sea el email verificado del usuario (y así cada uno vea solo su historial).
 
+- `AI_SUPPORT_ENABLE_GOOGLE_AUTH` (por defecto desactivado; define `true` en producción)
 - `AI_SUPPORT_GOOGLE_CLIENT_ID`
 - `AI_SUPPORT_GOOGLE_CLIENT_SECRET`
 - `AI_SUPPORT_GOOGLE_REDIRECT_URI` (debe coincidir EXACTO con la URL donde se abre Streamlit; ejemplo: `http://localhost:8504`)

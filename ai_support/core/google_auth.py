@@ -27,6 +27,12 @@ _GOOGLE_TOKENINFO_ENDPOINT = "https://oauth2.googleapis.com/tokeninfo"
 
 
 def google_auth_enabled() -> bool:
+    raw = os.getenv("AI_SUPPORT_ENABLE_GOOGLE_AUTH")
+    if raw is None:
+        return False
+    enabled = raw.strip().lower() in {"1", "true", "yes", "y", "on"}
+    if not enabled:
+        return False
     return bool(os.getenv("AI_SUPPORT_GOOGLE_CLIENT_ID") and os.getenv("AI_SUPPORT_GOOGLE_CLIENT_SECRET"))
 
 

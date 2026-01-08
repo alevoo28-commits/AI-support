@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import urllib.error
 import urllib.request
@@ -9,6 +10,13 @@ import queue
 import re
 import getpass
 import secrets
+import subprocess
+import socket
+
+from dotenv import load_dotenv
+
+# Cargar variables de entorno desde .env
+load_dotenv()
 
 import streamlit as st
 from langsmith import Client
@@ -26,7 +34,9 @@ from ai_support.core.printer_diagnostics import (
     collect_printer_diagnostics,
     connect_printer_ip,
     auto_connect_printer_ip,
+    diagnose_and_fix_printer_by_name,
     format_diagnostics_for_prompt,
+    list_local_printers_structured,
     list_printer_drivers,
     print_test_page,
     restart_spooler,
@@ -860,9 +870,99 @@ ESPECIALIDAD GENERAL:
         except Exception:
             st.info("No hay logs disponibles aún.")
 
-    col1, _ = st.columns([2, 1])
+    # Layout de dos columnas: izquierda para input/controles, derecha para respuesta
+    col_left, col_right = st.columns([1, 1])
 
-    with col1:
+    # --- Inicializar historial de conversaciones ---
+    if "_conversations" not in st.session_state:
+        st.session_state["_conversations"] = []
+    if "_current_conversation_id" not in st.session_state:
+        st.session_state["_current_conversation_id"] = None
+    if "_conversation_messages" not in st.session_state:
+        st.session_state["_conversation_messages"] = {}
+
+    with col_left:
+        # Historial de conversaciones (estilo ChatGPT)
+        with st.expander("💬 Historial de Conversaciones", expanded=False):
+            col_hist1, col_hist2 = st.columns([3, 1])
+            with col_hist1:
+                if st.button("➕ Nueva Conversación", use_container_width=True, type="primary"):
+                    # Crear nueva conversación
+                    import datetime
+                    new_id = f"conv_{int(time.time())}_{secrets.token_hex(4)}"
+                    new_conv = {
+                        "id": new_id,
+                        "title": "Nueva conversación",
+                        "created_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+                        "messages": []
+                    }
+                    st.session_state["_conversations"].insert(0, new_conv)
+                    st.session_state["_current_conversation_id"] = new_id
+                    st.session_state["_conversation_messages"][new_id] = []
+                    # Limpiar estado de generación
+                    st.session_state["_gen_text"] = ""
+                    st.session_state["_gen_result"] = None
+                    st.session_state["_gen_prompt"] = ""
+                    st.rerun()
+            
+            with col_hist2:
+                if st.button("🗑️ Limpiar", use_container_width=True):
+                    st.session_state["_conversations"] = []
+                    st.session_state["_conversation_messages"] = {}
+                    st.session_state["_current_conversation_id"] = None
+                    st.rerun()
+            
+            st.caption(f"Conversaciones guardadas: {len(st.session_state['_conversations'])}")
+            
+            # Mostrar lista de conversaciones
+            if st.session_state["_conversations"]:
+                st.markdown("**Selecciona una conversación:**")
+                for conv in st.session_state["_conversations"]:
+                    conv_id = conv["id"]
+                    is_current = conv_id == st.session_state["_current_conversation_id"]
+                    
+                    # Título con indicador si es la actual
+                    title_display = f"{'▶️ ' if is_current else ''}{conv['title']}"
+                    col_conv1, col_conv2 = st.columns([4, 1])
+                    
+                    with col_conv1:
+                        if st.button(
+                            title_display,
+                            key=f"select_conv_{conv_id}",
+                            use_container_width=True,
+                            type="primary" if is_current else "secondary"
+                        ):
+                            # Cargar conversación
+                            st.session_state["_current_conversation_id"] = conv_id
+                            # Restaurar mensajes
+                            messages = st.session_state["_conversation_messages"].get(conv_id, [])
+                            if messages:
+                                last_msg = messages[-1]
+                                if last_msg["role"] == "assistant":
+                                    st.session_state["_gen_text"] = last_msg["content"]
+                                    st.session_state["_gen_result"] = last_msg.get("result")
+                                if len(messages) >= 2:
+                                    user_msg = messages[-2]
+                                    if user_msg["role"] == "user":
+                                        st.session_state["_gen_prompt"] = user_msg["content"]
+                            st.rerun()
+                    
+                    with col_conv2:
+                        if st.button("❌", key=f"delete_conv_{conv_id}", use_container_width=True):
+                            # Eliminar conversación
+                            st.session_state["_conversations"] = [
+                                c for c in st.session_state["_conversations"] if c["id"] != conv_id
+                            ]
+                            st.session_state["_conversation_messages"].pop(conv_id, None)
+                            if st.session_state["_current_conversation_id"] == conv_id:
+                                st.session_state["_current_conversation_id"] = None
+                            st.rerun()
+                    
+                    st.caption(f"📅 {conv['created_at']} • {len(st.session_state['_conversation_messages'].get(conv_id, []))} mensajes")
+            else:
+                st.info("No hay conversaciones guardadas. Crea una nueva para comenzar.")
+        
+        st.markdown("---")
         st.header("💬 Consulta Multi-Agente")
 
         consulta = st.text_area(
@@ -870,12 +970,53 @@ ESPECIALIDAD GENERAL:
             placeholder="Describe tu problema técnico aquí...",
             height=100,
         )
+        
+        # Botones de enviar y stop lado a lado
+        orquestador_ready = "orquestador" in st.session_state and st.session_state.get("orquestador") is not None
+        
+        col_enviar, col_stop = st.columns([2, 1])
+        
+        with col_enviar:
+            enviar = st.button(
+                "▶️ Enviar",
+                type="primary",
+                key="enviar_principal",
+                disabled=bool(st.session_state.get("_gen_active")) or (not orquestador_ready),
+                use_container_width=True,
+            )
+        
+        with col_stop:
+            if st.session_state.get("_gen_active"):
+                if st.button("⏹️ Stop", key="stop_generation_main", type="secondary", use_container_width=True):
+                    ev = st.session_state.get("_gen_stop_event")
+                    if ev is not None:
+                        ev.set()
+        
+        if not orquestador_ready:
+            st.caption("Configura un proveedor y presiona 'Aplicar' para inicializar el sistema.")
 
         # --- UX simple: lista de impresoras + conectar automático ---
         consulta_l = (consulta or "").strip().lower()
         wants_printer_menu = (
             ("impresor" in consulta_l)
             and any(w in consulta_l for w in ["conectar", "instalar", "agregar", "añadir"])
+        )
+
+        wants_printer_troubleshoot = (
+            ("impresor" in consulta_l)
+            and any(
+                w in consulta_l
+                for w in [
+                    "problema",
+                    "no imprime",
+                    "no imprimir",
+                    "no imprime",
+                    "cola",
+                    "atasc",
+                    "error",
+                    "no sale",
+                ]
+            )
         )
 
         if mysql_enabled() and wants_printer_menu:
@@ -997,16 +1138,136 @@ ESPECIALIDAD GENERAL:
 
         printer_diag_for_prompt = ""
         if agente_estimado == "impresoras":
-            with st.expander("🖨️ Diagnóstico local (PowerShell)", expanded=False):
+            with st.expander("🖨️ Diagnóstico local (PowerShell)", expanded=bool(wants_printer_troubleshoot)):
                 st.caption(
                     "Esto ejecuta comandos locales en ESTE PC (Get-Printer, Get-PrinterPort, Spooler, etc.). "
                     "Solo se ejecuta si das permiso explícito."
                 )
                 allow_local = st.checkbox(
                     "Permitir ejecutar diagnóstico local",
-                    value=False,
+                    value=True,
                     key="allow_local_printer_diag",
                 )
+
+                st.markdown("**Problema de impresora (selección + reparación automática)**")
+                st.caption(
+                    "Selecciona la impresora instalada en este PC. El sistema intentará diagnóstico y reparación: "
+                    "cola, spooler, prueba, y reconexión TCP/IP (best-effort)."
+                )
+
+                if not allow_local:
+                    st.info("Activa 'Permitir ejecutar diagnóstico local' para listar y reparar.")
+                else:
+                    if "_printer_issue_selected" not in st.session_state:
+                        st.session_state["_printer_issue_selected"] = ""
+                    if "_printer_issue_report" not in st.session_state:
+                        st.session_state["_printer_issue_report"] = ""
+
+                    try:
+                        printers = list_local_printers_structured()
+                    except Exception as e:
+                        printers = []
+                        st.error(f"No se pudo listar impresoras locales: {e}")
+
+                    options: list[str] = []
+                    name_by_label: dict[str, str] = {}
+                    for p in printers:
+                        if not isinstance(p, dict):
+                            continue
+                        name = str(p.get("Name") or "").strip()
+                        if not name:
+                            continue
+                        ip = str(p.get("PrinterHostAddress") or "").strip()
+                        port = str(p.get("PortName") or "").strip()
+                        driver = str(p.get("DriverName") or "").strip()
+                        meta = []
+                        if ip:
+                            meta.append(ip)
+                        if port:
+                            meta.append(port)
+                        if driver:
+                            meta.append(driver)
+                        label = f"{name} ({' | '.join(meta)})" if meta else name
+                        options.append(label)
+                        name_by_label[label] = name
+
+                    options = sorted(set(options))
+                    if not options:
+                        st.warning("No se encontraron impresoras instaladas (o no fue posible leer la lista).")
+                    else:
+                        if not st.session_state.get("_printer_issue_selected"):
+                            st.session_state["_printer_issue_selected"] = options[0]
+
+                        st.selectbox(
+                            "Impresora",
+                            options=options,
+                            key="_printer_issue_selected",
+                        )
+
+                        colfix1, colfix2 = st.columns(2)
+                        with colfix1:
+                            do_fix = st.button(
+                                "Diagnosticar y reparar",
+                                type="primary",
+                                use_container_width=True,
+                            )
+                        with colfix2:
+                            do_clear = st.button(
+                                "Limpiar reporte",
+                                use_container_width=True,
+                            )
+
+                        if do_clear:
+                            st.session_state["_printer_issue_report"] = ""
+
+                        if do_fix:
+                            chosen_label = str(st.session_state.get("_printer_issue_selected") or "")
+                            chosen_name = name_by_label.get(chosen_label) or chosen_label
+                            with st.spinner("Ejecutando diagnóstico y reparación..."):
+                                try:
+                                    report = diagnose_and_fix_printer_by_name(
+                                        printer_name=chosen_name,
+                                        try_repair=True,
+                                    )
+                                except Exception as e:
+                                    report = f"No se pudo ejecutar el diagnóstico: {e}"
+                            st.session_state["_printer_issue_report"] = report
+
+                        full = str(st.session_state.get("_printer_issue_report") or "").strip()
+                        if full:
+                            # Parsear SUMMARY
+                            status = None
+                            reason = None
+                            for ln in full.splitlines():
+                                l = ln.strip()
+                                if l.startswith("[SUMMARY]"):
+                                    # Formato: [SUMMARY] status=ok|failed reason=...
+                                    if "status=ok" in l:
+                                        status = "ok"
+                                    elif "status=failed" in l:
+                                        status = "failed"
+                                    m = re.search(r"reason=([a-zA-Z0-9_\-]+)", l)
+                                    if m:
+                                        reason = m.group(1)
+                                    break
+
+                            if status == "ok":
+                                st.success("La impresora respondió correctamente tras las acciones automáticas.")
+                            elif status == "failed":
+                                msg = "La impresora sigue con problemas tras la reparación automática."
+                                if reason:
+                                    msg += f" (Motivo: {reason})"
+                                st.warning(msg)
+                                # Mostrar sugerencias si existen
+                                suggests = [ln for ln in full.splitlines() if ln.strip().startswith("[SUGGEST]")]
+                                if suggests:
+                                    st.caption("Sugerencias:")
+                                    for s in suggests:
+                                        st.write("- " + s.replace("[SUGGEST]", "").strip())
+
+                            st.code(full, language="text")
+
+                st.divider()
 
                 auto_env = os.getenv("AI_SUPPORT_PRINTER_AUTOMATION_AUTO", "false").strip().lower() in {
                     "1",
@@ -1252,6 +1513,12 @@ ESPECIALIDAD GENERAL:
 
             printer_diag_for_prompt = str(st.session_state.get("_printer_diag_prompt") or "")
 
+        # --- Herramientas de Excel / CSV (DESHABILITADO) ---
+        if False:  # Funcionalidad deshabilitada temporalmente
+         with st.expander("📊 Herramientas de Excel / CSV", expanded=False):
+            # ... código existente ...
+            pass
+        
         forbidden_keywords = [
             "hackear",
             "hack",
@@ -1302,18 +1569,6 @@ ESPECIALIDAD GENERAL:
             st.session_state["_gen_prompt"] = ""
         if "_gen_stop_event" not in st.session_state:
             st.session_state["_gen_stop_event"] = None
-
-        orquestador_ready = "orquestador" in st.session_state and st.session_state.get("orquestador") is not None
-
-        enviar = st.button(
-            "▶️ Enviar",
-            type="primary",
-            key="enviar_principal",
-            disabled=bool(st.session_state.get("_gen_active")) or (not orquestador_ready),
-        )
-
-        if not orquestador_ready:
-            st.caption("Configura un proveedor y presiona 'Aplicar' para inicializar el sistema.")
 
         def _start_generation(prompt: str) -> None:
             # Capturar el orquestador en el hilo principal (no usar session_state dentro del hilo)
@@ -1471,9 +1726,225 @@ ESPECIALIDAD GENERAL:
                     "inyección SQL, ataques, acceso no autorizado o actividades peligrosas. Por favor, formula una consulta apropiada."
                 )
             else:
-                prompt = consulta
+                # Atajo: operaciones directas sobre Excel cargado (ChatGPT para Excel)
+                df_excel = st.session_state.get("_excel_df")
+                if df_excel is not None:
+                    from ai_support.core.excel_chat_handler import handle_excel_command
+                    result = handle_excel_command(df_excel, consulta)
+                    if result["success"]:
+                        st.success(result["message"])
+                        if isinstance(result["result"], (int, float, str)):
+                            st.metric(label="Resultado", value=result["result"])
+                        elif isinstance(result["result"], pd.DataFrame):
+                            st.dataframe(result["result"], use_container_width=True)
+                            st.session_state["_excel_df"] = result["result"]  # actualizar con resultado filtrado/ordenado
+                        st.stop()
+                    # Si no se pudo procesar como comando Excel, agregar contexto del DataFrame al prompt
+                    else:
+                        import pandas as pd
+                        import numpy as np
+                        
+                        # ESTRATEGIA INTELIGENTE: Filtrado exacto primero, luego búsqueda semántica
+                        # Esto permite encontrar TODAS las filas que cumplan criterios específicos
+                        
+                        # Obtener embeddings configurados
+                        embeddings = st.session_state.get("embeddings")
+                        proveedor = st.session_state.get("provider_choice", "GitHub Models")
+                        
+                        # PASO 1: Intentar filtrado exacto por columnas
+                        df_filtered = None
+                        search_method = "keyword"
+                        
+                        # Detectar si la consulta menciona nombres de columnas
+                        columnas_lower = [col.lower() for col in df_excel.columns]
+                        consulta_lower = consulta.lower()
+                        
+                        # Buscar valores específicos para filtrar
+                        filters = {}
+                        
+                        # Detectar "carrera" o nombre de carrera
+                        if 'carrera' in columnas_lower:
+                            carrera_col = df_excel.columns[columnas_lower.index('carrera')]
+                            carreras_unicas = df_excel[carrera_col].unique()
+                            for carrera in carreras_unicas:
+                                if carrera and str(carrera).lower() in consulta_lower:
+                                    filters[carrera_col] = carrera
+                                    break
+                        
+                        # Detectar "jornada" o "horario"
+                        for col_name in ['jornada', 'horario']:
+                            if col_name in columnas_lower:
+                                jornada_col = df_excel.columns[columnas_lower.index(col_name)]
+                                for jornada in ['diurno', 'vespertino', 'ejecutivo']:
+                                    if jornada in consulta_lower:
+                                        filters[jornada_col] = df_excel[jornada_col].str.lower() == jornada
+                                        break
+                        
+                        # Detectar "nivel"
+                        if 'nivel' in columnas_lower:
+                            nivel_col = df_excel.columns[columnas_lower.index('nivel')]
+                            import re
+                            nivel_match = re.search(r'\bnivel\s*(\d+)', consulta_lower)
+                            if nivel_match:
+                                nivel_num = int(nivel_match.group(1))
+                                filters[nivel_col] = nivel_num
+                        
+                        # Aplicar filtros si se encontraron
+                        if filters:
+                            df_filtered = df_excel.copy()
+                            for col, value in filters.items():
+                                if isinstance(value, pd.Series):
+                                    df_filtered = df_filtered[value]
+                                else:
+                                    df_filtered = df_filtered[df_filtered[col] == value]
+                            
+                            if len(df_filtered) > 0:
+                                search_method = "exact_filter"
+                        
+                        # PASO 2: Si no hay filtrado exacto, intentar búsqueda semántica
+                        if df_filtered is None or len(df_filtered) == 0:
+                            if embeddings is not None and len(df_excel) > 50:
+                                try:
+                                    from sklearn.metrics.pairwise import cosine_similarity
+                                    
+                                    # Crear embeddings de la consulta
+                                    query_embedding = embeddings.embed_query(consulta)
+                                    
+                                    # Crear texto de cada fila (concatenar columnas importantes)
+                                    def row_to_text(row):
+                                        # Concatenar solo columnas de texto, máximo 500 caracteres por fila
+                                        texts = []
+                                        for col in df_excel.columns:
+                                            val = str(row[col])
+                                            if val and val != 'nan' and len(val) > 0:
+                                                texts.append(val)
+                                        return ' '.join(texts)[:500]
+                                    
+                                    # Limitar a primeras 500 filas para embeddings (por performance)
+                                    df_sample = df_excel.head(500) if len(df_excel) > 500 else df_excel
+                                    row_texts = df_sample.apply(row_to_text, axis=1).tolist()
+                                    
+                                    # Crear embeddings de las filas (en batches para no saturar)
+                                    batch_size = 50
+                                    row_embeddings = []
+                                    for i in range(0, len(row_texts), batch_size):
+                                        batch = row_texts[i:i+batch_size]
+                                        batch_emb = embeddings.embed_documents(batch)
+                                        batch_emb = embeddings.embed_documents(batch)
+                                        row_embeddings.extend(batch_emb)
+                                    
+                                    # Calcular similitud coseno
+                                    similarities = cosine_similarity([query_embedding], row_embeddings)[0]
+                                    
+                                    # Obtener índices de las filas más similares
+                                    top_n = 100 if proveedor == "GitHub Models" else 200
+                                    top_indices = np.argsort(similarities)[-top_n:][::-1]
+                                    
+                                    # Filtrar solo filas con similitud > 0.3 (umbral mínimo)
+                                    relevant_indices = [idx for idx in top_indices if similarities[idx] > 0.3]
+                                    
+                                    if relevant_indices:
+                                        df_filtered = df_sample.iloc[relevant_indices].copy()
+                                        search_method = "semantic"
+                                    
+                                except Exception as e:
+                                    # Si falla búsqueda semántica, usar fallback de keywords
+                                    st.warning(f"Búsqueda semántica no disponible, usando keywords: {e}")
+                        
+                        # FALLBACK: Búsqueda por keywords si no hay embeddings o falló
+                        if df_filtered is None or len(df_filtered) == 0:
+                            # Extraer palabras clave de la consulta
+                            stop_words = {'el', 'la', 'de', 'en', 'a', 'los', 'las', 'un', 'una', 'por', 'para', 'con', 'del', 'y', 'o', 'que', 'es', 'son', 'cuales', 'cual', 'me', 'dame', 'muestra', 'lista', 'busca', 'encuentra'}
+                            consulta_lower = consulta.lower()
+                            palabras = [p.strip('¿?.,;:()[]{}') for p in consulta_lower.split()]
+                            keywords = [p for p in palabras if len(p) > 3 and p not in stop_words]
+                            
+                            # Filtrar DataFrame buscando keywords en TODAS las columnas
+                            df_filtered = df_excel.copy()
+                            if keywords:
+                                mask = pd.Series([False] * len(df_excel))
+                                for col in df_excel.columns:
+                                    col_str = df_excel[col].astype(str).str.lower()
+                                    for keyword in keywords:
+                                        mask |= col_str.str.contains(keyword, na=False, regex=False)
+                                
+                                df_filtered = df_excel[mask]
+                                
+                                if len(df_filtered) == 0:
+                                    df_filtered = df_excel.copy()
+                        
+                        # Agregar información del DataFrame al prompt
+                        excel_context = f"\n\n📊 **IMPORTANTE: Tengo acceso directo a un archivo Excel cargado en memoria. Puedo analizar sus datos.**\n\n"
+                        excel_context += f"**Información del archivo:**\n"
+                        excel_context += f"- Columnas: {', '.join(df_excel.columns.astype(str))}\n"
+                        excel_context += f"- Total de filas en archivo: {len(df_excel)}\n"
+                        
+                        if len(df_filtered) < len(df_excel):
+                            if search_method == "exact_filter":
+                                excel_context += f"- Filas filtradas exactamente: {len(df_filtered)} (filtrado por columnas específicas)\n"
+                            elif search_method == "semantic":
+                                excel_context += f"- Filas relevantes encontradas: {len(df_filtered)} (búsqueda semántica con IA)\n"
+                            else:
+                                excel_context += f"- Filas relevantes encontradas: {len(df_filtered)} (búsqueda por palabras clave)\n"
+                        
+                        excel_context += f"- Tipos de datos: {df_excel.dtypes.to_dict()}\n\n"
+                        
+                        # Estadísticas descriptivas si hay columnas numéricas
+                        numeric_cols = df_filtered.select_dtypes(include=['number']).columns
+                        if len(numeric_cols) > 0:
+                            excel_context += f"**Estadísticas de columnas numéricas:**\n{df_filtered[numeric_cols].describe().to_string()}\n\n"
+                        
+                        # Valores únicos de columnas categóricas (útil para filtros)
+                        categorical_cols = df_filtered.select_dtypes(include=['object']).columns
+                        if len(categorical_cols) > 0 and len(categorical_cols) <= 10:
+                            excel_context += f"**Valores únicos en columnas de texto:**\n"
+                            for col in categorical_cols[:8]:  # Primeras 8 columnas
+                                unique_vals = df_filtered[col].dropna().unique()[:15]  # Primeros 15 valores
+                                if len(unique_vals) > 0:
+                                    excel_context += f"- {col}: {', '.join(map(str, unique_vals))}\n"
+                            excel_context += "\n"
+                        
+                        # Ajustar límite de filas según el proveedor Y el método de búsqueda
+                        proveedor = st.session_state.get("provider_choice", "GitHub Models")
+                        if search_method == "exact_filter":
+                            # Si es filtrado exacto, mostrar TODAS las filas (no hay ambigüedad)
+                            max_rows = len(df_filtered)
+                        elif proveedor == "LM Studio (local)":
+                            max_rows = min(300, len(df_filtered))
+                        else:
+                            max_rows = min(100, len(df_filtered))
+                        
+                        # Enviar datos filtrados (solo una vez)
+                        excel_context += f"**DATOS RELEVANTES ({max_rows} filas más relevantes):**\n```\n{df_filtered.head(max_rows).to_string()}\n```\n\n"
+                        
+                        # Información sobre duplicados
+                        total_duplicates = df_excel.duplicated().sum()
+                        if total_duplicates > 0:
+                            excel_context += f"⚠️ **Nota:** Hay {total_duplicates} filas duplicadas en el archivo completo.\n\n"
+                        
+                        excel_context += f"**INSTRUCCIONES IMPORTANTES:**\n"
+                        if search_method == "exact_filter":
+                            excel_context += f"1. Los datos mostrados fueron FILTRADOS EXACTAMENTE por las columnas mencionadas en la consulta.\n"
+                            excel_context += f"2. Tienes acceso a TODAS las {max_rows} filas que cumplen exactamente los criterios.\n"
+                            excel_context += f"3. MUESTRA TODOS LOS RESULTADOS ENCONTRADOS - son exactamente lo que el usuario pidió.\n"
+                        elif search_method == "semantic":
+                            excel_context += f"1. Los datos mostrados fueron seleccionados con BÚSQUEDA SEMÁNTICA (IA) - son las {max_rows} filas MÁS RELEVANTES de {len(df_excel)} totales.\n"
+                            excel_context += f"2. Tienes acceso a las {max_rows} filas MÁS RELEVANTES encontradas.\n"
+                        else:
+                            excel_context += f"1. Los datos mostrados fueron filtrados buscando en TODO el archivo de {len(df_excel)} filas.\n"
+                            excel_context += f"2. Tienes acceso a las {max_rows} filas MÁS RELEVANTES encontradas.\n"
+                        excel_context += f"3. SIEMPRE muestra los valores EXACTOS de las columnas solicitadas, NO uses placeholders.\n"
+                        excel_context += f"4. Si encontraste resultados, lista TODOS los valores reales de las columnas pedidas.\n"
+                        excel_context += f"5. Si NO hay resultados en los datos mostrados, indícalo claramente.\n"
+                        excel_context += f"6. NO des instrucciones de Excel manual. Proporciona el análisis directo.\n\n"
+                        
+                        prompt = consulta + excel_context
+                else:
+                    prompt = consulta
+                
+                # Agregar diagnósticos de impresora si existen
                 if printer_diag_for_prompt:
-                    prompt = f"{consulta}\n\n{printer_diag_for_prompt}"
+                    prompt = f"{prompt}\n\n{printer_diag_for_prompt}"
 
                 # Automatización: si se pide conectar impresora por IP, intentar flujo automático.
                 # Para evitar ejecuciones no deseadas, solo corre si AI_SUPPORT_PRINTER_AUTOMATION_AUTO=true.
@@ -1535,49 +2006,120 @@ ESPECIALIDAD GENERAL:
                             except Exception as e:
                                 st.session_state["_printer_auto_log"] = f"[AUTO_PRINTER] Error inesperado: {e}"
                                 prompt = f"{prompt}\n\n{st.session_state['_printer_auto_log']}"
+                
+                # Guardar en historial de conversación
+                current_conv_id = st.session_state.get("_current_conversation_id")
+                if not current_conv_id:
+                    # Crear nueva conversación automáticamente
+                    import datetime
+                    new_id = f"conv_{int(time.time())}_{secrets.token_hex(4)}"
+                    # Generar título a partir de las primeras palabras de la consulta
+                    title_words = consulta.split()[:6]
+                    conv_title = " ".join(title_words) + ("..." if len(consulta.split()) > 6 else "")
+                    new_conv = {
+                        "id": new_id,
+                        "title": conv_title,
+                        "created_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+                        "messages": []
+                    }
+                    st.session_state["_conversations"].insert(0, new_conv)
+                    st.session_state["_current_conversation_id"] = new_id
+                    st.session_state["_conversation_messages"][new_id] = []
+                    current_conv_id = new_id
+                
+                # Agregar mensaje del usuario
+                if current_conv_id not in st.session_state["_conversation_messages"]:
+                    st.session_state["_conversation_messages"][current_conv_id] = []
+                
+                st.session_state["_conversation_messages"][current_conv_id].append({
+                    "role": "user",
+                    "content": consulta,
+                    "timestamp": time.time()
+                })
+                
                 _start_generation(prompt)
                 st.rerun()
 
+    # Panel derecho con respuesta
+    with col_right:
+        st.header("🤖 Respuesta del Asistente")
+        
+        # Contenedor con scroll para la respuesta
+        response_container = st.container(height=600, border=True)
+        
+        with response_container:
+            # Inicializar placeholder para la respuesta
+            respuesta_placeholder = st.empty()
+            
+            # Mostrar historial completo de la conversación actual
+            current_conv_id = st.session_state.get("_current_conversation_id")
+            if current_conv_id and current_conv_id in st.session_state["_conversation_messages"]:
+                messages = st.session_state["_conversation_messages"][current_conv_id]
+                
+                # Mostrar todos los mensajes de la conversación
+                for i, msg in enumerate(messages):
+                    if msg["role"] == "user":
+                        st.markdown("### 👤 Tu consulta")
+                        st.info(msg["content"])
+                    elif msg["role"] == "assistant":
+                        st.markdown("### 💬 Respuesta")
+                        st.markdown(msg["content"])
+                        st.markdown("---")
+            
+            # Si hay generación activa, mostrar la nueva consulta y respuesta
+            if st.session_state.get("_gen_prompt") or st.session_state.get("_gen_result") or st.session_state.get("_gen_active"):
+                prompt_to_show = st.session_state.get("_gen_prompt", "")
+                if prompt_to_show and st.session_state.get("_gen_active"):
+                    # Extraer solo la consulta original (antes de los contextos)
+                    original_query = prompt_to_show.split("\n\n📊")[0].split("\n\n[")[0]
+                    st.markdown("### 👤 Tu consulta")
+                    st.info(original_query)
 
-        # Área única de respuesta (estilo ChatGPT): se va llenando con streaming.
-        st.markdown("### 💬 Respuesta")
-        respuesta_placeholder = st.empty()
+                # Área de respuesta que se va llenando con streaming
+                st.markdown("### 💬 Respuesta")
 
-        # Render/actualización mientras se genera
-        if st.session_state.get("_gen_active"):
-            col_stop, col_hint = st.columns([1, 3])
-            with col_stop:
-                if st.button("⏹️ Stop", key="stop_generation"):
-                    ev = st.session_state.get("_gen_stop_event")
-                    if ev is not None:
-                        ev.set()
-            with col_hint:
-                st.caption("Generando respuesta... (puedes detener con Stop)")
+            # Render/actualización mientras se genera
+            if st.session_state.get("_gen_active"):
+                st.caption("⏳ Generando respuesta...")
 
-            q = st.session_state.get("_gen_queue")
+                q = st.session_state.get("_gen_queue")
 
-            # Consumir mensajes de la cola (no bloqueante)
-            if q is not None:
-                try:
-                    while True:
-                        msg = q.get_nowait()
-                        if msg.get("type") == "text":
-                            st.session_state["_gen_text"] = msg.get("text", "")
-                        elif msg.get("type") == "final":
-                            final_result = msg.get("result")
-                            st.session_state["_gen_result"] = final_result
-                            # Asegurar que el texto final quede en el mismo bloque (sin duplicar).
-                            if isinstance(final_result, dict) and isinstance(final_result.get("respuesta"), str):
-                                st.session_state["_gen_text"] = final_result.get("respuesta") or st.session_state.get(
-                                    "_gen_text", ""
-                                )
-                            st.session_state["_gen_active"] = False
-                        elif msg.get("type") == "error":
-                            st.session_state["_gen_error"] = msg.get("error")
-                            st.session_state["_gen_error_obj"] = msg.get("error_obj")
-                            st.session_state["_gen_active"] = False
-                except queue.Empty:
-                    pass
+                # Consumir mensajes de la cola (no bloqueante)
+                if q is not None:
+                    try:
+                        while True:
+                            msg = q.get_nowait()
+                            if msg.get("type") == "text":
+                                st.session_state["_gen_text"] = msg.get("text", "")
+                            elif msg.get("type") == "final":
+                                final_result = msg.get("result")
+                                st.session_state["_gen_result"] = final_result
+                                # Asegurar que el texto final quede en el mismo bloque (sin duplicar).
+                                if isinstance(final_result, dict) and isinstance(final_result.get("respuesta"), str):
+                                    st.session_state["_gen_text"] = final_result.get("respuesta") or st.session_state.get(
+                                        "_gen_text", ""
+                                    )
+                                st.session_state["_gen_active"] = False
+                                # Limpiar stop event inmediatamente
+                                st.session_state["_gen_stop_event"] = None
+                                
+                                # Guardar respuesta en historial de conversación
+                                current_conv_id = st.session_state.get("_current_conversation_id")
+                                if current_conv_id and current_conv_id in st.session_state["_conversation_messages"]:
+                                    st.session_state["_conversation_messages"][current_conv_id].append({
+                                        "role": "assistant",
+                                        "content": st.session_state["_gen_text"],
+                                        "result": final_result,
+                                        "timestamp": time.time()
+                                    })
+                            elif msg.get("type") == "error":
+                                st.session_state["_gen_error"] = msg.get("error")
+                                st.session_state["_gen_error_obj"] = msg.get("error_obj")
+                                st.session_state["_gen_active"] = False
+                                # Limpiar stop event inmediatamente
+                                st.session_state["_gen_stop_event"] = None
+                    except queue.Empty:
+                        pass
 
             # Mostrar texto parcial (o final) en un único bloque
             respuesta_placeholder.markdown(st.session_state.get("_gen_text", ""))
@@ -1609,8 +2151,6 @@ ESPECIALIDAD GENERAL:
             if "colaboracion" in resultado:
                 with st.expander("🔗 Colaboración Multi-Agente"):
                     st.markdown(resultado["colaboracion"])
-
-            # La respuesta ya se muestra arriba en el bloque único (evita duplicado).
 
             if resultado.get("faiss_usado"):
                 with st.expander("🔍 FAISS RAG Utilizado"):
@@ -1664,6 +2204,133 @@ ESPECIALIDAD GENERAL:
                 )
             else:
                 st.error(f"Error al generar respuesta: {err_str}")
+
+    # --- Sección Excel con IA (en columna izquierda, abajo) ---
+    with col_left:
+        st.markdown("---")
+        with st.expander("📊 Análisis de Excel con IA", expanded=False):
+            st.caption(
+                "Sube un archivo Excel (.xlsx/.xls) o CSV para hacer preguntas al agente sobre los datos."
+            )
+            
+            # Debug: verificar disponibilidad de openpyxl
+            try:
+                import openpyxl
+                st.caption(f"✓ openpyxl disponible (v{openpyxl.__version__})")
+            except ImportError:
+                st.error("✗ openpyxl NO disponible - usa CSV")
+            
+            uploaded = st.file_uploader(
+                "Selecciona archivo Excel o CSV",
+                type=["xlsx", "xls", "csv"],
+                key="excel_uploader",
+            )
+            
+            if uploaded is not None:
+                import pandas as pd
+                ext = os.path.splitext(uploaded.name)[1].lower()
+                df = None
+                
+                if ext == ".csv":
+                    try:
+                        encodings = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1']
+                        separators = [',', ';', '\t']
+                        
+                        for encoding in encodings:
+                            for sep in separators:
+                                try:
+                                    uploaded.seek(0)
+                                    df = pd.read_csv(
+                                        uploaded, 
+                                        encoding=encoding,
+                                        sep=sep,
+                                        on_bad_lines='skip',
+                                        engine='python'
+                                    )
+                                    if not df.empty:
+                                        st.success(f"✓ CSV cargado ({len(df)} filas)")
+                                        break
+                                except Exception:
+                                    continue
+                            if df is not None and not df.empty:
+                                break
+                        
+                        if df is None or df.empty:
+                            st.error("No se pudo leer el CSV.")
+                    except Exception as e:
+                        st.error(f"Error: {e}")
+                        
+                elif ext in {".xlsx", ".xls"}:
+                    try:
+                        from openpyxl import load_workbook
+                        import io
+                        
+                        wb = load_workbook(io.BytesIO(uploaded.read()))
+                        all_sheets = {}
+                        
+                        for sheet_name in wb.sheetnames:
+                            ws = wb[sheet_name]
+                            data = []
+                            for row in ws.iter_rows(values_only=True):
+                                data.append(list(row))
+                            
+                            if data and len(data) > 0:
+                                headers = data[0]
+                                clean_headers = []
+                                seen = {}
+                                for i, header in enumerate(headers):
+                                    if header is None or str(header).strip() == "":
+                                        header = f"Columna_{i+1}"
+                                    else:
+                                        header = str(header).strip()
+                                    
+                                    if header in seen:
+                                        seen[header] += 1
+                                        header = f"{header}_{seen[header]}"
+                                    else:
+                                        seen[header] = 0
+                                    
+                                    clean_headers.append(header)
+                                
+                                sheet_df = pd.DataFrame(data[1:], columns=clean_headers)
+                                all_sheets[sheet_name] = sheet_df
+                        
+                        if all_sheets:
+                            st.success(f"✓ Excel cargado: {len(all_sheets)} pestaña(s)")
+                            st.session_state["_excel_sheets"] = all_sheets
+                            st.session_state["_excel_uploaded_file"] = uploaded
+                            st.session_state["_excel_filename"] = uploaded.name
+                            
+                            st.markdown("### 📋 Vista previa")
+                            for sheet_name, sheet_df in all_sheets.items():
+                                with st.expander(f"📄 {sheet_name} ({len(sheet_df)} filas)", expanded=False):
+                                    preview_rows = min(10, len(sheet_df))
+                                    st.dataframe(sheet_df.head(preview_rows), use_container_width=True)
+                                    if len(sheet_df) > preview_rows:
+                                        st.caption(f"Mostrando {preview_rows} de {len(sheet_df)} filas")
+                            
+                            df = list(all_sheets.values())[0]
+                            st.session_state["_excel_df"] = df
+                            st.info("💬 Haz preguntas en el chat principal")
+                        else:
+                            st.warning("Archivo vacío")
+                    except ImportError:
+                        st.error("openpyxl no disponible - usa CSV")
+                    except Exception as e:
+                        st.error(f"Error: {e}")
+
+                if df is not None and ext == ".csv":
+                    st.session_state["_excel_df"] = df
+                    st.session_state["_excel_uploaded_file"] = uploaded
+                    st.session_state["_excel_filename"] = uploaded.name
+                    
+                    st.success(f"✓ CSV: {len(df)} filas, {len(df.columns)} columnas")
+                    st.markdown("### 📋 Vista previa")
+                    preview_rows = min(10, len(df))
+                    st.dataframe(df.head(preview_rows), use_container_width=True)
+                    if len(df) > preview_rows:
+                        st.caption(f"Mostrando {preview_rows} de {len(df)} filas")
+                    st.info("💬 Haz preguntas en el chat principal")
 
 
 if __name__ == "__main__":

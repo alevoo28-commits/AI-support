@@ -213,4 +213,3 @@ class SistemaMemoriaAvanzada:
         if self.user_id and self.persistence:
             return self.persistence.get_user_stats(self.user_id)
         return None
-            self.vector_memory.clear()

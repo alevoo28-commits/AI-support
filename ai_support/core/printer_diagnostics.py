@@ -15,9 +15,16 @@ from ai_support.core.local_powershell import (
     safe_printer_command_list_drivers_json,
     safe_driver_command_pnputil_add,
     safe_printer_command_list_ports,
+    safe_printer_command_list_ports_json,
     safe_printer_command_list_printers,
+    safe_printer_command_list_printers_json,
+    safe_printer_command_get_printer_json,
+    safe_printer_command_get_port_json,
+    safe_printer_command_list_jobs,
+    safe_printer_command_clear_jobs,
     safe_printer_command_restart_spooler,
     safe_printer_command_set_default,
+    safe_printer_command_remove,
     safe_printer_command_test_port,
     safe_printer_command_print_test_page,
 )
@@ -69,6 +76,279 @@ def print_test_page(printer_name: str) -> PowerShellResult:
 
 def list_printer_drivers() -> PowerShellResult:
     return run_powershell(safe_printer_command_list_drivers(), timeout_s=30)
+
+
+def list_local_printers_structured() -> list[dict]:
+    """Retorna impresoras instaladas en el PC con info de puerto (si aplica)."""
+
+    import json
+
+    printers_res = run_powershell(safe_printer_command_list_printers_json(), timeout_s=25)
+    ports_res = run_powershell(safe_printer_command_list_ports_json(), timeout_s=25)
+
+    raw_p = (printers_res.stdout or "").strip()
+    raw_ports = (ports_res.stdout or "").strip()
+
+    printers_payload = []
+    if raw_p:
+        try:
+            printers_payload = json.loads(raw_p)
+        except Exception:
+            printers_payload = []
+
+    ports_payload = []
+    if raw_ports:
+        try:
+            ports_payload = json.loads(raw_ports)
+        except Exception:
+            ports_payload = []
+
+    if isinstance(printers_payload, dict):
+        printers_list = [printers_payload]
+    elif isinstance(printers_payload, list):
+        printers_list = printers_payload
+    else:
+        printers_list = []
+
+    if isinstance(ports_payload, dict):
+        ports_list = [ports_payload]
+    elif isinstance(ports_payload, list):
+        ports_list = ports_payload
+    else:
+        ports_list = []
+
+    ports_by_name: dict[str, dict] = {}
+    for port in ports_list:
+        if isinstance(port, dict):
+            name = str(port.get("Name") or "").strip()
+            if name:
+                ports_by_name[name] = port
+
+    out: list[dict] = []
+    for pr in printers_list:
+        if not isinstance(pr, dict):
+            continue
+        port_name = str(pr.get("PortName") or "").strip()
+        port = ports_by_name.get(port_name) if port_name else None
+        row = dict(pr)
+        if isinstance(port, dict):
+            row["PrinterHostAddress"] = port.get("PrinterHostAddress")
+            row["PortNumber"] = port.get("PortNumber")
+            row["Protocol"] = port.get("Protocol")
+        out.append(row)
+    return out
+
+
+def diagnose_and_fix_printer_by_name(
+    *,
+    printer_name: str,
+    try_repair: bool = True,
+) -> str:
+    """Diagnóstico local + reparación best-effort para una impresora instalada."""
+
+    import json
+
+    lines: list[str] = []
+    success: bool = False
+    failure_reason: str = ""
+    lines.append(f"[PRINTER_TROUBLESHOOT] impresora='{printer_name}'")
+
+    # 1) Datos base de impresora
+    try:
+        pr_res = run_powershell(safe_printer_command_get_printer_json(printer_name), timeout_s=20)
+        pr_raw = (pr_res.stdout or pr_res.stderr).strip()
+        pr = json.loads(pr_raw) if pr_raw else {}
+    except Exception as e:
+        lines.append(f"[PRINTER] No se pudo leer Get-Printer: {e}")
+        return "\n".join(lines)[:8000]
+
+    driver = str(pr.get("DriverName") or "").strip()
+    port_name = str(pr.get("PortName") or "").strip()
+    shared = bool(pr.get("Shared"))
+    status = pr.get("PrinterStatus")
+    share_name = str(pr.get("ShareName") or "").strip()
+
+    lines.append(f"[PRINTER] DriverName={driver or '(vacío)'}")
+    lines.append(f"[PRINTER] PortName={port_name or '(vacío)'}")
+    lines.append(f"[PRINTER] Shared={shared} ShareName={share_name or '(vacío)'}")
+    lines.append(f"[PRINTER] PrinterStatus={status}")
+
+    # 2) Spooler
+    try:
+        sp = run_powershell("Get-Service Spooler | Select-Object Status,StartType,Name | Format-List | Out-String", timeout_s=10)
+        lines.append("[SPOOLER]")
+        lines.append(((sp.stdout or sp.stderr).strip() or "(sin salida)")[:800])
+    except Exception as e:
+        lines.append(f"[SPOOLER] Error: {e}")
+
+    # 3) Cola
+    try:
+        jobs = run_powershell(safe_printer_command_list_jobs(printer_name), timeout_s=15)
+        jobs_raw = (jobs.stdout or "").strip()
+        if jobs_raw:
+            lines.append("[JOBS]")
+            lines.append(jobs_raw[:1200])
+        else:
+            lines.append("[JOBS] (sin trabajos o cmdlet no disponible)")
+    except Exception as e:
+        lines.append(f"[JOBS] Error: {e}")
+
+    # 4) Puerto/IP + test red (si aplica)
+    ip = ""
+    port_num = 9100
+    if port_name and not shared:
+        try:
+            port_res = run_powershell(safe_printer_command_get_port_json(port_name), timeout_s=15)
+            port_raw = (port_res.stdout or port_res.stderr).strip()
+            port = json.loads(port_raw) if port_raw else {}
+            ip = str(port.get("PrinterHostAddress") or "").strip()
+            pn = port.get("PortNumber")
+            if isinstance(pn, int):
+                port_num = pn
+            elif isinstance(pn, str) and pn.isdigit():
+                port_num = int(pn)
+            lines.append(f"[PORT] Host={ip or '(vacío)'} Port={port_num}")
+        except Exception as e:
+            lines.append(f"[PORT] Error: {e}")
+
+    if ip:
+        try:
+            # safe_printer_command_test_port limita puertos permitidos
+            allowed_port = port_num if port_num in {9100, 515, 631} else 9100
+            tn = run_powershell(safe_printer_command_test_port(ip, allowed_port), timeout_s=12)
+            lines.append("[NETWORK] Test-NetConnection")
+            lines.append(((tn.stdout or tn.stderr).strip() or "(sin salida)")[:900])
+        except Exception as e:
+            lines.append(f"[NETWORK] Error: {e}")
+    else:
+        lines.append("[NETWORK] Sin IP asociada (USB/Shared/Local): se omite test de red")
+
+    # 5) Página de prueba
+    test_rc = None
+    try:
+        tp = print_test_page(printer_name)
+        test_rc = tp.returncode
+        lines.append(f"[TEST_PAGE] rc={tp.returncode}")
+        out = (tp.stdout or tp.stderr).strip()
+        if out:
+            lines.append(out[:900])
+    except Exception as e:
+        lines.append(f"[TEST_PAGE] Error: {e}")
+
+    if not try_repair:
+        # Resumen sin reparación
+        lines.append("[SUMMARY] status=failed reason=sin_reparacion")
+        return "\n".join(lines)[:8000]
+
+    # --- Reparación best-effort ---
+    if test_rc == 0:
+        lines.append("[REPAIR] Página de prueba OK; no se requieren acciones.")
+        success = True
+        lines.append("[SUMMARY] status=ok reason=test_page_initial_ok")
+        return "\n".join(lines)[:8000]
+
+    lines.append("[REPAIR] Intentando acciones automáticas...")
+
+    # A) Limpiar cola
+    try:
+        cj = run_powershell(safe_printer_command_clear_jobs(printer_name), timeout_s=25)
+        lines.append(f"[REPAIR] Clear jobs rc={cj.returncode}")
+        out = (cj.stdout or cj.stderr).strip()
+        if out:
+            lines.append(out[:600])
+    except Exception as e:
+        lines.append(f"[REPAIR] Clear jobs error: {e}")
+
+    # B) Reiniciar spooler
+    try:
+        rs = restart_spooler()
+        lines.append(f"[REPAIR] Restart spooler rc={rs.returncode}")
+        out = (rs.stdout or rs.stderr).strip()
+        if out:
+            lines.append(out[:600])
+    except Exception as e:
+        lines.append(f"[REPAIR] Restart spooler error: {e}")
+
+    # C) Reintentar página de prueba
+    try:
+        tp2 = print_test_page(printer_name)
+        lines.append(f"[REPAIR] Retry test page rc={tp2.returncode}")
+        out = (tp2.stdout or tp2.stderr).strip()
+        if out:
+            lines.append(out[:700])
+        if tp2.returncode == 0:
+            lines.append("[REPAIR] OK después de limpiar cola / reiniciar spooler")
+            success = True
+            lines.append("[SUMMARY] status=ok reason=test_page_after_spooler")
+            return "\n".join(lines)[:8000]
+    except Exception as e:
+        lines.append(f"[REPAIR] Retry test page error: {e}")
+
+    # D) Si es TCP/IP y tenemos datos, remover y re-agregar
+    if ip and driver and not shared:
+        lines.append("[REPAIR] Intentando quitar y re-conectar impresora TCP/IP...")
+        try:
+            rm = run_powershell(safe_printer_command_remove(printer_name), timeout_s=60)
+            lines.append(f"[REPAIR] Remove-Printer rc={rm.returncode}")
+            out = (rm.stdout or rm.stderr).strip()
+            if out:
+                lines.append(out[:800])
+        except Exception as e:
+            lines.append(f"[REPAIR] Remove-Printer error: {e}")
+
+        try:
+            add = run_powershell(
+                safe_printer_command_add_ip(ip, printer_name, driver, port_number=port_num),
+                timeout_s=120,
+            )
+            lines.append(f"[REPAIR] Re-add printer rc={add.returncode}")
+            out = (add.stdout or add.stderr).strip()
+            if out:
+                lines.append(out[:1200])
+        except Exception as e:
+            lines.append(f"[REPAIR] Re-add error: {e}")
+
+        try:
+            tp3 = print_test_page(printer_name)
+            lines.append(f"[REPAIR] Post-reconnect test page rc={tp3.returncode}")
+            out = (tp3.stdout or tp3.stderr).strip()
+            if out:
+                lines.append(out[:900])
+            if tp3.returncode == 0:
+                success = True
+                lines.append("[SUMMARY] status=ok reason=test_page_after_reconnect")
+                return "\n".join(lines)[:8000]
+        except Exception as e:
+            lines.append(f"[REPAIR] Post-reconnect test page error: {e}")
+    else:
+        if shared:
+            lines.append("[REPAIR] Impresora compartida: no se reconecta automáticamente (requiere UNC/servidor).")
+            failure_reason = "shared_printer"
+        elif not ip:
+            lines.append("[REPAIR] Sin IP: no se puede reconectar automáticamente.")
+            failure_reason = "no_ip"
+        elif not driver:
+            lines.append("[REPAIR] DriverName vacío: no se puede reconectar automáticamente.")
+            failure_reason = "no_driver"
+
+    # Nota sobre tóner/tinta
+    lines.append(
+        "[NOTE] Nivel de tinta/tóner no siempre es consultable estándar en Windows sin herramientas del fabricante/SNMP."
+    )
+
+    if not success:
+        # Sugerencias manuales
+        if not failure_reason:
+            failure_reason = "persisting_issue"
+        lines.append(f"[SUMMARY] status=failed reason={failure_reason}")
+        lines.append("[SUGGEST] Verificar cables/energía y conexión física (USB/Red).")
+        lines.append("[SUGGEST] Revisar papel, atascos y niveles de tinta/tóner.")
+        lines.append("[SUGGEST] Abrir 'Cola de impresión' y limpiar trabajos manualmente si persisten.")
+        lines.append("[SUGGEST] Probar el driver del fabricante (archivo .INF) y reinstalar.")
+        lines.append("[SUGGEST] Si es TCP/IP: comprobar ping y puerto 9100/515/631 desde este equipo.")
+        lines.append("[SUGGEST] Verificar si está como 'impresora predeterminada' en Windows.")
+
+    return "\n".join(lines)[:8000]
 
 
 def _list_printer_driver_names() -> list[str]:

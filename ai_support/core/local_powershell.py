@@ -107,8 +107,55 @@ def safe_printer_command_list_printers() -> str:
     )
 
 
+def safe_printer_command_list_printers_json() -> str:
+    # Salida parseable para UI (selector) y automatización.
+    return (
+        "Get-Printer | Select-Object Name,DriverName,PortName,Shared,ShareName,PrinterStatus | ConvertTo-Json -Compress | Out-String"
+    )
+
+
 def safe_printer_command_list_ports() -> str:
     return "Get-PrinterPort | Select-Object Name,PrinterHostAddress,PortNumber,Protocol | Format-Table -AutoSize | Out-String"
+
+
+def safe_printer_command_list_ports_json() -> str:
+    return (
+        "Get-PrinterPort | Select-Object Name,PrinterHostAddress,PortNumber,Protocol | ConvertTo-Json -Compress | Out-String"
+    )
+
+
+def safe_printer_command_get_printer_json(printer_name: str) -> str:
+    printer_name = _ensure_safe_arg_text(printer_name, "printer_name")
+    return (
+        f"Get-Printer -Name '{printer_name}' -ErrorAction Stop | "
+        f"Select-Object Name,DriverName,PortName,Shared,ShareName,PrinterStatus | ConvertTo-Json -Compress | Out-String"
+    )
+
+
+def safe_printer_command_get_port_json(port_name: str) -> str:
+    port_name = _ensure_safe_arg_text(port_name, "port_name")
+    return (
+        f"Get-PrinterPort -Name '{port_name}' -ErrorAction Stop | "
+        f"Select-Object Name,PrinterHostAddress,PortNumber,Protocol | ConvertTo-Json -Compress | Out-String"
+    )
+
+
+def safe_printer_command_list_jobs(printer_name: str) -> str:
+    printer_name = _ensure_safe_arg_text(printer_name, "printer_name")
+    # Get-PrintJob puede no estar disponible en algunos entornos; manejamos silenciosamente.
+    return (
+        f"Get-PrintJob -PrinterName '{printer_name}' -ErrorAction SilentlyContinue | "
+        f"Select-Object Id,DocumentName,JobStatus,TotalPages,PagesPrinted,SubmittedTime | ConvertTo-Json -Compress | Out-String"
+    )
+
+
+def safe_printer_command_clear_jobs(printer_name: str) -> str:
+    printer_name = _ensure_safe_arg_text(printer_name, "printer_name")
+    # Elimina trabajos en cola (best-effort)
+    return (
+        f"Get-PrintJob -PrinterName '{printer_name}' -ErrorAction SilentlyContinue | "
+        f"Remove-PrintJob -Confirm:$false -ErrorAction SilentlyContinue | Out-String"
+    )
 
 
 def safe_printer_command_restart_spooler() -> str:

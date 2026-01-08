@@ -1,5 +1,7 @@
 pandas
 plotly
+openpyxl
+PyJWT
 streamlit>=1.29.0
 openai>=1.32.2
 langchain-core>=1.1.0
@@ -13,3 +15,5 @@ psutil>=5.9.0
 azure-ai-inference
 azure-core
 mysql-connector-python
+python-dotenv
+requests>=2.27.0

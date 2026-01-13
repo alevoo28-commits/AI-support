@@ -29,11 +29,16 @@ _GOOGLE_TOKENINFO_ENDPOINT = "https://oauth2.googleapis.com/tokeninfo"
 def google_auth_enabled() -> bool:
     raw = os.getenv("AI_SUPPORT_ENABLE_GOOGLE_AUTH")
     if raw is None:
+        # Safer default: disabled unless explicitly enabled.
+        # This avoids blocking the chat UI on localhost when OAuth is not intended.
         return False
     enabled = raw.strip().lower() in {"1", "true", "yes", "y", "on"}
     if not enabled:
         return False
-    return bool(os.getenv("AI_SUPPORT_GOOGLE_CLIENT_ID") and os.getenv("AI_SUPPORT_GOOGLE_CLIENT_SECRET"))
+    client = (os.getenv("AI_SUPPORT_GOOGLE_CLIENT_ID") or os.getenv("GOOGLE_CLIENT_ID") or "").strip()
+    secret = (os.getenv("AI_SUPPORT_GOOGLE_CLIENT_SECRET") or os.getenv("GOOGLE_CLIENT_SECRET") or "").strip()
+    redirect = (os.getenv("AI_SUPPORT_GOOGLE_REDIRECT_URI") or os.getenv("GOOGLE_REDIRECT_URI") or "").strip()
+    return bool(client and secret and redirect)
 
 
 def google_allowed_domain() -> str:
@@ -41,14 +46,14 @@ def google_allowed_domain() -> str:
 
 
 def google_redirect_uri() -> Optional[str]:
-    uri = os.getenv("AI_SUPPORT_GOOGLE_REDIRECT_URI")
+    uri = os.getenv("AI_SUPPORT_GOOGLE_REDIRECT_URI") or os.getenv("GOOGLE_REDIRECT_URI")
     if not uri:
         return None
     return uri.strip()
 
 
 def build_google_auth_url(*, state: str) -> str:
-    client_id = os.getenv("AI_SUPPORT_GOOGLE_CLIENT_ID", "").strip()
+    client_id = (os.getenv("AI_SUPPORT_GOOGLE_CLIENT_ID") or os.getenv("GOOGLE_CLIENT_ID") or "").strip()
     redirect_uri = google_redirect_uri()
     if not client_id or not redirect_uri:
         raise ValueError("Falta AI_SUPPORT_GOOGLE_CLIENT_ID o AI_SUPPORT_GOOGLE_REDIRECT_URI")
@@ -77,8 +82,12 @@ def exchange_code_for_tokens(*, code: str) -> Dict[str, Any]:
     Retorna dict que usualmente incluye: access_token, id_token, expires_in, scope, token_type.
     """
 
-    client_id = os.getenv("AI_SUPPORT_GOOGLE_CLIENT_ID", "").strip()
-    client_secret = os.getenv("AI_SUPPORT_GOOGLE_CLIENT_SECRET", "").strip()
+    client_id = (os.getenv("AI_SUPPORT_GOOGLE_CLIENT_ID") or os.getenv("GOOGLE_CLIENT_ID") or "").strip()
+    client_secret = (
+        os.getenv("AI_SUPPORT_GOOGLE_CLIENT_SECRET")
+        or os.getenv("GOOGLE_CLIENT_SECRET")
+        or ""
+    ).strip()
     redirect_uri = google_redirect_uri()
 
     if not client_id or not client_secret or not redirect_uri:
@@ -114,7 +123,7 @@ def verify_id_token_and_get_email(*, raw_id_token: str) -> str:
     Enforce: email verificado + dominio permitido.
     """
 
-    client_id = os.getenv("AI_SUPPORT_GOOGLE_CLIENT_ID", "").strip()
+    client_id = (os.getenv("AI_SUPPORT_GOOGLE_CLIENT_ID") or os.getenv("GOOGLE_CLIENT_ID") or "").strip()
     if not client_id:
         raise ValueError("Falta AI_SUPPORT_GOOGLE_CLIENT_ID")
 

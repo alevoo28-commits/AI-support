@@ -44,11 +44,19 @@ class AgenteEspecializado:
 
         # LLM (GitHub Models o LM Studio - ambos compatibles OpenAI)
         # Nota: algunos modelos en GitHub Models rechazan cualquier valor de temperature que no sea el default.
+        timeout_s = 120.0
+        try:
+            timeout_s = float(os.getenv("AI_SUPPORT_LLM_TIMEOUT_SECONDS", "120") or "120")
+        except Exception:
+            timeout_s = 120.0
+
         llm_kwargs: Dict[str, Any] = {
             "base_url": llm_config.base_url,
             "api_key": llm_config.api_key,
             "model": llm_config.model,
             "streaming": True,
+            "timeout": timeout_s,
+            "max_retries": 0,
         }
         if llm_config.provider != "github":
             llm_kwargs["temperature"] = 0.7
@@ -63,6 +71,7 @@ class AgenteEspecializado:
                     base_url=embeddings_config.base_url,
                     api_key=embeddings_config.api_key,
                     model=embeddings_config.model,
+                    timeout=timeout_s,
                 )
             except Exception as e:
                 print(f"⚠️ {self.nombre}: Embeddings no disponibles ({e}). Se desactiva RAG/VectorMemory.")

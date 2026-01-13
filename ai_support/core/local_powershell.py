@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 from dataclasses import dataclass
 from typing import Optional
+
+from ai_support.core.config import excel_only_mode_enabled
 
 
 @dataclass(frozen=True)
@@ -69,12 +72,28 @@ def ensure_unc_printer(value: str) -> str:
     return value
 
 
+def ensure_prefix_length(value: int) -> int:
+    try:
+        value_int = int(value)
+    except Exception as e:
+        raise ValueError("PrefixLength inválido") from e
+    if value_int < 0 or value_int > 32:
+        raise ValueError("PrefixLength inválido")
+    return value_int
+
+
 def run_powershell(command: str, timeout_s: int = 20) -> PowerShellResult:
     """Ejecuta PowerShell en modo seguro (sin perfil).
 
     Nota: este runner NO acepta comandos arbitrarios del modelo; solo debe ser usado
     desde funciones internas con parámetros validados.
     """
+
+    if excel_only_mode_enabled():
+        raise PermissionError(
+            "PowerShell está deshabilitado por seguridad (modo Excel-only). "
+            "Desactiva AI_SUPPORT_EXCEL_ONLY para habilitar herramientas locales."
+        )
 
     command = _ensure_safe_text(command, "command")
 
@@ -98,6 +117,81 @@ def run_powershell(command: str, timeout_s: int = 20) -> PowerShellResult:
         stdout=completed.stdout or "",
         stderr=completed.stderr or "",
         returncode=int(completed.returncode or 0),
+    )
+
+
+def safe_net_command_list_adapters_json() -> str:
+    # Listado parseable de adaptadores (para selector en UI)
+    return (
+        "Get-NetAdapter | "
+        "Select-Object Name,InterfaceDescription,Status,MacAddress,LinkSpeed | "
+        "ConvertTo-Json -Compress | Out-String"
+    )
+
+
+def safe_net_command_get_ipv4_addresses_json(interface_alias: str) -> str:
+    interface_alias = _ensure_safe_arg_text(interface_alias, "interface_alias")
+    return (
+        f"Get-NetIPAddress -InterfaceAlias '{interface_alias}' -AddressFamily IPv4 -ErrorAction SilentlyContinue | "
+        "Select-Object InterfaceAlias,IPAddress,PrefixLength,AddressState,Type | "
+        "ConvertTo-Json -Compress | Out-String"
+    )
+
+
+def safe_net_command_get_ipconfiguration_json(interface_alias: str) -> str:
+    interface_alias = _ensure_safe_arg_text(interface_alias, "interface_alias")
+    # IPv4DefaultGateway puede venir como objeto; DNSServer como lista.
+    return (
+        f"Get-NetIPConfiguration -InterfaceAlias '{interface_alias}' -ErrorAction SilentlyContinue | "
+        "Select-Object InterfaceAlias,IPv4DefaultGateway,DNSServer | "
+        "ConvertTo-Json -Compress | Out-String"
+    )
+
+
+def safe_net_command_test_ip_in_use(ip: str) -> str:
+    ip = ensure_ipv4(ip)
+    # Test-NetConnection devuelve True/False con -InformationLevel Quiet
+    return f"Test-NetConnection -ComputerName {ip} -InformationLevel Quiet | Out-String"
+
+
+def safe_net_command_set_static_ipv4(
+    *,
+    interface_alias: str,
+    ip: str,
+    prefix_length: int,
+    default_gateway: str | None,
+    dns_servers: list[str] | None,
+) -> str:
+    interface_alias = _ensure_safe_arg_text(interface_alias, "interface_alias")
+    ip = ensure_ipv4(ip)
+    prefix_length = ensure_prefix_length(prefix_length)
+    gw = ensure_ipv4(default_gateway) if default_gateway else ""
+
+    dns_list: list[str] = []
+    if dns_servers:
+        for d in dns_servers:
+            dns_list.append(ensure_ipv4(str(d)))
+
+    # Nota: requiere permisos de administrador.
+    # Estrategia:
+    # - Remueve IPs IPv4 existentes en el alias, excepto la IP objetivo y APIPA (169.254.x.x)
+    # - Agrega la IP estática con gateway si se especifica
+    # - Configura DNS si se especifica
+    dns_ps = "@()"
+    if dns_list:
+        quoted = ",".join([f"'{d}'" for d in dns_list])
+        dns_ps = f"@({quoted})"
+
+    # Evitar wildcard '*' (no permitido por el validador). Usamos StartsWith.
+    return (
+        f"$alias='{interface_alias}'; $ip='{ip}'; $prefix={prefix_length}; $gw='{gw}'; $dns={dns_ps}; "
+        "Get-NetIPAddress -InterfaceAlias $alias -AddressFamily IPv4 -ErrorAction SilentlyContinue | "
+        "Where-Object { ($_.IPAddress -ne $ip) -and (-not ($_.IPAddress).StartsWith('169.254.')) } | "
+        "Remove-NetIPAddress -Confirm:$false -ErrorAction SilentlyContinue | Out-String; "
+        "if ($gw) { New-NetIPAddress -InterfaceAlias $alias -IPAddress $ip -PrefixLength $prefix -DefaultGateway $gw -ErrorAction Stop | Out-String } "
+        "else { New-NetIPAddress -InterfaceAlias $alias -IPAddress $ip -PrefixLength $prefix -ErrorAction Stop | Out-String }; "
+        "if ($dns.Count -gt 0) { Set-DnsClientServerAddress -InterfaceAlias $alias -ServerAddresses $dns -ErrorAction Stop | Out-String }; "
+        "Get-NetIPConfiguration -InterfaceAlias $alias | Select-Object InterfaceAlias,IPv4Address,IPv4DefaultGateway,DNSServer | ConvertTo-Json -Compress | Out-String"
     )
 
 
@@ -234,3 +328,58 @@ def safe_printer_command_print_test_page(printer_name: str) -> str:
     # PrintUIEntry imprime una página de prueba en la impresora indicada.
     # Nota: puede fallar si el nombre no existe o si la impresora está offline.
     return f"rundll32 printui.dll,PrintUIEntry /k /n \"{printer_name}\" | Out-String"
+
+
+# ============================================================================
+# Comandos de red: adaptadores, conectividad, IP
+# ============================================================================
+
+def safe_net_command_test_connectivity(target: str = "8.8.8.8") -> str:
+    """Prueba conectividad a un destino (IP o hostname).
+    
+    Args:
+        target: IP o hostname a probar (default: 8.8.8.8 - Google DNS)
+    
+    Returns:
+        Comando PowerShell que prueba la conectividad
+    """
+    target = _ensure_safe_arg_text(target, "target")
+    return f"Test-Connection -ComputerName {target} -Count 2 -ErrorAction SilentlyContinue | ConvertTo-Json -Compress | Out-String"
+
+
+def safe_net_command_get_adapter_ip(interface_alias: str) -> str:
+    """Obtiene la configuración IP de un adaptador específico.
+    
+    Args:
+        interface_alias: Nombre del adaptador (ej: "Ethernet")
+    
+    Returns:
+        Comando PowerShell que retorna IP, Gateway, DNS en formato JSON
+    """
+    interface_alias = _ensure_safe_arg_text(interface_alias, "interface_alias")
+    return (
+        f"$adapter = Get-NetIPAddress -InterfaceAlias '{interface_alias}' -AddressFamily IPv4 -ErrorAction SilentlyContinue | Select-Object -First 1; "
+        f"$gateway = (Get-NetRoute -InterfaceAlias '{interface_alias}' -DestinationPrefix '0.0.0.0/0' -ErrorAction SilentlyContinue).NextHop; "
+        f"$dns = (Get-DnsClientServerAddress -InterfaceAlias '{interface_alias}' -AddressFamily IPv4 -ErrorAction SilentlyContinue).ServerAddresses; "
+        f"@{{IPAddress=$adapter.IPAddress; PrefixLength=$adapter.PrefixLength; Gateway=$gateway; DNS=$dns}} | ConvertTo-Json -Compress | Out-String"
+    )
+
+
+def safe_net_command_test_connectivity_on_interface(interface_alias: str, target: str = "8.8.8.8") -> str:
+    """Prueba conectividad específicamente desde un adaptador.
+    
+    Args:
+        interface_alias: Nombre del adaptador (ej: "Ethernet")
+        target: IP o hostname a probar
+    
+    Returns:
+        Comando PowerShell que prueba conectividad desde ese adaptador
+    """
+    interface_alias = _ensure_safe_arg_text(interface_alias, "interface_alias")
+    target = _ensure_safe_arg_text(target, "target")
+    # Get-NetIPAddress para obtener índice del adaptador, luego Test-NetConnection
+    return (
+        f"$ifIndex = (Get-NetAdapter -Name '{interface_alias}' -ErrorAction SilentlyContinue).ifIndex; "
+        f"Test-NetConnection -ComputerName {target} -InformationLevel Detailed -ErrorAction SilentlyContinue | "
+        f"Select-Object ComputerName,RemoteAddress,PingSucceeded,PingReplyDetails | ConvertTo-Json -Compress | Out-String"
+    )

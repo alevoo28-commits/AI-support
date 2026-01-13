@@ -74,3 +74,18 @@ def default_lmstudio_embeddings() -> EmbeddingsProviderConfig:
         api_key_env="LMSTUDIO_API_KEY",
         model=os.getenv("LMSTUDIO_EMBED_MODEL", ""),
     )
+
+
+def excel_only_mode_enabled() -> bool:
+    """Modo seguro: el sistema SOLO procesa consultas sobre Excel/CSV.
+
+    Cuando está activo, se deben deshabilitar acciones externas (PowerShell, integraciones, automatización).
+    Activación por env:
+    - AI_SUPPORT_EXCEL_ONLY=true|1|yes
+    - o AI_SUPPORT_MODE=excel_only
+    """
+    mode = (os.getenv("AI_SUPPORT_MODE") or "").strip().lower()
+    if mode == "excel_only":
+        return True
+    raw = (os.getenv("AI_SUPPORT_EXCEL_ONLY") or "").strip().lower()
+    return raw in {"1", "true", "yes", "y", "on"}

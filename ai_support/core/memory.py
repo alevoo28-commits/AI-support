@@ -62,8 +62,8 @@ class SistemaMemoriaAvanzada:
         # Restaurar historial del usuario si existe
         if self.user_id and self.persistence:
             restored = restore_user_memory_to_buffer(self.user_id, self.buffer_memory, self.persistence)
-            if restored:
-                print(f"✅ Historial restaurado para usuario: {self.user_id}")
+            # No imprimir en consola (Streamlit re-ejecuta y spamea logs)
+            # Si se necesita, usar logging a nivel DEBUG desde la app.
 
         # 2. ConversationSummaryMemory - Resume cuando es largo
         self.summary_memory = None

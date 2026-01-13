@@ -44,6 +44,13 @@ from ai_support.core.printer_diagnostics import (
 )
 from ai_support.core.printer_inventory_mysql import fetch_printers_from_mysql, mysql_enabled
 from ai_support.core.user_memory_persistence import UserMemoryPersistence
+from ai_support.core.ip_assignment import (
+    assign_ip_to_ethernet_and_register,
+    list_net_adapters,
+    get_adapter_ipv4,
+)
+from ai_support.core.users_mysql import get_user_by_email, upsert_user_by_email
+from ai_support.core.windows_elevation import is_windows_admin, restart_streamlit_elevated
 from ai_support.core.google_auth import (
     build_google_auth_url,
     exchange_code_for_tokens,
@@ -287,21 +294,39 @@ def main() -> None:
                 st.session_state["google_oauth_state"] = secrets.token_urlsafe(24)
 
             # Procesar callback si viene code/state
-            try:
-                qp = st.experimental_get_query_params()
-            except Exception:
-                qp = {}
+            def _get_query_params():
+                if hasattr(st, "query_params"):
+                    return st.query_params
+                return st.experimental_get_query_params()
 
-            code = (qp.get("code") or [None])[0]
-            state = (qp.get("state") or [None])[0]
-            oauth_error = (qp.get("error") or [None])[0]
+            def _qp_first(qp_mapping, key: str) -> str | None:
+                val = qp_mapping.get(key) if qp_mapping is not None else None
+                if isinstance(val, list):
+                    return val[0] if val else None
+                if val is None:
+                    return None
+                return str(val)
+
+            def _clear_query_params() -> None:
+                if hasattr(st, "query_params"):
+                    try:
+                        st.query_params.clear()
+                    except Exception:
+                        pass
+                else:
+                    try:
+                        st.experimental_set_query_params()
+                    except Exception:
+                        pass
+
+            qp = _get_query_params()
+            code = _qp_first(qp, "code")
+            state = _qp_first(qp, "state")
+            oauth_error = _qp_first(qp, "error")
 
             if oauth_error:
                 st.error(f"Google OAuth error: {oauth_error}")
-                try:
-                    st.experimental_set_query_params()
-                except Exception:
-                    pass
+                _clear_query_params()
 
             if code and state and not st.session_state.get("_google_oauth_done"):
                 if state != st.session_state.get("google_oauth_state"):
@@ -320,10 +345,7 @@ def main() -> None:
                         st.error(f"No se pudo autenticar: {e}")
 
                 # Limpiar query params para no re-procesar
-                try:
-                    st.experimental_set_query_params()
-                except Exception:
-                    pass
+                _clear_query_params()
 
                 st.rerun()
 
@@ -344,6 +366,63 @@ def main() -> None:
                 st.stop()
 
             st.success(f"👤 Sesión: **{current_user}**")
+
+            # --- Provisionamiento de usuario en MySQL (tabla usuarios) ---
+            # Solo aplica si el usuario es un email (Google OAuth) y MySQL está habilitado.
+            if isinstance(current_user, str) and "@" in current_user:
+                with st.expander("🗃️ Perfil en MySQL", expanded=False):
+                    st.caption(
+                        "Crea/actualiza tu registro en la tabla `personal` usando el email de Google. "
+                        "Si no existes, completa el formulario para registrarte."
+                    )
+                    mysql_ok = bool((os.getenv("AI_SUPPORT_MYSQL_ENABLE") or "").strip().lower() in {"1", "true", "yes", "y", "on"})
+                    if not mysql_ok:
+                        st.info("MySQL no está habilitado (AI_SUPPORT_MYSQL_ENABLE=false).")
+                    else:
+                        try:
+                            db_user = get_user_by_email(current_user)
+                            st.session_state["_mysql_user_exists"] = bool(db_user)
+                        except Exception as e:
+                            db_user = None
+                            st.session_state["_mysql_user_exists"] = False
+                            st.error(f"No se pudo consultar usuario en MySQL: {e}")
+
+                        if db_user:
+                            st.success("Registro encontrado en MySQL.")
+                            st.caption(f"IP registrada: {str(db_user.get('IP') or db_user.get('ip') or '').strip() or '(vacía)'}")
+                        else:
+                            st.warning("No existe registro en MySQL para este email.")
+
+                        with st.form("mysql_user_profile_form", clear_on_submit=False):
+                            st.text_input("Email", value=current_user, disabled=True)
+                            nombre = st.text_input("Nombre", value=str((db_user or {}).get("nombre") or ""))
+                            apellido = st.text_input("Apellido", value=str((db_user or {}).get("apellido") or ""))
+                            apellido_2 = st.text_input("Segundo apellido (opcional)", value=str((db_user or {}).get("apellido_2") or ""))
+                            rut = st.text_input("RUT (opcional)", value=str((db_user or {}).get("rut") or ""))
+                            dep_raw = (db_user or {}).get("departamento_id")
+                            dep_default = int(dep_raw) if isinstance(dep_raw, (int, float)) and str(dep_raw).strip() else 0
+                            departamento_id = st.number_input("Departamento ID (opcional)", min_value=0, max_value=999999, value=dep_default, step=1)
+                            tui = st.text_input("TUI (opcional)", value=str((db_user or {}).get("tui") or ""))
+                            submitted_profile = st.form_submit_button("Guardar en MySQL", use_container_width=True)
+
+                        if submitted_profile:
+                            try:
+                                dep_val = int(departamento_id) if int(departamento_id) > 0 else None
+                                row = upsert_user_by_email(
+                                    email=current_user,
+                                    nombre=nombre,
+                                    apellido=apellido,
+                                    apellido_2=apellido_2,
+                                    rut=rut,
+                                    departamento_id=dep_val,
+                                    tui=tui,
+                                )
+                                st.session_state["_mysql_user_exists"] = True
+                                st.success("Perfil guardado/actualizado.")
+                                st.caption(f"ID: {row.get('id', '(desconocido)')} | IP: {row.get('IP', '')}")
+                            except Exception as e:
+                                st.error(f"No se pudo guardar perfil: {e}")
+
             if st.button("🚪 Cerrar sesión", use_container_width=True):
                 st.session_state.pop("current_user", None)
                 st.session_state.pop("_google_oauth_done", None)
@@ -353,6 +432,14 @@ def main() -> None:
             if st.button("🗑️ Borrar historial", use_container_width=True):
                 if persistence.delete_user_memory(current_user):
                     st.success("Historial borrado")
+                # También borrar conversaciones UI persistidas (estilo ChatGPT)
+                try:
+                    safe_id = persistence._sanitize_user_id(current_user)
+                    ui_path = os.path.join(str(persistence.storage_dir), f"{safe_id}_ui_conversations.json")
+                    if os.path.exists(ui_path):
+                        os.remove(ui_path)
+                except Exception:
+                    pass
                 st.session_state["orquestador"] = None
                 st.rerun()
 
@@ -369,6 +456,14 @@ def main() -> None:
             if st.button("🗑️ Borrar historial", use_container_width=True):
                 if persistence.delete_user_memory(current_user):
                     st.success("Historial borrado")
+                # También borrar conversaciones UI persistidas (estilo ChatGPT)
+                try:
+                    safe_id = persistence._sanitize_user_id(current_user)
+                    ui_path = os.path.join(str(persistence.storage_dir), f"{safe_id}_ui_conversations.json")
+                    if os.path.exists(ui_path):
+                        os.remove(ui_path)
+                except Exception:
+                    pass
                 st.session_state["orquestador"] = None
                 st.rerun()
         
@@ -377,10 +472,19 @@ def main() -> None:
         st.markdown("### ⚙️ Configuración de Modelo")
         st.markdown("---")
         
+        # UX: si no hay token de GitHub, preferir LM Studio en localhost para no dejar el chat deshabilitado.
+        default_provider_index = 0
+        try:
+            if not default_github_llm().api_key:
+                default_provider_index = 1
+        except Exception:
+            default_provider_index = 0
+
         provider = st.selectbox(
             "🔌 Proveedor LLM",
             options=["GitHub Models", "LM Studio (local)"],
-            index=0,
+            index=default_provider_index,
+            key="provider_choice",
             help="Selecciona el proveedor de modelos de lenguaje"
         )
 
@@ -615,15 +719,24 @@ def main() -> None:
 
         if apply_cfg or (prev_cfg_key is None):
             st.session_state["_cfg_key"] = cfg_key
-            # No inicializar si GitHub no tiene token
+            # Si GitHub no tiene token, no dejar el sistema sin orquestador.
             if llm_cfg.provider == "github" and not llm_cfg.api_key:
-                st.session_state.pop("orquestador", None)
-            else:
+                st.error("Falta `GITHUB_TOKEN`. En localhost se usará `LM Studio (local)` por defecto.")
+                try:
+                    llm_cfg = default_lmstudio_llm()
+                    emb_cfg = default_lmstudio_embeddings()
+                except Exception:
+                    pass
+
+            try:
                 st.session_state.orquestador = OrquestadorMultiagente(
-                    llm_config=llm_cfg, 
+                    llm_config=llm_cfg,
                     embeddings_config=emb_cfg,
-                    user_id=st.session_state.get("current_user")
+                    user_id=st.session_state.get("current_user"),
                 )
+            except Exception as e:
+                st.session_state.orquestador = None
+                st.error(f"No se pudo inicializar el orquestador: {e}")
         elif prev_cfg_key != cfg_key:
             st.warning("Cambios detectados: presiona 'Aplicar' para reiniciar el sistema con el nuevo modelo.")
 
@@ -717,48 +830,54 @@ ESPECIALIDAD GENERAL:
         menu = st.radio("Selecciona una sección:", ("Agentes",), key="menu_navegacion")
         st.markdown("---")
         if st.button("🔄 Limpiar Memoria", key="limpiar_memoria", use_container_width=True):
-            for agente in st.session_state.orquestador.agentes.values():
-                agente.memoria.limpiar_memoria()
-                agente.historial = []
-            st.success("✅ Memoria avanzada limpiada")
+            if st.session_state.get("orquestador"):
+                for agente in st.session_state.orquestador.agentes.values():
+                    agente.memoria.limpiar_memoria()
+                    agente.historial = []
+                st.success("✅ Memoria avanzada limpiada")
+            else:
+                st.warning("⚠️ Sistema no inicializado. Presiona 'Aplicar' en la configuración.")
 
     if menu == "Agentes":
         with st.expander("🤖 Información de Agentes", expanded=False):
-            color_map = {
-                "hardware": "#e3f2fd",
-                "software": "#fce4ec",
-                "redes": "#e8f5e9",
-                "seguridad": "#fff3e0",
-                "excel": "#e8eaf6",
-                "general": "#ede7f6",
-            }
-            icon_map = {
-                "hardware": "🔧",
-                "software": "💻",
-                "redes": "🌐",
-                "seguridad": "🔒",
-                "excel": "📊",
-                "general": "⚙️",
-            }
-            cols = st.columns(2)
-            for idx, (nombre, agente) in enumerate(st.session_state.orquestador.agentes.items()):
-                metricas = agente.metricas
-                color = color_map.get(nombre, "#f5f5f5")
-                icon = icon_map.get(nombre, "🤖")
-                with cols[idx % 2]:
-                    st.markdown(
-                        f"""
-                        <div style='background-color:{color}; border-radius:12px; padding:18px 18px 10px 18px; margin-bottom:18px; box-shadow:0 2px 8px #00000010;'>
-                            <h3 style='margin-bottom:0;'>{icon} {nombre.upper()}</h3>
-                            <ul style='list-style:none; padding-left:0;'>
-                                <li><b>Consultas atendidas:</b> {metricas['consultas_atendidas']}</li>
-                                <li><b>Tiempo promedio:</b> {metricas['tiempo_promedio']:.2f} s</li>
-                                <li><b>Problemas resueltos:</b> {metricas['problemas_resueltos']}</li>
-                            </ul>
-                        </div>
-                    """,
-                        unsafe_allow_html=True,
-                    )
+            if not st.session_state.get("orquestador"):
+                st.warning("⚠️ Sistema no inicializado. Presiona 'Aplicar' en la configuración del sidebar para inicializar el orquestador.")
+            else:
+                color_map = {
+                    "hardware": "#e3f2fd",
+                    "software": "#fce4ec",
+                    "redes": "#e8f5e9",
+                    "seguridad": "#fff3e0",
+                    "excel": "#e8eaf6",
+                    "general": "#ede7f6",
+                }
+                icon_map = {
+                    "hardware": "🔧",
+                    "software": "💻",
+                    "redes": "🌐",
+                    "seguridad": "🔒",
+                    "excel": "📊",
+                    "general": "⚙️",
+                }
+                cols = st.columns(2)
+                for idx, (nombre, agente) in enumerate(st.session_state.orquestador.agentes.items()):
+                    metricas = agente.metricas
+                    color = color_map.get(nombre, "#f5f5f5")
+                    icon = icon_map.get(nombre, "🤖")
+                    with cols[idx % 2]:
+                        st.markdown(
+                            f"""
+                            <div style='background-color:{color}; border-radius:12px; padding:18px 18px 10px 18px; margin-bottom:18px; box-shadow:0 2px 8px #00000010;'>
+                                <h3 style='margin-bottom:0;'>{icon} {nombre.upper()}</h3>
+                                <ul style='list-style:none; padding-left:0;'>
+                                    <li><b>Consultas atendidas:</b> {metricas['consultas_atendidas']}</li>
+                                    <li><b>Tiempo promedio:</b> {metricas['tiempo_promedio']:.2f} s</li>
+                                    <li><b>Problemas resueltos:</b> {metricas['problemas_resueltos']}</li>
+                                </ul>
+                            </div>
+                        """,
+                            unsafe_allow_html=True,
+                        )
 
     elif menu == "Métricas":
         st.header("📊 Métricas del Sistema")
@@ -870,8 +989,8 @@ ESPECIALIDAD GENERAL:
         except Exception:
             st.info("No hay logs disponibles aún.")
 
-    # Layout de dos columnas: izquierda para input/controles, derecha para respuesta
-    col_left, col_right = st.columns([1, 1])
+    # Layout estilo ChatGPT: chat a la izquierda, conversaciones a la derecha
+    chat_col, conv_col = st.columns([3, 1])
 
     # --- Inicializar historial de conversaciones ---
     if "_conversations" not in st.session_state:
@@ -881,119 +1000,299 @@ ESPECIALIDAD GENERAL:
     if "_conversation_messages" not in st.session_state:
         st.session_state["_conversation_messages"] = {}
 
-    with col_left:
-        # Historial de conversaciones (estilo ChatGPT)
-        with st.expander("💬 Historial de Conversaciones", expanded=False):
-            col_hist1, col_hist2 = st.columns([3, 1])
-            with col_hist1:
-                if st.button("➕ Nueva Conversación", use_container_width=True, type="primary"):
-                    # Crear nueva conversación
-                    import datetime
-                    new_id = f"conv_{int(time.time())}_{secrets.token_hex(4)}"
-                    new_conv = {
-                        "id": new_id,
-                        "title": "Nueva conversación",
-                        "created_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
-                        "messages": []
-                    }
-                    st.session_state["_conversations"].insert(0, new_conv)
-                    st.session_state["_current_conversation_id"] = new_id
-                    st.session_state["_conversation_messages"][new_id] = []
-                    # Limpiar estado de generación
-                    st.session_state["_gen_text"] = ""
-                    st.session_state["_gen_result"] = None
-                    st.session_state["_gen_prompt"] = ""
-                    st.rerun()
-            
-            with col_hist2:
-                if st.button("🗑️ Limpiar", use_container_width=True):
-                    st.session_state["_conversations"] = []
-                    st.session_state["_conversation_messages"] = {}
-                    st.session_state["_current_conversation_id"] = None
-                    st.rerun()
-            
-            st.caption(f"Conversaciones guardadas: {len(st.session_state['_conversations'])}")
-            
-            # Mostrar lista de conversaciones
-            if st.session_state["_conversations"]:
-                st.markdown("**Selecciona una conversación:**")
-                for conv in st.session_state["_conversations"]:
-                    conv_id = conv["id"]
-                    is_current = conv_id == st.session_state["_current_conversation_id"]
-                    
-                    # Título con indicador si es la actual
-                    title_display = f"{'▶️ ' if is_current else ''}{conv['title']}"
-                    col_conv1, col_conv2 = st.columns([4, 1])
-                    
-                    with col_conv1:
-                        if st.button(
-                            title_display,
-                            key=f"select_conv_{conv_id}",
-                            use_container_width=True,
-                            type="primary" if is_current else "secondary"
-                        ):
-                            # Cargar conversación
-                            st.session_state["_current_conversation_id"] = conv_id
-                            # Restaurar mensajes
-                            messages = st.session_state["_conversation_messages"].get(conv_id, [])
-                            if messages:
-                                last_msg = messages[-1]
-                                if last_msg["role"] == "assistant":
-                                    st.session_state["_gen_text"] = last_msg["content"]
-                                    st.session_state["_gen_result"] = last_msg.get("result")
-                                if len(messages) >= 2:
-                                    user_msg = messages[-2]
-                                    if user_msg["role"] == "user":
-                                        st.session_state["_gen_prompt"] = user_msg["content"]
-                            st.rerun()
-                    
-                    with col_conv2:
-                        if st.button("❌", key=f"delete_conv_{conv_id}", use_container_width=True):
-                            # Eliminar conversación
-                            st.session_state["_conversations"] = [
-                                c for c in st.session_state["_conversations"] if c["id"] != conv_id
-                            ]
-                            st.session_state["_conversation_messages"].pop(conv_id, None)
-                            if st.session_state["_current_conversation_id"] == conv_id:
-                                st.session_state["_current_conversation_id"] = None
-                            st.rerun()
-                    
-                    st.caption(f"📅 {conv['created_at']} • {len(st.session_state['_conversation_messages'].get(conv_id, []))} mensajes")
-            else:
-                st.info("No hay conversaciones guardadas. Crea una nueva para comenzar.")
-        
-        st.markdown("---")
-        st.header("💬 Consulta Multi-Agente")
+    if "_ui_conv_loaded" not in st.session_state:
+        st.session_state["_ui_conv_loaded"] = False
 
-        consulta = st.text_area(
-            "Describe tu problema técnico:",
-            placeholder="Describe tu problema técnico aquí...",
-            height=100,
-        )
-        
-        # Botones de enviar y stop lado a lado
-        orquestador_ready = "orquestador" in st.session_state and st.session_state.get("orquestador") is not None
-        
-        col_enviar, col_stop = st.columns([2, 1])
-        
-        with col_enviar:
-            enviar = st.button(
-                "▶️ Enviar",
-                type="primary",
-                key="enviar_principal",
-                disabled=bool(st.session_state.get("_gen_active")) or (not orquestador_ready),
+    def _sanitize_user_id_ui(user_id: str) -> str:
+        safe_user_id = "".join(c for c in (user_id or "") if c.isalnum() or c in "_-. ")
+        safe_user_id = safe_user_id.strip().replace(" ", "_")
+        if not safe_user_id:
+            safe_user_id = "default"
+        return safe_user_id[:128]
+
+    def _ui_conversations_path(user_id: str) -> str:
+        persistence = st.session_state.get("user_persistence")
+        base_dir = None
+        if persistence is not None and hasattr(persistence, "storage_dir"):
+            base_dir = str(persistence.storage_dir)
+        if not base_dir:
+            local_app = os.getenv("LOCALAPPDATA")
+            if local_app:
+                base_dir = os.path.join(local_app, "AI-support", "user_memories")
+            else:
+                base_dir = os.path.join(os.path.expanduser("~"), ".ai_support", "user_memories")
+        safe_id = _sanitize_user_id_ui(user_id)
+        return os.path.join(base_dir, f"{safe_id}_ui_conversations.json")
+
+    def _persist_ui_conversations() -> None:
+        user_id = st.session_state.get("current_user")
+        if not user_id:
+            return
+        try:
+            # Guardar solo lo necesario para re-render del chat (evita problemas
+            # si algún `result` contiene objetos no serializables).
+            conversations_raw = st.session_state.get("_conversations", [])
+            conversations_safe: list[dict] = []
+            if isinstance(conversations_raw, list):
+                for c in conversations_raw:
+                    if not isinstance(c, dict):
+                        continue
+                    conversations_safe.append(
+                        {
+                            "id": c.get("id"),
+                            "title": c.get("title"),
+                            "created_at": c.get("created_at"),
+                        }
+                    )
+
+            messages_raw = st.session_state.get("_conversation_messages", {})
+            messages_safe: dict = {}
+            if isinstance(messages_raw, dict):
+                for conv_id, msgs in messages_raw.items():
+                    if not isinstance(msgs, list):
+                        continue
+                    safe_list: list[dict] = []
+                    for m in msgs:
+                        if not isinstance(m, dict):
+                            continue
+                        safe_list.append(
+                            {
+                                "role": m.get("role"),
+                                "content": m.get("content"),
+                                "timestamp": m.get("timestamp"),
+                            }
+                        )
+                    messages_safe[str(conv_id)] = safe_list
+
+            payload = {
+                "version": "1.0",
+                "saved_at": time.time(),
+                "current_conversation_id": st.session_state.get("_current_conversation_id"),
+                "conversations": conversations_safe,
+                "conversation_messages": messages_safe,
+            }
+            path = _ui_conversations_path(str(user_id))
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(payload, f, ensure_ascii=False)
+        except Exception:
+            # Persistencia UI es best-effort
+            pass
+
+    def _hydrate_ui_conversations_once() -> None:
+        if st.session_state.get("_ui_conv_loaded"):
+            return
+
+        st.session_state["_ui_conv_loaded"] = True
+
+        user_id = st.session_state.get("current_user")
+        if not user_id:
+            return
+
+        # 1) Intentar cargar conversaciones UI guardadas
+        try:
+            path = _ui_conversations_path(str(user_id))
+            if os.path.exists(path):
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                conversations = data.get("conversations")
+                conversation_messages = data.get("conversation_messages")
+                current_id = data.get("current_conversation_id")
+
+                if isinstance(conversations, list) and isinstance(conversation_messages, dict):
+                    st.session_state["_conversations"] = conversations
+                    st.session_state["_conversation_messages"] = conversation_messages
+                    st.session_state["_current_conversation_id"] = current_id
+
+                    # Intentar reconstruir último input para que el UX de impresoras siga funcionando
+                    msgs = (
+                        st.session_state.get("_conversation_messages", {}).get(current_id, [])
+                        if current_id
+                        else []
+                    )
+                    for m in reversed(msgs):
+                        if (m or {}).get("role") == "user":
+                            st.session_state["_last_user_query"] = str(m.get("content") or "")
+                            break
+                return
+        except Exception:
+            pass
+
+        # 2) Fallback: si no hay UI guardada, intentar reconstruir desde memoria persistida (LangChain)
+        try:
+            persistence = st.session_state.get("user_persistence")
+            if persistence is None:
+                return
+            memory_data = persistence.load_user_memory(str(user_id))
+            if not memory_data:
+                return
+            raw_msgs = memory_data.get("messages") or []
+
+            ui_msgs: list[dict] = []
+            for m in raw_msgs:
+                mtype = getattr(m, "type", None)
+                content = getattr(m, "content", "")
+                if not content:
+                    continue
+                if mtype == "human":
+                    ui_msgs.append({"role": "user", "content": str(content), "timestamp": time.time()})
+                elif mtype == "ai":
+                    ui_msgs.append({"role": "assistant", "content": str(content), "timestamp": time.time()})
+
+            if not ui_msgs:
+                return
+
+            import datetime
+
+            conv_id = "conv_persisted"
+            # Título simple desde el primer mensaje del usuario
+            first_user = next((x for x in ui_msgs if x.get("role") == "user"), None)
+            title = "Historial"
+            if first_user:
+                words = str(first_user.get("content") or "").split()[:6]
+                if words:
+                    title = " ".join(words) + ("..." if len(words) >= 6 else "")
+
+            created_at = None
+            try:
+                created_at = memory_data.get("last_updated")
+            except Exception:
+                created_at = None
+            if not created_at:
+                created_at = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+
+            st.session_state["_conversations"] = [
+                {"id": conv_id, "title": title, "created_at": created_at, "messages": []}
+            ]
+            st.session_state["_conversation_messages"] = {conv_id: ui_msgs}
+            st.session_state["_current_conversation_id"] = conv_id
+            st.session_state["_last_user_query"] = str(first_user.get("content") or "") if first_user else ""
+
+            _persist_ui_conversations()
+        except Exception:
+            pass
+
+    _hydrate_ui_conversations_once()
+
+    with conv_col:
+        st.subheader("💬 Conversaciones")
+        col_hist1, col_hist2 = st.columns([3, 1])
+        with col_hist1:
+            if st.button(
+                "➕ Nueva",
                 use_container_width=True,
-            )
-        
-        with col_stop:
-            if st.session_state.get("_gen_active"):
-                if st.button("⏹️ Stop", key="stop_generation_main", type="secondary", use_container_width=True):
-                    ev = st.session_state.get("_gen_stop_event")
-                    if ev is not None:
-                        ev.set()
-        
+                type="primary",
+                disabled=bool(st.session_state.get("_gen_active")),
+            ):
+                import datetime
+
+                new_id = f"conv_{int(time.time())}_{secrets.token_hex(4)}"
+                new_conv = {
+                    "id": new_id,
+                    "title": "Nueva conversación",
+                    "created_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    "messages": [],
+                }
+                st.session_state["_conversations"].insert(0, new_conv)
+                st.session_state["_current_conversation_id"] = new_id
+                st.session_state["_conversation_messages"][new_id] = []
+                st.session_state["_last_user_query"] = ""
+                st.session_state["_gen_text"] = ""
+                st.session_state["_gen_result"] = None
+                st.session_state["_gen_prompt"] = ""
+                _persist_ui_conversations()
+                st.rerun()
+
+        with col_hist2:
+            if st.button(
+                "🗑️",
+                use_container_width=True,
+                disabled=bool(st.session_state.get("_gen_active")),
+            ):
+                st.session_state["_conversations"] = []
+                st.session_state["_conversation_messages"] = {}
+                st.session_state["_current_conversation_id"] = None
+                st.session_state["_last_user_query"] = ""
+                st.session_state["_gen_text"] = ""
+                st.session_state["_gen_result"] = None
+                st.session_state["_gen_prompt"] = ""
+                _persist_ui_conversations()
+                st.rerun()
+
+        st.caption(f"Guardadas: {len(st.session_state['_conversations'])}")
+
+        if st.session_state["_conversations"]:
+            for conv in st.session_state["_conversations"]:
+                conv_id = conv["id"]
+                is_current = conv_id == st.session_state["_current_conversation_id"]
+                title_display = f"{'▶️ ' if is_current else ''}{conv['title']}"
+                col_conv1, col_conv2 = st.columns([4, 1])
+                with col_conv1:
+                    if st.button(
+                        title_display,
+                        key=f"select_conv_{conv_id}",
+                        use_container_width=True,
+                        type="primary" if is_current else "secondary",
+                        disabled=bool(st.session_state.get("_gen_active")),
+                    ):
+                        st.session_state["_current_conversation_id"] = conv_id
+                        messages = st.session_state["_conversation_messages"].get(conv_id, [])
+                        if messages:
+                            last_msg = messages[-1]
+                            if last_msg["role"] == "assistant":
+                                st.session_state["_gen_text"] = last_msg["content"]
+                                st.session_state["_gen_result"] = last_msg.get("result")
+                            if len(messages) >= 2:
+                                user_msg = messages[-2]
+                                if user_msg["role"] == "user":
+                                    st.session_state["_gen_prompt"] = user_msg["content"]
+                                    st.session_state["_last_user_query"] = user_msg["content"]
+                        _persist_ui_conversations()
+                        st.rerun()
+                with col_conv2:
+                    if st.button(
+                        "❌",
+                        key=f"delete_conv_{conv_id}",
+                        use_container_width=True,
+                        disabled=bool(st.session_state.get("_gen_active")),
+                    ):
+                        st.session_state["_conversations"] = [
+                            c for c in st.session_state["_conversations"] if c["id"] != conv_id
+                        ]
+                        st.session_state["_conversation_messages"].pop(conv_id, None)
+                        if st.session_state["_current_conversation_id"] == conv_id:
+                            st.session_state["_current_conversation_id"] = None
+                        _persist_ui_conversations()
+                        st.rerun()
+
+                st.caption(
+                    f"📅 {conv['created_at']} • {len(st.session_state['_conversation_messages'].get(conv_id, []))} msgs"
+                )
+        else:
+            st.info("Sin conversaciones. Crea una nueva para comenzar.")
+
+    with chat_col:
+        st.header("💬 Chat")
+
+        orquestador_ready = "orquestador" in st.session_state and st.session_state.get("orquestador") is not None
         if not orquestador_ready:
             st.caption("Configura un proveedor y presiona 'Aplicar' para inicializar el sistema.")
+
+        if st.session_state.get("_gen_active"):
+            if st.button("⏹️ Stop", key="stop_generation_main", type="secondary"):
+                ev = st.session_state.get("_gen_stop_event")
+                if ev is not None:
+                    ev.set()
+
+        submitted = st.chat_input(
+            "Describe tu problema técnico…",
+            disabled=bool(st.session_state.get("_gen_active")) or (not orquestador_ready),
+        )
+
+        if submitted:
+            st.session_state["_last_user_query"] = submitted
+
+        consulta = str(st.session_state.get("_last_user_query") or "")
 
         # --- UX simple: lista de impresoras + conectar automático ---
         consulta_l = (consulta or "").strip().lower()
@@ -1519,40 +1818,8 @@ ESPECIALIDAD GENERAL:
             # ... código existente ...
             pass
         
-        forbidden_keywords = [
-            "hackear",
-            "hack",
-            "sql injection",
-            "inyección sql",
-            "bypass",
-            "exploit",
-            "ataque",
-            "crackear",
-            "phishing",
-            "obtener contraseña",
-            "password leak",
-            "robar datos",
-            "malware",
-            "virus",
-            "script malicioso",
-            "evadir seguridad",
-            "eludir seguridad",
-            "saltarse seguridad",
-            "acceder sin permiso",
-            "acceso no autorizado",
-            "piratear",
-            "piratería",
-            "rootkit",
-            "keylogger",
-            "payload",
-            "reverse shell",
-            "escalar privilegios",
-            "privilege escalation",
-        ]
-
-        def contiene_peligro(texto: str) -> bool:
-            texto_l = texto.lower()
-            return any(palabra in texto_l for palabra in forbidden_keywords)
+        # Importar validación de seguridad
+        from ai_support.ui.utils.security import contiene_peligro
 
         # Estado de generación
         if "_gen_active" not in st.session_state:
@@ -1569,6 +1836,9 @@ ESPECIALIDAD GENERAL:
             st.session_state["_gen_prompt"] = ""
         if "_gen_stop_event" not in st.session_state:
             st.session_state["_gen_stop_event"] = None
+
+        if "_gen_thread" not in st.session_state:
+            st.session_state["_gen_thread"] = None
 
         def _start_generation(prompt: str) -> None:
             # Capturar el orquestador en el hilo principal (no usar session_state dentro del hilo)
@@ -1609,6 +1879,7 @@ ESPECIALIDAD GENERAL:
 
             t = threading.Thread(target=_worker, daemon=True)
             t.start()
+            st.session_state["_gen_thread"] = t
 
         # --- Flujo chat-first: cuando el usuario pide "conectar impresora" sin IP,
         # mostrar selector del inventario y ejecutar automatización al confirmar.
@@ -1712,7 +1983,21 @@ ESPECIALIDAD GENERAL:
                         _start_generation(prompt)
                         st.rerun()
 
-        if enviar and consulta.strip():
+        # --- IP Expander OCULTO: la asignación de IP es automática (similar a impresoras) ---
+        # No se muestra expander de IP; todo se ejecuta en background cuando el usuario pide "conectarme a internet"
+
+        # --- Crear contenedores PRIMERO (antes de procesar consultas) ---
+        # Mostrar progreso ARRIBA del chat para que sea visible
+        st.markdown("### 🔧 Diagnósticos y Automatizaciones")
+        progress_container = st.container()
+        
+        st.markdown("---")
+        st.markdown("### 💬 Conversación")
+        # Contenedor para historial de chat
+        history_container = st.container()
+
+        if submitted and str(submitted).strip():
+            consulta = str(submitted).strip()
             cooldown_until = float(st.session_state.get("_cooldown_until", 0.0) or 0.0)
             now = time.time()
             if cooldown_until > now:
@@ -1946,6 +2231,31 @@ ESPECIALIDAD GENERAL:
                 if printer_diag_for_prompt:
                     prompt = f"{prompt}\n\n{printer_diag_for_prompt}"
 
+                # Diagnóstico de conectividad: EJECUTAR ANTES de agregar mensaje al historial y generar respuesta.
+                # Importante: el precheck se ejecuta SIEMPRE cuando la consulta es de red/internet.
+                # La variable AI_SUPPORT_NET_AUTOMATION_AUTO solo controla si se permiten CAMBIOS (asignar IP).
+                net_allow_changes = os.getenv("AI_SUPPORT_NET_AUTOMATION_AUTO", "true").strip().lower() in {
+                    "1",
+                    "true",
+                    "yes",
+                    "y",
+                    "on",
+                }
+
+                from ai_support.ui.automation.network_diagnostics import run_network_diagnostics
+
+                user_key = str(st.session_state.get("current_user") or "local_user").strip()
+                net_result = run_network_diagnostics(
+                    consulta,
+                    progress_container,
+                    user_key,
+                    allow_changes=net_allow_changes,
+                )
+
+                # Si retorna un prompt, hubo diagnóstico (y posiblemente acciones). Usar ese prompt.
+                if net_result:
+                    prompt = net_result
+
                 # Automatización: si se pide conectar impresora por IP, intentar flujo automático.
                 # Para evitar ejecuciones no deseadas, solo corre si AI_SUPPORT_PRINTER_AUTOMATION_AUTO=true.
                 auto_enabled = os.getenv("AI_SUPPORT_PRINTER_AUTOMATION_AUTO", "false").strip().lower() in {
@@ -2007,7 +2317,7 @@ ESPECIALIDAD GENERAL:
                                 st.session_state["_printer_auto_log"] = f"[AUTO_PRINTER] Error inesperado: {e}"
                                 prompt = f"{prompt}\n\n{st.session_state['_printer_auto_log']}"
                 
-                # Guardar en historial de conversación
+                # AHORA SÍ: Guardar en historial de conversación (después de automatizaciones)
                 current_conv_id = st.session_state.get("_current_conversation_id")
                 if not current_conv_id:
                     # Crear nueva conversación automáticamente
@@ -2036,147 +2346,158 @@ ESPECIALIDAD GENERAL:
                     "content": consulta,
                     "timestamp": time.time()
                 })
+
+                _persist_ui_conversations()
                 
                 _start_generation(prompt)
                 st.rerun()
 
-    # Panel derecho con respuesta
-    with col_right:
-        st.header("🤖 Respuesta del Asistente")
-        
-        # Contenedor con scroll para la respuesta
-        response_container = st.container(height=600, border=True)
-        
-        with response_container:
-            # Inicializar placeholder para la respuesta
-            respuesta_placeholder = st.empty()
-            
-            # Mostrar historial completo de la conversación actual
-            current_conv_id = st.session_state.get("_current_conversation_id")
-            if current_conv_id and current_conv_id in st.session_state["_conversation_messages"]:
-                messages = st.session_state["_conversation_messages"][current_conv_id]
-                
-                # Mostrar todos los mensajes de la conversación
-                for i, msg in enumerate(messages):
-                    if msg["role"] == "user":
-                        st.markdown("### 👤 Tu consulta")
-                        st.info(msg["content"])
-                    elif msg["role"] == "assistant":
-                        st.markdown("### 💬 Respuesta")
-                        st.markdown(msg["content"])
-                        st.markdown("---")
-            
-            # Si hay generación activa, mostrar la nueva consulta y respuesta
-            if st.session_state.get("_gen_prompt") or st.session_state.get("_gen_result") or st.session_state.get("_gen_active"):
-                prompt_to_show = st.session_state.get("_gen_prompt", "")
-                if prompt_to_show and st.session_state.get("_gen_active"):
-                    # Extraer solo la consulta original (antes de los contextos)
-                    original_query = prompt_to_show.split("\n\n📊")[0].split("\n\n[")[0]
-                    st.markdown("### 👤 Tu consulta")
-                    st.info(original_query)
+        # --- Render de chat + streaming ---
+        current_conv_id = st.session_state.get("_current_conversation_id")
+        messages = (
+            st.session_state.get("_conversation_messages", {}).get(current_conv_id, [])
+            if current_conv_id
+            else []
+        )
 
-                # Área de respuesta que se va llenando con streaming
-                st.markdown("### 💬 Respuesta")
+        # Consumir cola mientras se genera (no bloqueante)
+        if st.session_state.get("_gen_active"):
+            t = st.session_state.get("_gen_thread")
+            if t is not None and hasattr(t, "is_alive") and (not t.is_alive()):
+                st.session_state["_gen_active"] = False
+                st.session_state["_gen_stop_event"] = None
 
-            # Render/actualización mientras se genera
-            if st.session_state.get("_gen_active"):
-                st.caption("⏳ Generando respuesta...")
+            q = st.session_state.get("_gen_queue")
+            if q is not None:
+                try:
+                    while True:
+                        msg = q.get_nowait()
+                        if msg.get("type") == "text":
+                            st.session_state["_gen_text"] = msg.get("text", "")
+                        elif msg.get("type") == "final":
+                            final_result = msg.get("result")
+                            st.session_state["_gen_result"] = final_result
+                            if isinstance(final_result, dict) and isinstance(final_result.get("respuesta"), str):
+                                st.session_state["_gen_text"] = final_result.get("respuesta") or st.session_state.get(
+                                    "_gen_text", ""
+                                )
+                            st.session_state["_gen_active"] = False
+                            st.session_state["_gen_stop_event"] = None
+                            st.session_state["_gen_queue"] = None  # Limpiar la cola también
 
-                q = st.session_state.get("_gen_queue")
-
-                # Consumir mensajes de la cola (no bloqueante)
-                if q is not None:
-                    try:
-                        while True:
-                            msg = q.get_nowait()
-                            if msg.get("type") == "text":
-                                st.session_state["_gen_text"] = msg.get("text", "")
-                            elif msg.get("type") == "final":
-                                final_result = msg.get("result")
-                                st.session_state["_gen_result"] = final_result
-                                # Asegurar que el texto final quede en el mismo bloque (sin duplicar).
-                                if isinstance(final_result, dict) and isinstance(final_result.get("respuesta"), str):
-                                    st.session_state["_gen_text"] = final_result.get("respuesta") or st.session_state.get(
-                                        "_gen_text", ""
-                                    )
-                                st.session_state["_gen_active"] = False
-                                # Limpiar stop event inmediatamente
-                                st.session_state["_gen_stop_event"] = None
-                                
-                                # Guardar respuesta en historial de conversación
-                                current_conv_id = st.session_state.get("_current_conversation_id")
-                                if current_conv_id and current_conv_id in st.session_state["_conversation_messages"]:
-                                    st.session_state["_conversation_messages"][current_conv_id].append({
+                            current_conv_id = st.session_state.get("_current_conversation_id")
+                            if current_conv_id and current_conv_id in st.session_state["_conversation_messages"]:
+                                st.session_state["_conversation_messages"][current_conv_id].append(
+                                    {
                                         "role": "assistant",
                                         "content": st.session_state["_gen_text"],
                                         "result": final_result,
-                                        "timestamp": time.time()
-                                    })
-                            elif msg.get("type") == "error":
-                                st.session_state["_gen_error"] = msg.get("error")
-                                st.session_state["_gen_error_obj"] = msg.get("error_obj")
-                                st.session_state["_gen_active"] = False
-                                # Limpiar stop event inmediatamente
-                                st.session_state["_gen_stop_event"] = None
-                    except queue.Empty:
-                        pass
+                                        "timestamp": time.time(),
+                                    }
+                                )
+                                _persist_ui_conversations()
+                            
+                            # Forzar rerun inmediato para actualizar UI
+                            st.rerun()
+                            
+                        elif msg.get("type") == "error":
+                            st.session_state["_gen_error"] = msg.get("error")
+                            st.session_state["_gen_error_obj"] = msg.get("error_obj")
+                            st.session_state["_gen_active"] = False
+                            st.session_state["_gen_stop_event"] = None
+                            st.session_state["_gen_queue"] = None  # Limpiar la cola también
+                            
+                            # Forzar rerun inmediato para actualizar UI
+                            st.rerun()
+                except queue.Empty:
+                    pass
 
-            # Mostrar texto parcial (o final) en un único bloque
-            respuesta_placeholder.markdown(st.session_state.get("_gen_text", ""))
+        # --- Render de chat + streaming ---
+        # Usar contenedores ya creados arriba (líneas 1991-1994)
+        
+        # Mostrar historial en contenedor inferior
+        with history_container:
+            current_conv_id = st.session_state.get("_current_conversation_id")
+            messages = (
+                st.session_state.get("_conversation_messages", {}).get(current_conv_id, [])
+                if current_conv_id
+                else []
+            )
 
-            # Mientras sigue activo, refrescar para permitir Stop y ver streaming
+            if messages:
+                st.markdown("---")
+                st.caption("📜 Historial de conversación")
+                
+            for msg in messages:
+                role = str(msg.get("role") or "").strip().lower()
+                content = str(msg.get("content") or "")
+                if role == "user":
+                    with st.chat_message("user"):
+                        st.markdown(content)
+                elif role == "assistant":
+                    with st.chat_message("assistant"):
+                        st.markdown(content)
+
+        # Diagnóstico de red se muestra en tiempo real durante la ejecución (no necesita lógica aquí)
+        
+        if st.session_state.get("_gen_error"):
+            with progress_container:
+                st.error(str(st.session_state.get("_gen_error") or "Error desconocido"))
+
+        # Solo hacer rerun si realmente está activo
+        if st.session_state.get("_gen_active"):
+            with progress_container:
+                with st.chat_message("assistant"):
+                    st.caption("⏳ Generando…")
+                    st.markdown(st.session_state.get("_gen_text", ""))
+            
+            # Verificar de nuevo antes de rerun por si se procesó mensaje final
             if st.session_state.get("_gen_active"):
                 time.sleep(0.2)
                 st.rerun()
 
-        # Cuando no está activo, igual renderizamos el último texto en el mismo bloque.
-        if not st.session_state.get("_gen_active"):
-            respuesta_placeholder.markdown(st.session_state.get("_gen_text", ""))
-
-        # Si terminó, render normal del resultado (o error)
         if (not st.session_state.get("_gen_active")) and st.session_state.get("_gen_result"):
             resultado = st.session_state.get("_gen_result")
-
-            # limpiar stop event
             st.session_state["_gen_stop_event"] = None
 
-            with st.expander("🔧 Detalles de ejecución", expanded=False):
-                st.info(f"🎯 **Agente Principal**: {resultado['agente_principal']}")
-                st.info(f"👥 **Agentes Involucrados**: {', '.join(resultado['agentes_involucrados'])}")
-                st.info(f"⏱️ **Tiempo**: {resultado['tiempo_respuesta']:.2f}s")
+            with progress_container:
+                with st.expander("🔧 Detalles de ejecución", expanded=False):
+                    st.info(f"🎯 **Agente Principal**: {resultado['agente_principal']}")
+                    st.info(f"👥 **Agentes Involucrados**: {', '.join(resultado['agentes_involucrados'])}")
+                    st.info(f"⏱️ **Tiempo**: {resultado['tiempo_respuesta']:.2f}s")
 
-            if resultado.get("stopped"):
-                st.warning("Generación detenida: se muestra respuesta parcial.")
+                if resultado.get("stopped"):
+                    st.warning("Generación detenida: se muestra respuesta parcial.")
 
-            if "colaboracion" in resultado:
-                with st.expander("🔗 Colaboración Multi-Agente"):
-                    st.markdown(resultado["colaboracion"])
+                if "colaboracion" in resultado:
+                    with st.expander("🔗 Colaboración Multi-Agente"):
+                        st.markdown(resultado["colaboracion"])
 
-            if resultado.get("faiss_usado"):
-                with st.expander("🔍 FAISS RAG Utilizado"):
-                    st.success("✅ Búsqueda semántica FAISS activa")
-                    if resultado.get("contexto_faiss"):
-                        st.markdown("**Contexto encontrado:**")
-                        st.text(resultado["contexto_faiss"])
-                    else:
-                        st.info("Contexto FAISS disponible pero no mostrado")
+                if resultado.get("faiss_usado"):
+                    with st.expander("🔍 FAISS RAG Utilizado"):
+                        st.success("✅ Búsqueda semántica FAISS activa")
+                        if resultado.get("contexto_faiss"):
+                            st.markdown("**Contexto encontrado:**")
+                            st.text(resultado["contexto_faiss"])
+                        else:
+                            st.info("Contexto FAISS disponible pero no mostrado")
 
-            if "memoria_usada" in resultado:
-                with st.expander("🧠 Memoria Utilizada"):
-                    memoria_info = resultado["memoria_usada"]
-                    col_mem1, col_mem2, col_mem3 = st.columns(3)
+                if "memoria_usada" in resultado:
+                    with st.expander("🧠 Memoria Utilizada"):
+                        memoria_info = resultado["memoria_usada"]
+                        col_mem1, col_mem2, col_mem3 = st.columns(3)
 
-                    with col_mem1:
-                        st.metric("Buffer", memoria_info.get("buffer", 0))
-                        st.caption("Historial completo")
-                    with col_mem2:
-                        st.metric("Summary", memoria_info.get("summary", 0))
-                        st.caption("Resumen inteligente")
-                    with col_mem3:
-                        st.metric("Window", memoria_info.get("window", 0))
-                        st.caption("Últimas interacciones")
+                        with col_mem1:
+                            st.metric("Buffer", memoria_info.get("buffer", 0))
+                            st.caption("Historial completo")
+                        with col_mem2:
+                            st.metric("Summary", memoria_info.get("summary", 0))
+                            st.caption("Resumen inteligente")
+                        with col_mem3:
+                            st.metric("Window", memoria_info.get("window", 0))
+                            st.caption("Últimas interacciones")
 
-                    col_mem4, col_mem5 = st.columns(2)
+                        col_mem4, col_mem5 = st.columns(2)
                     with col_mem4:
                         st.metric("Entities", memoria_info.get("entities", 0))
                         st.caption("Entidades recordadas")
@@ -2206,7 +2527,7 @@ ESPECIALIDAD GENERAL:
                 st.error(f"Error al generar respuesta: {err_str}")
 
     # --- Sección Excel con IA (en columna izquierda, abajo) ---
-    with col_left:
+    with chat_col:
         st.markdown("---")
         with st.expander("📊 Análisis de Excel con IA", expanded=False):
             st.caption(

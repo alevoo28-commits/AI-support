@@ -1,0 +1,10 @@
+- [ ] Crear estructura base del proyecto Python
+  - Generar carpetas y archivos iniciales para el proyecto 'instalable', incluyendo src/, .env.example, requirements.txt, README.md, y .github/copilot-instructions.md.
+- [ ] Agregar dependencias y requirements.txt
+  - Agregar pymysql, python-dotenv, psutil, scapy, PyInstaller a requirements.txt.
+- [ ] Crear plantilla de .env
+  - Crear archivo .env.example con todas las variables de entorno necesarias para la configuración de red y base de datos.
+- [ ] Agregar README y documentación inicial
+  - Agregar README.md con descripción del proyecto, requisitos y flujo general.
+- [ ] Agregar copilot-instructions.md a .github
+  - Agregar archivo copilot-instructions.md en .github con instrucciones para Copilot.

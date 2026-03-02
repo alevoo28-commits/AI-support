@@ -1,0 +1,7 @@
+2026-01-15 09:36:47,098 - INFO - Sistema iniciado
+2026-01-15 09:36:47,100 - INFO - Permisos de administrador verificados
+2026-01-15 09:36:47,102 - INFO - Inicializando componentes del sistema
+2026-01-15 09:36:47,122 - INFO - Adaptador Ethernet encontrado: Adaptador de Ethernet Ethernet 3
+2026-01-15 09:36:47,122 - INFO - Verificando conectividad a Internet
+2026-01-15 09:36:47,137 - INFO - Ping exitoso a 8.8.8.8
+2026-01-15 09:36:47,137 - INFO - Conexión a Internet establecida correctamente

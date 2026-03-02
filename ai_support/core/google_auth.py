@@ -137,6 +137,10 @@ def verify_id_token_and_get_email(*, raw_id_token: str) -> str:
     except Exception as e:
         raise ValueError(f"Token inválido: {e}")
 
+    # --- LOG DE DEPURACIÓN ---
+    print("[DEBUG] Payload id_token Google:", json.dumps(payload, indent=2, ensure_ascii=False))
+    # --- FIN LOG ---
+
     aud = (payload.get("aud") or "").strip()
     if aud != client_id:
         raise ValueError("Token inválido (audience no coincide)")

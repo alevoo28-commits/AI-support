@@ -1,0 +1,2 @@
+# This file will store the client_id (email) sent from the web UI to the Windows client
+# It will be read by main.py to set the USUARIO environment variable or use as user identifier

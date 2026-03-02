@@ -1,0 +1,8 @@
+2026-01-15 10:53:22,111 - INFO - Sistema iniciado
+2026-01-15 10:53:22,113 - INFO - Permisos de administrador verificados
+2026-01-15 10:53:22,115 - INFO - Inicializando componentes del sistema
+2026-01-15 10:53:22,136 - INFO - Adaptador Ethernet encontrado: Adaptador de Ethernet Ethernet 3
+2026-01-15 10:53:22,136 - INFO - Verificando conectividad a Internet
+2026-01-15 10:53:22,166 - INFO - Ping exitoso a 8.8.8.8
+2026-01-15 10:53:22,166 - INFO - Conexión a Internet establecida correctamente
+2026-01-15 10:53:22,175 - INFO - Reporte enviado correctamente: {'received': {'resultado': 'Conexión a Internet OK', 'timestamp': '2026-01-15T10:53:22.167077', 'usuario': 'desconocido'}, 'status': 'ok'}

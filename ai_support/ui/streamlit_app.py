@@ -1,8 +1,56 @@
+import streamlit as st
+def main():
+    # Bloque superior de usuario y configuración de modelo (estilo original)
+    st.title("⚙️ Sistema Multi-Agente de Soporte Informático")
+    st.markdown("Sistema con orquestación, agentes especializados y colaboración entre agentes")
+    st.divider()
+
+    cols = st.columns([1,2])
+    with cols[0]:
+        st.subheader("👤 Usuario")
+        if st.session_state.get("current_user"):
+            st.success(f"Sesión: {st.session_state['current_user']}")
+            st.info("Chat habilitado. Puedes interactuar con los agentes.")
+        else:
+            st.warning("Inicia sesión con Google para habilitar el chat.")
+        st.button("Cerrar sesión", use_container_width=True)
+        st.button("Borrar historial", use_container_width=True)
+
+    st.divider()
+    st.subheader("⚙️ Configuración de Modelo")
+    st.selectbox("Proveedor LLM", ["GitHub Models", "LM Studio (local)"])
+    st.info("Configura GITHUB_TOKEN en tu archivo .env para usar GitHub Models.")
+    # Reducir ruido de warnings de LangChain (no afecta ejecución)
+    try:
+        from langchain_core._api.deprecation import LangChainDeprecationWarning
+        warnings.filterwarnings("ignore", category=LangChainDeprecationWarning)
+    except Exception:
+        pass
+    st.markdown("---")
+def enviar_client_id_al_cliente_windows(email: str, client_host: str = "localhost", client_port: int = 5001):
+    """
+    Envía el email del usuario autenticado al cliente Windows para que lo use como CLIENT_ID.
+    Por defecto, intenta POST a http://localhost:5001/set_client_id (el .exe debe exponer este endpoint o compartir carpeta).
+    Alternativamente, puede guardar el archivo en una ruta compartida.
+    """
+    import requests
+    try:
+        url = f"http://{client_host}:{client_port}/set_client_id"
+        resp = requests.post(url, json={"client_id": email}, timeout=2)
+        if resp.status_code == 200:
+            print(f"CLIENT_ID enviado correctamente al cliente Windows: {email}")
+            return True
+        else:
+            print(f"Error enviando CLIENT_ID al cliente Windows: {resp.status_code}")
+    except Exception as e:
+        print(f"No se pudo enviar CLIENT_ID al cliente Windows: {e}")
+    return False
+
 import os
 import sys
 import json
-import urllib.error
 import urllib.request
+                            # Eliminado st.experimental_set_query_params() para evitar conflicto con st.query_params
 import warnings
 import time
 import threading
@@ -12,13 +60,13 @@ import getpass
 import secrets
 import subprocess
 import socket
-
+import requests
+import uvicorn
 from dotenv import load_dotenv
 
 # Cargar variables de entorno desde .env
 load_dotenv()
 
-import streamlit as st
 from langsmith import Client
 
 from ai_support.core.logging_utils import setup_logging
@@ -157,115 +205,108 @@ def _is_rate_limit_error(err: Exception) -> bool:
 
 
 def main() -> None:
-    # Reducir ruido de warnings de LangChain (no afecta ejecución)
-    try:
-        from langchain_core._api.deprecation import LangChainDeprecationWarning
+    import os
+    import streamlit as st
+    USER_FILE = os.path.join(os.path.expanduser("~"), ".ai_support_user_data")
 
-        warnings.filterwarnings("ignore", category=LangChainDeprecationWarning)
-    except Exception:
-        pass
+    # Restaurar usuario y state persistente al cargar la app
+    if os.path.exists(USER_FILE):
+        try:
+            with open(USER_FILE, "r", encoding="utf-8") as f:
+                data = f.read().strip().split("\n")
+                if len(data) >= 2:
+                    email, oauth_state = data[0], data[1]
+                    if email:
+                        st.session_state["current_user"] = email
+                    if oauth_state:
+                        st.session_state["google_oauth_state"] = oauth_state
+        except Exception:
+            pass
+    # Nunca regenerar google_oauth_state si ya existe en disco o en session_state
 
-    setup_logging()
+    # --- PROCESAR CALLBACK OAUTH AL INICIO ---
+    google_enabled = google_auth_enabled()
+    if google_enabled:
+        if "google_oauth_state" not in st.session_state:
+            st.session_state["google_oauth_state"] = secrets.token_urlsafe(24)
 
-    st.set_page_config(
-        page_title="Sistema Multi-Agente con Orquestación",
-        page_icon="⚙️",
-        layout="wide",
-    )
+        def _get_query_params():
+            return st.query_params
 
-    # CSS corporativo (inspirado en https://serviciosfcfm.uchile.cl/incidencias/)
-    st.markdown("""
-    <style>
-        /* Colores corporativos Universidad de Chile / FCFM */
-        :root {
-            --uchile-azul: #003D7A;
-            --uchile-azul-claro: #0056A8;
-            --uchile-gris: #5A6C7D;
-            --uchile-gris-claro: #E8EBED;
-            --uchile-blanco: #FFFFFF;
-        }
-        
-        /* Header principal */
-        .main h1 {
-            color: var(--uchile-azul) !important;
-            border-bottom: 3px solid var(--uchile-azul-claro);
-            padding-bottom: 0.5rem;
-        }
-        
-        /* Subtítulos */
-        .main h2, .main h3 {
-            color: var(--uchile-azul-claro) !important;
-        }
-        
-        /* Botones primarios */
-        .stButton>button[kind="primary"] {
-            background-color: var(--uchile-azul) !important;
-            color: var(--uchile-blanco) !important;
-            border: none !important;
-            font-weight: 600 !important;
-        }
-        
-        .stButton>button[kind="primary"]:hover {
-            background-color: var(--uchile-azul-claro) !important;
-        }
-        
-        /* Sidebar - reducido para dar más espacio al chat */
-        section[data-testid="stSidebar"] {
-            background-color: var(--uchile-gris-claro) !important;
-            min-width: 280px !important;
-            max-width: 320px !important;
-        }
-        
-        section[data-testid="stSidebar"] > div {
-            width: 280px !important;
-        }
-        
-        section[data-testid="stSidebar"] h2, section[data-testid="stSidebar"] h3 {
-            color: var(--uchile-azul) !important;
-            font-size: 1.1rem !important;
-        }
-        
-        /* Text areas y inputs */
-        .stTextArea textarea, .stTextInput input, .stSelectbox select {
-            border-color: var(--uchile-gris) !important;
-        }
-        
-        .stTextArea textarea:focus, .stTextInput input:focus {
-            border-color: var(--uchile-azul-claro) !important;
-            box-shadow: 0 0 0 1px var(--uchile-azul-claro) !important;
-        }
-        
-        /* Expanders */
-        .streamlit-expanderHeader {
-            background-color: var(--uchile-gris-claro) !important;
-            color: var(--uchile-azul) !important;
-            font-weight: 600 !important;
-        }
-        
-        /* Info/Success/Warning boxes */
-        .stAlert {
-            border-left: 4px solid var(--uchile-azul-claro) !important;
-        }
-        
-        /* Spinner */
-        .stSpinner > div {
-            border-top-color: var(--uchile-azul) !important;
-        }
-        
-        /* Tabs */
-        .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
-            background-color: var(--uchile-azul) !important;
-            color: var(--uchile-blanco) !important;
-        }
-    </style>
-    """, unsafe_allow_html=True)
+        def _qp_first(qp_mapping, key: str) -> str | None:
+            val = qp_mapping.get(key) if qp_mapping is not None else None
+            if isinstance(val, list):
+                return val[0] if val else None
+            if val is None:
+                return None
+            return str(val)
+
+        qp = _get_query_params()
+        code = _qp_first(qp, "code")
+        state = _qp_first(qp, "state")
+        oauth_error = _qp_first(qp, "error")
+
+        if oauth_error:
+            st.error(f"Google OAuth error: {oauth_error}")
+
+        # Procesar el callback antes de cualquier st.stop()
+        if code and state and not st.session_state.get("_google_oauth_done"):
+            # Leer el state persistente de disco para comparar
+            STATE_FILE = os.path.join(os.path.expanduser("~"), ".ai_support_oauth_state")
+            expected_state = st.session_state.get("google_oauth_state")
+            if os.path.exists(STATE_FILE):
+                try:
+                    with open(STATE_FILE, "r", encoding="utf-8") as f:
+                        expected_state = f.read().strip()
+                except Exception:
+                    pass
+            if state != expected_state:
+                st.error("OAuth inválido (state no coincide).")
+                st.warning(f"[DEBUG] state recibido: {state}")
+                st.warning(f"[DEBUG] state esperado: {expected_state}")
+                st.warning(f"[DEBUG] session_state completo: {dict(st.session_state)}")
+            else:
+                try:
+                    tokens = exchange_code_for_tokens(code=code)
+                    raw_id_token = tokens.get("id_token")
+                    if not raw_id_token:
+                        st.error("Respuesta de Google no incluye id_token")
+                        st.warning(f"[DEBUG] tokens recibidos: {tokens}")
+                        raise ValueError("Respuesta de Google no incluye id_token")
+                    email = None
+                    try:
+                        import jwt
+                        payload = jwt.decode(raw_id_token, options={"verify_signature": False})
+                        st.warning(f"[DEBUG] Email en id_token: {payload.get('email')}")
+                        email = verify_id_token_and_get_email(raw_id_token=raw_id_token)
+                    except Exception as ve:
+                        st.error(f"No se pudo verificar el id_token: {ve}")
+                        st.warning(f"[DEBUG] id_token recibido: {raw_id_token}")
+                    if email:
+                        st.session_state["current_user"] = email
+                        st.session_state["_google_oauth_done"] = True
+                        # Guardar usuario y state en disco para persistencia
+                        with open(USER_FILE, "w", encoding="utf-8") as f:
+                            f.write(f"{email}\n{st.session_state['google_oauth_state']}")
+                        st.success(f"[DEBUG] Login exitoso, usuario: {email}")
+
+                    else:
+                        st.error("No se pudo obtener el email del usuario o el dominio no es permitido.")
+                except Exception as e:
+                    st.error(f"No se pudo autenticar: {e}")
+                    st.warning(f"[DEBUG] Error en login OAuth: {e}")
 
     st.title("⚙️ Sistema Multi-Agente de Soporte Informático")
     st.markdown("Sistema con orquestación, agentes especializados y colaboración entre agentes")
-    st.warning(
-        "⚠️ Este sistema utiliza IA generativa. Las respuestas pueden contener sesgos o errores. "
-        "Por favor, valida la información crítica y revisa las advertencias éticas en la documentación."
-    )
+    st.divider()
+
+    # ...existing code...
+
+
+    # Mostrar el chat si el usuario está autenticado
+    if st.session_state.get("current_user"):
+        st.success(f"Chat habilitado para: {st.session_state['current_user']}")
+        # ...aquí va el código del chat y orquestador...
 
     # LangSmith (mantener compatibilidad)
     try:
@@ -275,6 +316,7 @@ def main() -> None:
         client = None
 
     # --- Selección de modelo/proveedor (antes de crear orquestador) ---
+
     with st.sidebar:
         # Historial por usuario (modo seguro): usuario del sistema operativo
         st.markdown("### 👤 Usuario")
@@ -289,15 +331,20 @@ def main() -> None:
         persistence = st.session_state["user_persistence"]
 
         # --- Google OAuth (si está configurado) ---
+
+        # --- Google OAuth (si está configurado) ---
         if google_enabled:
+            # Solo generar el state si no existe, y nunca sobrescribirlo durante el flujo
             if "google_oauth_state" not in st.session_state:
                 st.session_state["google_oauth_state"] = secrets.token_urlsafe(24)
 
-            # Procesar callback si viene code/state
+            # Procesar callback SIEMPRE antes de cualquier st.stop()
+            def _clear_oauth_state():
+                if "google_oauth_state" in st.session_state:
+                    del st.session_state["google_oauth_state"]
+
             def _get_query_params():
-                if hasattr(st, "query_params"):
-                    return st.query_params
-                return st.experimental_get_query_params()
+                return st.query_params
 
             def _qp_first(qp_mapping, key: str) -> str | None:
                 val = qp_mapping.get(key) if qp_mapping is not None else None
@@ -308,21 +355,17 @@ def main() -> None:
                 return str(val)
 
             def _clear_query_params() -> None:
-                if hasattr(st, "query_params"):
-                    try:
-                        st.query_params.clear()
-                    except Exception:
-                        pass
-                else:
-                    try:
-                        st.experimental_set_query_params()
-                    except Exception:
-                        pass
+                try:
+                    st.query_params.clear()
+                except Exception:
+                    pass
 
             qp = _get_query_params()
             code = _qp_first(qp, "code")
             state = _qp_first(qp, "state")
             oauth_error = _qp_first(qp, "error")
+
+            print(f"[DEBUG] OAuth params: code={code}, state={state}, error={oauth_error}")
 
             if oauth_error:
                 st.error(f"Google OAuth error: {oauth_error}")
@@ -331,23 +374,46 @@ def main() -> None:
             if code and state and not st.session_state.get("_google_oauth_done"):
                 if state != st.session_state.get("google_oauth_state"):
                     st.error("OAuth inválido (state no coincide).")
+                    st.warning(f"[DEBUG] state recibido: {state}")
+                    st.warning(f"[DEBUG] state esperado: {st.session_state.get('google_oauth_state')}")
+                    st.warning(f"[DEBUG] session_state completo: {dict(st.session_state)}")
+                    _clear_oauth_state()
                 else:
                     try:
                         tokens = exchange_code_for_tokens(code=code)
                         raw_id_token = tokens.get("id_token")
                         if not raw_id_token:
+                            st.error("Respuesta de Google no incluye id_token")
+                            st.warning(f"[DEBUG] tokens recibidos: {tokens}")
                             raise ValueError("Respuesta de Google no incluye id_token")
-                        email = verify_id_token_and_get_email(raw_id_token=raw_id_token)
-                        st.session_state["current_user"] = email
-                        st.session_state["_google_oauth_done"] = True
-                        st.session_state["orquestador"] = None
+                        email = None
+                        try:
+                            email = None
+                            import jwt
+                            try:
+                                payload = jwt.decode(raw_id_token, options={"verify_signature": False})
+                                st.warning(f"[DEBUG] Email en id_token: {payload.get('email')}")
+                            except Exception as jwt_e:
+                                st.warning(f"[DEBUG] Error decodificando id_token: {jwt_e}")
+                            email = verify_id_token_and_get_email(raw_id_token=raw_id_token)
+                        except Exception as ve:
+                            st.error(f"No se pudo verificar el id_token: {ve}")
+                            st.warning(f"[DEBUG] id_token recibido: {raw_id_token}")
+                        if email:
+                            st.session_state["current_user"] = email
+                            st.session_state["_google_oauth_done"] = True
+                            st.session_state["orquestador"] = None
+                            st.success(f"[DEBUG] Login exitoso, usuario: {email}")
+                        else:
+                            st.error("No se pudo obtener el email del usuario o el dominio no es permitido.")
                     except Exception as e:
                         st.error(f"No se pudo autenticar: {e}")
+                        st.warning(f"[DEBUG] Error en login OAuth: {e}")
+                    finally:
+                        _clear_oauth_state()
 
-                # Limpiar query params para no re-procesar
                 _clear_query_params()
 
-                st.rerun()
 
             current_user = st.session_state.get("current_user")
             if not current_user:
@@ -356,16 +422,24 @@ def main() -> None:
                 else:
                     try:
                         auth_url = build_google_auth_url(state=st.session_state["google_oauth_state"])
-                        st.markdown(f"[🔐 Iniciar sesión con Google]({auth_url})")
+                        if st.button("🔐 Iniciar sesión con Google", use_container_width=True):
+                            # Guardar el state en disco al iniciar login
+                            STATE_FILE = os.path.join(os.path.expanduser("~"), ".ai_support_oauth_state")
+                            with open(STATE_FILE, "w", encoding="utf-8") as f:
+                                f.write(st.session_state["google_oauth_state"])
+                            st.markdown(f'<meta http-equiv="refresh" content="0; url={auth_url}">', unsafe_allow_html=True)
                         st.caption("Debes usar tu correo @uchile.cl")
                     except Exception as e:
                         st.error(f"Google OAuth no configurado: {e}")
 
                 st.warning("⚠️ Inicia sesión para usar el chat")
                 st.markdown("---")
+                st.info(f"[DEBUG] session_state: {dict(st.session_state)}")
                 st.stop()
 
+            # Si el usuario está presente, mostrar el chat
             st.success(f"👤 Sesión: **{current_user}**")
+            st.info("✅ Chat habilitado. Puedes interactuar con los agentes.")
 
             # --- Provisionamiento de usuario en MySQL (tabla usuarios) ---
             # Solo aplica si el usuario es un email (Google OAuth) y MySQL está habilitado.
@@ -426,8 +500,11 @@ def main() -> None:
             if st.button("🚪 Cerrar sesión", use_container_width=True):
                 st.session_state.pop("current_user", None)
                 st.session_state.pop("_google_oauth_done", None)
-                st.session_state["orquestador"] = None
-                st.rerun()
+                # Borrar usuario y state persistente en disco
+                if os.path.exists(USER_FILE):
+                    os.remove(USER_FILE)
+                # Línea eliminada: no se borra orquestador
+
 
             if st.button("🗑️ Borrar historial", use_container_width=True):
                 if persistence.delete_user_memory(current_user):
@@ -440,8 +517,8 @@ def main() -> None:
                         os.remove(ui_path)
                 except Exception:
                     pass
-                st.session_state["orquestador"] = None
-                st.rerun()
+                # Línea eliminada: no se borra orquestador
+
 
         # --- Fallback local (sin Google OAuth) ---
         else:
@@ -464,8 +541,8 @@ def main() -> None:
                         os.remove(ui_path)
                 except Exception:
                     pass
-                st.session_state["orquestador"] = None
-                st.rerun()
+                # Línea eliminada: no se borra orquestador
+
         
         st.markdown("---")
         
@@ -753,61 +830,12 @@ def main() -> None:
                 material_soporte = f.read()
 
             materiales_especificos = {
-                "hardware": f"""
-{material_soporte}
-
-ESPECIALIDAD HARDWARE:
-- Componentes físicos del computador (CPU, RAM, discos, tarjetas gráficas)
-- Problemas de rendimiento y capacidad
-- Instalación y configuración de hardware
-- Diagnóstico de fallos físicos
-""",
-                "software": f"""
-{material_soporte}
-
-ESPECIALIDAD SOFTWARE:
-- Programas y aplicaciones (Windows, Office, navegadores)
-- Instalación y desinstalación de software
-- Problemas de compatibilidad
-- Configuración de aplicaciones
-""",
-                "redes": f"""
-{material_soporte}
-
-ESPECIALIDAD REDES:
-- Conectividad (WiFi, Ethernet, routers, switches)
-- Configuración de red
-- Problemas de conectividad
-- Seguridad de red
-""",
-                "seguridad": f"""
-{material_soporte}
-
-ESPECIALIDAD SEGURIDAD:
-- Protección contra amenazas (antivirus, firewall, malware)
-- Configuración de seguridad
-- Detección de amenazas
-- Mejores prácticas de seguridad
-""",
-                "excel": f"""
-{material_soporte}
-
-ESPECIALIDAD EXCEL:
-- Fórmulas comunes (SI, Y/O, BUSCARV/XLOOKUP, SUMAR.SI.CONJUNTO)
-- Errores típicos (#N/A, #VALOR!, #¡DIV/0!)
-- Tablas dinámicas y segmentaciones
-- Power Query (importar/limpiar/unir datos)
-- Macros/VBA (nociones y diagnóstico de errores)
-""",
-                "general": f"""
-{material_soporte}
-
-ESPECIALIDAD GENERAL:
-- Soporte técnico general
-- Consultas diversas
-- Coordinación entre especialidades
-- Información general de TI
-""",
+                "hardware": f"{material_soporte}\n\n**ESPECIALIDAD HARDWARE:**\n- Componentes físicos del computador (CPU, RAM, discos, tarjetas gráficas)\n- Problemas de rendimiento y capacidad\n- Instalación y configuración de hardware\n- Diagnóstico de fallos físicos",
+                "software": f"{material_soporte}\n\n**ESPECIALIDAD SOFTWARE:**\n- Programas y aplicaciones (Windows, Office, navegadores)\n- Instalación y desinstalación de software\n- Problemas de compatibilidad\n- Configuración de aplicaciones",
+                "redes": f"{material_soporte}\n\n**ESPECIALIDAD REDES:**\n- Conectividad (WiFi, Ethernet, routers, switches)\n- Configuración de red\n- Problemas de conectividad\n- Seguridad de red",
+                "seguridad": f"{material_soporte}\n\n**ESPECIALIDAD SEGURIDAD:**\n- Protección contra amenazas (antivirus, firewall, malware)\n- Configuración de seguridad\n- Detección de amenazas\n- Mejores prácticas de seguridad",
+                "excel": f"{material_soporte}\n\n**ESPECIALIDAD EXCEL:**\n- Fórmulas comunes (SI, Y/O, BUSCARV/XLOOKUP, SUMAR.SI.CONJUNTO)\n- Errores típicos (#N/A, #VALOR!, #¡DIV/0!)\n- Tablas dinámicas y segmentaciones\n- Power Query (importar/limpiar/unir datos)\n- Macros/VBA (nociones y diagnóstico de errores)",
+                "general": f"{material_soporte}\n\n**ESPECIALIDAD GENERAL:**\n- Soporte técnico general\n- Consultas diversas\n- Coordinación entre especialidades\n- Información general de TI",
             }
 
             for agente_nombre, agente in st.session_state.orquestador.agentes.items():
@@ -875,7 +903,7 @@ ESPECIALIDAD GENERAL:
                                     <li><b>Problemas resueltos:</b> {metricas['problemas_resueltos']}</li>
                                 </ul>
                             </div>
-                        """,
+                            """,
                             unsafe_allow_html=True,
                         )
 
@@ -1201,7 +1229,7 @@ ESPECIALIDAD GENERAL:
                 st.session_state["_gen_result"] = None
                 st.session_state["_gen_prompt"] = ""
                 _persist_ui_conversations()
-                st.rerun()
+
 
         with col_hist2:
             if st.button(
@@ -1217,7 +1245,7 @@ ESPECIALIDAD GENERAL:
                 st.session_state["_gen_result"] = None
                 st.session_state["_gen_prompt"] = ""
                 _persist_ui_conversations()
-                st.rerun()
+
 
         st.caption(f"Guardadas: {len(st.session_state['_conversations'])}")
 
@@ -1248,7 +1276,7 @@ ESPECIALIDAD GENERAL:
                                     st.session_state["_gen_prompt"] = user_msg["content"]
                                     st.session_state["_last_user_query"] = user_msg["content"]
                         _persist_ui_conversations()
-                        st.rerun()
+
                 with col_conv2:
                     if st.button(
                         "❌",
@@ -1263,7 +1291,7 @@ ESPECIALIDAD GENERAL:
                         if st.session_state["_current_conversation_id"] == conv_id:
                             st.session_state["_current_conversation_id"] = None
                         _persist_ui_conversations()
-                        st.rerun()
+
 
                 st.caption(
                     f"📅 {conv['created_at']} • {len(st.session_state['_conversation_messages'].get(conv_id, []))} msgs"
@@ -1275,8 +1303,10 @@ ESPECIALIDAD GENERAL:
         st.header("💬 Chat")
 
         orquestador_ready = "orquestador" in st.session_state and st.session_state.get("orquestador") is not None
-        if not orquestador_ready:
-            st.caption("Configura un proveedor y presiona 'Aplicar' para inicializar el sistema.")
+        if orquestador_ready:
+            st.success("✅ Orquestador listo. El chat está habilitado.")
+        else:
+            st.warning("⚠️ El chat está deshabilitado. Configura un proveedor y presiona 'Aplicar' para inicializar el sistema.")
 
         if st.session_state.get("_gen_active"):
             if st.button("⏹️ Stop", key="stop_generation_main", type="secondary"):
@@ -1293,6 +1323,14 @@ ESPECIALIDAD GENERAL:
             st.session_state["_last_user_query"] = submitted
 
         consulta = str(st.session_state.get("_last_user_query") or "")
+
+        # --- Actualización automática del resultado de conectividad cada 3 segundos ---
+        import streamlit as st
+        import time
+        if "_diagnostico_remoto_en_espera" in st.session_state and st.session_state["_diagnostico_remoto_en_espera"]:
+            mostrar_ultimo_reporte_conectividad(str(st.session_state.get("current_user") or "local_user"))
+            time.sleep(3)
+            st.experimental_rerun()
 
         # --- UX simple: lista de impresoras + conectar automático ---
         consulta_l = (consulta or "").strip().lower()
@@ -1632,7 +1670,7 @@ ESPECIALIDAD GENERAL:
                                 for p in stored_inner
                             ]
                             sel_inner = str(st.session_state.get("_mysql_printer_choice") or "")
-                            idx_inner = options_inner.index(sel_inner) if sel_inner in options_inner else 0
+                            idx_inner = options_inner.index(sel_inner) if sel_inner in options_inner : 0
                             chosen_inner = stored_inner[idx_inner]
                             st.session_state["_selected_printer_record"] = chosen_inner
                             # Autocompletar campos existentes
@@ -1723,7 +1761,6 @@ ESPECIALIDAD GENERAL:
                 if do_default and allow_local and printer_default_name.strip():
                     try:
                         res = set_default_printer(printer_default_name.strip())
-                        st.success("Comando ejecutado.")
                         st.code((res.stdout or res.stderr).strip(), language="text")
                     except Exception as e:
                         st.error(f"No se pudo configurar como predeterminada: {e}")
@@ -1745,7 +1782,7 @@ ESPECIALIDAD GENERAL:
                 driver_name = st.text_input(
                     "Driver (opcional, ej: Microsoft IPP Class Driver)",
                     value="",
-                    key="printer_ip_driver",
+                                                         key="printer_ip_driver",
                     disabled=not allow_local,
                 )
                 colip1, colip2 = st.columns(2)
@@ -1942,7 +1979,7 @@ ESPECIALIDAD GENERAL:
                 if do_cancel:
                     st.session_state["_pending_printer_connect"] = False
                     st.session_state["_pending_printer_connect_user_text"] = ""
-                    st.rerun()
+
 
                 if do_connect_selected:
                     selected_ip = str(chosen.get("ip") or "").strip()
@@ -1975,13 +2012,12 @@ ESPECIALIDAD GENERAL:
                                 prompt = f"{prompt}\n\n{selected_info}\n{log.details}".strip()
                             except Exception as e:
                                 st.session_state["_printer_auto_log"] = f"[AUTO_PRINTER] Error inesperado: {e}"
-                                prompt = (base_user_text or "Conectar impresora").strip()
                                 prompt = f"{prompt}\n\n{selected_info}\n{st.session_state['_printer_auto_log']}".strip()
 
                         st.session_state["_pending_printer_connect"] = False
                         st.session_state["_pending_printer_connect_user_text"] = ""
                         _start_generation(prompt)
-                        st.rerun()
+
 
         # --- IP Expander OCULTO: la asignación de IP es automática (similar a impresoras) ---
         # No se muestra expander de IP; todo se ejecuta en background cuando el usuario pide "conectarme a internet"
@@ -2011,6 +2047,35 @@ ESPECIALIDAD GENERAL:
                     "inyección SQL, ataques, acceso no autorizado o actividades peligrosas. Por favor, formula una consulta apropiada."
                 )
             else:
+                # --- INTEGRACIÓN TRIGGER DIAGNÓSTICO ---
+                if 'no tengo internet' in consulta.lower():
+                    trigger_diagnostico_remoto()
+                    st.info("Se ha solicitado el diagnóstico remoto al cliente. Espera unos segundos para el resultado.")
+                    # Esperar y mostrar el resultado del cliente (polling simple)
+                    import time
+                    max_wait = 15  # segundos
+                    poll_interval = 2
+                    waited = 0
+                    while waited < max_wait:
+                        try:
+                            url = "http://localhost:5000/api/report/latest"
+                            resp = requests.get(url, timeout=3)
+                            if resp.status_code == 200:
+                                data = resp.json().get('latest_report', {})
+                                resultado = data.get('resultado', '')
+                                if resultado:
+                                    usuario_rep = data.get('usuario', str(st.session_state.get("current_user") or "local_user"))
+                                    st.success(f"Diagnóstico de conectividad ({usuario_rep}): {resultado}")
+                                    st.caption(f"Timestamp: {data.get('timestamp', '')}")
+                                    break
+                            time.sleep(poll_interval)
+                            waited += poll_interval
+                        except Exception:
+                            time.sleep(poll_interval)
+                            waited += poll_interval
+                    else:
+                        st.warning("No se recibió reporte de conectividad del cliente tras esperar 15 segundos.")
+                    st.stop()
                 # Atajo: operaciones directas sobre Excel cargado (ChatGPT para Excel)
                 df_excel = st.session_state.get("_excel_df")
                 if df_excel is not None:
@@ -2090,6 +2155,7 @@ ESPECIALIDAD GENERAL:
                         if df_filtered is None or len(df_filtered) == 0:
                             if embeddings is not None and len(df_excel) > 50:
                                 try:
+                                    import sklearn
                                     from sklearn.metrics.pairwise import cosine_similarity
                                     
                                     # Crear embeddings de la consulta
@@ -2098,6 +2164,7 @@ ESPECIALIDAD GENERAL:
                                     # Crear texto de cada fila (concatenar columnas importantes)
                                     def row_to_text(row):
                                         # Concatenar solo columnas de texto, máximo 500 caracteres por fila
+                                        
                                         texts = []
                                         for col in df_excel.columns:
                                             val = str(row[col])
@@ -2245,11 +2312,44 @@ ESPECIALIDAD GENERAL:
                 from ai_support.ui.automation.network_diagnostics import run_network_diagnostics
 
                 user_key = str(st.session_state.get("current_user") or "local_user").strip()
+
+                # Remote Control auto: si está configurado en el servidor, se usa automáticamente
+                # para ejecutar el diagnóstico/cambio de red en el PC cliente.
+                rc_url = str(os.getenv("AI_SUPPORT_REMOTE_CONTROL_URL") or st.session_state.get("_rc_url") or "").strip()
+                rc_admin_token = str(os.getenv("AI_SUPPORT_ADMIN_TOKEN") or st.session_state.get("_rc_admin_token") or "").strip()
+                rc_auto = os.getenv("AI_SUPPORT_REMOTE_CONTROL_AUTO", "true").strip().lower() in {
+                    "1",
+                    "true",
+                    "yes",
+                    "y",
+                    "on",
+                }
+
+                remote_mode = str(st.session_state.get("_remote_exec_mode") or "Servidor (local)")
+                remote_agent_url = (
+                    str(st.session_state.get("_remote_agent_url") or "").strip()
+                    if remote_mode == "Cliente (Agente HTTP)"
+                    else ""
+                )
+                remote_winrm_host = (
+                    str(st.session_state.get("_remote_client_host") or "").strip()
+                    if remote_mode == "Cliente (WinRM/PowerShell Remoting)"
+                    else ""
+                )
+
+                # Si Remote Control está activo, ignoramos el selector WinRM/Agente HTTP para red.
+                rc_use = bool(rc_auto and rc_url and rc_admin_token and user_key)
+
                 net_result = run_network_diagnostics(
                     consulta,
                     progress_container,
                     user_key,
                     allow_changes=net_allow_changes,
+                    remote_agent_url=remote_agent_url or None,
+                    remote_winrm_host=remote_winrm_host or None,
+                    remote_control_url=(rc_url if rc_use else None),
+                    remote_control_admin_token=(rc_admin_token if rc_use else None),
+                    remote_control_user_key=(user_key if rc_use else None),
                 )
 
                 # Si retorna un prompt, hubo diagnóstico (y posiblemente acciones). Usar ese prompt.
@@ -2316,7 +2416,7 @@ ESPECIALIDAD GENERAL:
                             except Exception as e:
                                 st.session_state["_printer_auto_log"] = f"[AUTO_PRINTER] Error inesperado: {e}"
                                 prompt = f"{prompt}\n\n{st.session_state['_printer_auto_log']}"
-                
+
                 # AHORA SÍ: Guardar en historial de conversación (después de automatizaciones)
                 current_conv_id = st.session_state.get("_current_conversation_id")
                 if not current_conv_id:
@@ -2350,7 +2450,7 @@ ESPECIALIDAD GENERAL:
                 _persist_ui_conversations()
                 
                 _start_generation(prompt)
-                st.rerun()
+
 
         # --- Render de chat + streaming ---
         current_conv_id = st.session_state.get("_current_conversation_id")
@@ -2398,7 +2498,7 @@ ESPECIALIDAD GENERAL:
                                 _persist_ui_conversations()
                             
                             # Forzar rerun inmediato para actualizar UI
-                            st.rerun()
+
                             
                         elif msg.get("type") == "error":
                             st.session_state["_gen_error"] = msg.get("error")
@@ -2408,7 +2508,7 @@ ESPECIALIDAD GENERAL:
                             st.session_state["_gen_queue"] = None  # Limpiar la cola también
                             
                             # Forzar rerun inmediato para actualizar UI
-                            st.rerun()
+
                 except queue.Empty:
                     pass
 
@@ -2454,7 +2554,7 @@ ESPECIALIDAD GENERAL:
             # Verificar de nuevo antes de rerun por si se procesó mensaje final
             if st.session_state.get("_gen_active"):
                 time.sleep(0.2)
-                st.rerun()
+
 
         if (not st.session_state.get("_gen_active")) and st.session_state.get("_gen_result"):
             resultado = st.session_state.get("_gen_result")
@@ -2652,6 +2752,65 @@ ESPECIALIDAD GENERAL:
                     if len(df) > preview_rows:
                         st.caption(f"Mostrando {preview_rows} de {len(df)} filas")
                     st.info("💬 Haz preguntas en el chat principal")
+
+
+# --- INTEGRACIÓN TRIGGER DIAGNÓSTICO ---
+
+TRIGGER_SERVER_URL = "http://172.17.87.11:5000"
+CLIENT_ID = os.getenv('COMPUTERNAME', 'cliente_windows')
+
+def mostrar_ultimo_reporte_conectividad(client_id):
+    import requests
+    import streamlit as st
+    try:
+        resp = requests.get(f"{TRIGGER_SERVER_URL}/api/report")
+        if resp.status_code == 200:
+            data = resp.json()
+            # Buscar el último reporte para el client_id
+            if isinstance(data, list):
+                reportes_usuario = [r for r in data if str(r.get("usuario") or r.get("client_id") or "").lower() == client_id.lower()]
+                if reportes_usuario:
+                    ultimo = sorted(reportes_usuario, key=lambda r: r.get("timestamp", ""), reverse=True)[0]
+                    st.info(f"Último diagnóstico: {ultimo.get('resultado', ultimo)}")
+                else:
+                    st.info("No hay reportes de conectividad recientes para este usuario.")
+            else:
+                st.info("No se pudo leer el historial de reportes.")
+        else:
+            st.info("No se pudo consultar el historial de reportes.")
+    except Exception as e:
+        st.info(f"No se pudo consultar el historial de reportes: {e}")
+
+def trigger_diagnostico_remoto():
+    import os
+    import subprocess
+    import streamlit as st
+    client_id = str(st.session_state.get("current_user") or os.getenv('COMPUTERNAME', 'cliente_windows'))
+    exe_path = r"C:\\ConfiguradorRed_FCFM.exe"
+    exe_launched = False
+    if os.path.exists(exe_path):
+        try:
+            subprocess.Popen([exe_path], shell=True)
+            exe_launched = True
+        except Exception as e:
+            st.error(f"No se pudo ejecutar {exe_path}: {e}")
+    try:
+        import requests
+        resp = requests.post(f"{TRIGGER_SERVER_URL}/api/trigger-test", json={"client_id": client_id})
+        if resp.status_code == 200:
+            msg = f"Se ha solicitado el diagnóstico remoto para {client_id}."
+            if exe_launched:
+                msg += "\nSe abrió el programa de conectividad en C:."
+            else:
+                msg += "\nNo se encontró o no se pudo abrir C:\\ConfiguradorRed_FCFM.exe."
+            st.success(msg)
+            # Marcar que estamos esperando el diagnóstico remoto
+            st.session_state["_diagnostico_remoto_en_espera"] = True
+            mostrar_ultimo_reporte_conectividad(client_id)
+        else:
+            st.error(f"Error al solicitar diagnóstico remoto: {resp.text}")
+    except Exception as e:
+        st.error(f"No se pudo conectar al servidor de triggers: {e}")
 
 
 if __name__ == "__main__":

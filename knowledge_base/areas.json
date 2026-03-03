@@ -4,5 +4,11 @@
     "name": "informática",
     "description": "procedimientos de área de informática",
     "created_at": 1772498144.5465255
+  },
+  "redes_47205": {
+    "id": "redes_47205",
+    "name": "redes",
+    "description": "",
+    "created_at": 1772547205.2855823
   }
 }

@@ -87,9 +87,6 @@ def run_network_diagnostics(
         "conectarme a la red",
         "conectar a la red",
         "no tengo red",
-        "configurar ip",
-        "asignar ip",
-        "necesito ip",
         "no tengo ip",
         "problemas de internet",
         "problema de internet",
@@ -103,12 +100,37 @@ def run_network_diagnostics(
         "no abre paginas",
     ]
     
+    # Keywords que disparan asignación de IP de forma EXPLÍCITA (saltean precheck de conectividad)
+    assign_explicit_keywords = [
+        "asignar ip",
+        "asigname una ip",
+        "asignarme una ip",
+        "asignar una ip",
+        "asigna ip",
+        "quiero una ip",
+        "necesito una ip",
+        "cambiar mi ip",
+        "cambiar ip",
+        "configurar ip",
+        "poner ip",
+        "dame una ip",
+        "asigna una ip",
+        "nueva ip",
+        "registrar ip",
+        "asignar dirección ip",
+        "asignarme dirección ip",
+    ]
+
     consulta_l = (consulta or "").strip().lower()
     net_intent = any(k in consulta_l for k in net_keywords)
-    
-    if not net_intent:
+    force_assign = any(k in consulta_l for k in assign_explicit_keywords)
+
+    if not net_intent and not force_assign:
         return None
-    
+
+    # Si hay solicitud explícita de asignación, activar también net_intent
+    if force_assign:
+        net_intent = True
 
     # Si está configurado Remote Control, es obligatorio usar poller. Si no hay poller, NO ejecutar nada local.
 
@@ -266,74 +288,8 @@ def run_network_diagnostics(
                     return None
         return None
 
-    # Si no hay Remote Control activo, NO ejecutar diagnóstico local ni por WinRM/Agente HTTP
-    return None
-
-    # Si usamos Remote Control, ejecutamos el job en el PC cliente y devolvemos un prompt con el resultado.
-    # Nota: este modo ya realiza (en el cliente) el precheck y, si corresponde, el intento de asignación IP.
-    if use_remote_control:
-        with progress_container:
-            with st.status("🛰️ Remote Control: ejecutando diagnóstico en el PC cliente", expanded=True) as rcst:
-                try:
-                    st.write(f"👤 Usuario (user_key): {rc_user_key}")
-                    st.write("🔎 Buscando agente conectado...")
-
-                    agent_id = _rc_pick_agent_id_ui()
-                    if not agent_id:
-                        rcst.update(label="⚠️ No hay agente conectado", state="error")
-                        return None
-
-                    st.write(f"✅ Agente seleccionado: {agent_id}")
-                    st.write("📨 Enviando job diagnose_and_fix...")
-                    resp = _rc_post(
-                        "/admin/job",
-                        payload={
-                            "agent_id": agent_id,
-                            "job_type": "diagnose_and_fix",
-                            "payload": {"target": "8.8.8.8", "allow_changes": bool(allow_changes)},
-                        },
-                    )
-                    job_id = str(resp.get("job_id") or "").strip()
-                    if not job_id:
-                        raise RuntimeError("El servidor no devolvió job_id")
-                    st.write(f"🧾 job_id: {job_id}")
-                    st.write("⏳ Esperando resultado del PC cliente...")
-                    job = _rc_wait_job(job_id)
-                    status = str(job.get("status") or "")
-                    result = job.get("result") if isinstance(job.get("result"), dict) else {}
-                    err = str(job.get("error") or "").strip()
-
-                    if status == "done":
-                        rcst.update(label="✅ Diagnóstico remoto completado", state="complete")
-                    else:
-                        rcst.update(label="❌ Diagnóstico remoto falló", state="error")
-
-                    # Mostrar resumen en UI
-                    st.write(f"Estado: {status}")
-                    if err:
-                        st.write(f"Error: {err}")
-                    if isinstance(result, dict) and result:
-                        st.json(result)
-
-                    # Construir prompt para el LLM con resultado estructurado
-                    return (
-                        "DIAGNÓSTICO AUTOMÁTICO (PC CLIENTE / POLLER)\n"
-                        f"user_key={rc_user_key}\n"
-                        f"agent_id={agent_id}\n"
-                        f"status={status}\n"
-                        + (f"error={err}\n" if err else "")
-                        + "result_json=\n"
-                        + json.dumps(result or {}, ensure_ascii=False, indent=2)
-                        + "\n\nINSTRUCCIONES PARA TU RESPUESTA:\n"
-                        "1. Si ok=true, confirma conectividad y resume lo hecho.\n"
-                        "2. Si ok=false y changed=true/new_ip existe, explica que se cambió la IP e indica la nueva IP.\n"
-                        "3. Si ok=false y no se pudo cambiar, da pasos concretos (cable, DHCP, reinicio adaptador).\n"
-                        "4. Mantén la respuesta breve y accionable."
-                    )
-                except Exception as e:
-                    rcst.update(label="❌ Remote Control: error", state="error")
-                    st.write(f"❌ Error Remote Control: {e}")
-                    return None
+    use_agent = remote_cfg is not None
+    use_winrm = winrm_host is not None
 
     # PASO 0: Test rápido de conectividad ANTES de hacer diagnóstico completo
     quick_test_adapter = None
@@ -390,9 +346,84 @@ def run_network_diagnostics(
                 pre.update(label="❌ Precheck: error", state="error")
                 st.write(f"❌ Error ejecutando precheck: {e}")
     
-    # Si HAY conectividad → No hacer nada, dejar que el chat responda normal
-    if has_connectivity:
+    # Si HAY conectividad y NO es una solicitud explícita de asignación → No hacer nada
+    if has_connectivity and not force_assign:
         return None  # El chat responderá normalmente
+
+    # Si HAY conectividad pero el usuario pidió asignar IP explícitamente → asignar igual
+    if has_connectivity and force_assign:
+        with progress_container:
+            with st.status("🔧 Asignando IP por solicitud explícita...", expanded=True) as assign_st:
+                st.info("📋 El equipo tiene conectividad, pero se solicitó asignación de IP explícita.")
+                try:
+                    # Detectar adaptador Ethernet
+                    adapters_list = list_net_adapters()
+                    target_adapter = None
+                    for a in adapters_list:
+                        name = str(a.get("Name") or "").strip().lower()
+                        status_txt = str(a.get("Status") or "").strip().lower()
+                        if "ethernet" in name and status_txt == "up":
+                            target_adapter = str(a.get("Name") or "").strip()
+                            break
+                    if not target_adapter:
+                        for a in adapters_list:
+                            status_txt = str(a.get("Status") or "").strip().lower()
+                            name = str(a.get("Name") or "").strip().lower()
+                            if status_txt == "up" and "wi-fi" not in name and "loopback" not in name:
+                                target_adapter = str(a.get("Name") or "").strip()
+                                break
+
+                    if not target_adapter:
+                        assign_st.update(label="❌ Sin adaptador de red activo", state="error")
+                        return """ASIGNACIÓN DE IP: Sin adaptador activo.
+INSTRUCCIONES: Explica que no se encontró un adaptador Ethernet activo y sugiere verificar el cable."""
+
+                    st.write(f"✅ Adaptador detectado: {target_adapter}")
+
+                    if not allow_changes:
+                        assign_st.update(label="⚠️ Asignación desactivada (modo diagnóstico)", state="complete")
+                        return f"""ASIGNACIÓN DE IP BLOQUEADA (AI_SUPPORT_NET_AUTOMATION_AUTO=false):
+Adaptador: {target_adapter}
+INSTRUCCIONES: Informa que la asignación automática está desactivada por configuración del administrador."""
+
+                    st.write("⚙️ Buscando IP libre en el pool MySQL y asignando...")
+                    result = assign_ip_to_ethernet_and_register(
+                        user_key=user_key,
+                        interface_alias=target_adapter,
+                        prefix_length=24,
+                        require_no_ping_response=True,
+                        dry_run=False,
+                    )
+
+                    if result.ok and result.assigned_ip:
+                        st.success(f"✅ IP asignada: {result.assigned_ip}")
+                        assign_st.update(label="✅ IP asignada correctamente", state="complete")
+                        return f"""ASIGNACIÓN DE IP COMPLETADA:
+- Adaptador: {target_adapter}
+- IP asignada: {result.assigned_ip}
+- Registrada en MySQL para usuario: {user_key}
+- Detalle: {result.details}
+
+INSTRUCCIONES PARA TU RESPUESTA:
+1. Confirma que asignaste la IP {result.assigned_ip} al adaptador {target_adapter}.
+2. Indica que quedó registrada en el sistema.
+3. Sugiere probar: ping 8.8.8.8
+4. Mantén la respuesta breve (3-4 líneas)."""
+                    else:
+                        st.error(f"❌ Error: {result.details}")
+                        assign_st.update(label="❌ Error al asignar IP", state="error")
+                        return f"""ASIGNACIÓN DE IP FALLIDA:
+- Adaptador: {target_adapter}
+- Error: {result.details}
+
+INSTRUCCIONES PARA TU RESPUESTA:
+1. Informa que no se pudo asignar la IP automáticamente.
+2. Si el error menciona permisos, indica que se requiere ejecutar como Administrador.
+3. Si no hay IPs disponibles en el pool, sugiere contactar al administrador de red."""
+                except Exception as exc:
+                    assign_st.update(label="❌ Error inesperado", state="error")
+                    return f"""ASIGNACIÓN DE IP: Error inesperado: {exc}
+INSTRUCCIONES: Informa del error y sugiere intentar manualmente."""
     
     # Sin conectividad → Ejecutar diagnóstico COMPLETO
     with progress_container:

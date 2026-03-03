@@ -1,4 +1,4 @@
-﻿"""
+"""
 Configurador de Red - FCFM Universidad de Chile
 Ejecuta como Administrador.
 
@@ -26,10 +26,18 @@ from network_manager import NetworkManager
 from database_manager import DatabaseManager
 from dotenv import load_dotenv
 
-# Configurar logging
-log_dir = "logs"
-if not os.path.exists(log_dir):
-    os.makedirs(log_dir)
+# Directorio base: carpeta del .exe (frozen) o del script fuente
+if getattr(sys, 'frozen', False):
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Cargar .env desde el mismo directorio que el .exe / script
+load_dotenv(dotenv_path=os.path.join(BASE_DIR, '.env'))
+
+# Configurar logging en la carpeta del .exe
+log_dir = os.path.join(BASE_DIR, "logs")
+os.makedirs(log_dir, exist_ok=True)
 
 log_file = os.path.join(log_dir, f"network_config_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
 logging.basicConfig(
@@ -49,7 +57,7 @@ ALLOWED_SEGMENTS = [
 ]
 
 def _ping_responde(ip: str) -> bool:
-    """Retorna True si la IP responde a ping (estÃ¡ ocupada)."""
+    """Retorna True si la IP responde a ping (esta ocupada)."""
     try:
         r = subprocess.run(
             ['ping', '-n', '1', '-w', '500', ip],
@@ -61,7 +69,7 @@ def _ping_responde(ip: str) -> bool:
 
 
 def generar_pool_candidatas(ips_usadas: set, max_por_segmento: int = 254) -> list:
-    """Genera IPs candidatas en paralelo descartando usadas y las que respondan ping."""
+    """Genera IPs candidatas descartando las usadas y las que respondan ping."""
     candidatas = []
     for seg in ALLOWED_SEGMENTS:
         for i in range(2, max_por_segmento + 1):
@@ -91,14 +99,12 @@ def generar_pool_candidatas(ips_usadas: set, max_por_segmento: int = 254) -> lis
 
 def print_banner():
     """Muestra el banner del sistema"""
-    banner = """
-    â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
-    â•‘   Sistema de ConfiguraciÃ³n AutomÃ¡tica de Red              â•‘
-    â•‘   FCFM - Universidad de Chile                             â•‘
-    â•‘   VersiÃ³n 1.0                                             â•‘
-    â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-    """
-    print(banner)
+    print("""
+    ============================================================
+     Sistema de Configuracion Automatica de Red
+     FCFM - Universidad de Chile  v2.0
+    ============================================================
+    """)
     logger.info("Sistema iniciado")
 
 def verificar_permisos_admin():
@@ -121,8 +127,6 @@ def main():
     """FunciÃ³n principal."""
     print_banner()
     verificar_permisos_admin()
-    load_dotenv()
-
     try:
         network_mgr = NetworkManager()
         db_mgr = DatabaseManager()

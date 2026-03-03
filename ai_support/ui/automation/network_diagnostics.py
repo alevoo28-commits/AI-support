@@ -353,22 +353,20 @@ def run_network_diagnostics(
     # Si HAY conectividad pero el usuario pidió asignar IP explícitamente �?' asignar igual
     # También se ejecuta cuando NO hay conectividad y force_assign=True (viene del flujo normal de diagnóstico)
     if force_assign:
-        # El agente web no puede ejecutar programas en el PC del cliente.
-        # El usuario debe correr el ejecutable standalone manualmente.
+        # El agente web no puede ejecutar .exe en el PC del cliente.
+        # El usuario debe ejecutar el programa standalone manualmente.
         return (
-            "SOLICITUD DE ASIGNACI�"N DE IP DETECTADA.\n"
+            "SOLICITUD DE ASIGNACION DE IP DETECTADA.\n"
             "INSTRUCCIONES PARA TU RESPUESTA:\n"
-            "1. Indica al usuario que, para asignar una IP estática con conectividad verificada, "
-            "debe ejecutar manualmente el programa **ConfiguradorRed_FCFM.exe** en su PC.\n"
-            "2. Explica que debe ejecutarlo con clic derecho �?' 'Ejecutar como administrador'.\n"
-            "3. El programa realizará automáticamente: detección del adaptador Ethernet, "
-            "búsqueda de una IP libre en los segmentos de red FCFM (172.17.82-87.x), "
-            "verificación de conectividad a Internet al solicitar correo del usuario, "
-            "y registro de la IP en la base de datos.\n"
-            "4. Si el usuario no tiene el ejecutable, puede pedírselo al equipo de soporte TI.\n"
-            "5. Mantén la respuesta clara y amable (máximo 5 líneas)."
+            "1. Indica al usuario que debe ejecutar manualmente el programa"
+            " **ConfiguradorRed_FCFM.exe** en su PC con clic derecho"
+            " -> Ejecutar como administrador.\n"
+            "2. El programa detectara el adaptador Ethernet, buscara una IP"
+            " libre en los segmentos 172.17.82-87.x, verificara conectividad"
+            " a Internet y registrara la IP en la base de datos.\n"
+            "3. Si no tiene el ejecutable, puede solicitarlo a soporte TI.\n"
+            "4. Responde de forma clara y amable (maximo 5 lineas)."
         )
-
 
     # Sin conectividad �?' Ejecutar diagnóstico COMPLETO
     with progress_container:

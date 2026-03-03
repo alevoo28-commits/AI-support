@@ -16,13 +16,29 @@ python -m pip install pyinstaller
 
 echo.
 echo Compilando ejecutable...
-python -m PyInstaller --onefile --console --name "ConfiguradorRed_FCFM" --icon=NONE src/main.py
+python -m PyInstaller --onefile --console ^
+  --name "ConfiguradorRed_FCFM" ^
+  --paths src ^
+  --hidden-import mysql.connector ^
+  src/main.py
+
+if errorlevel 1 (
+    echo.
+    echo [ERROR] Fallo la compilacion.
+    pause
+    exit /b 1
+)
 
 echo.
-echo ========================================
-echo  Compilación completada
-echo ========================================
+echo ============================================
+echo  Compilacion completada
+echo ============================================
+echo  Ejecutable : dist\ConfiguradorRed_FCFM.exe
 echo.
-echo El ejecutable se encuentra en: dist\ConfiguradorRed_FCFM.exe
+echo  IMPORTANTE: Copia el archivo .env junto al
+echo  ejecutable antes de distribuirlo.
+echo  El .env debe contener:
+echo    DB_HOST, DB_PORT, DB_USER, DB_PASSWORD
+echo    DB_NAME, GATEWAY (opcional)
 echo.
 pause

@@ -204,100 +204,413 @@ def _is_rate_limit_error(err: Exception) -> bool:
     )
 
 
+# ── Base de Conocimiento UI ───────────────────────────────────────────────────
+
+def _render_knowledge_base_section() -> None:
+    """Renderiza la sección de Base de Conocimiento por Áreas."""
+    import streamlit as st
+    from ai_support.core.knowledge_base import get_kb_manager
+
+    ACCEPTED_TYPES = ["pdf", "docx", "doc", "xlsx", "xls", "xlsm", "txt", "csv", "md"]
+    ACCEPTED_LABEL = ".pdf, .docx, .xlsx, .txt"
+
+    kb = get_kb_manager()
+
+    st.markdown("## 📚 Base de Conocimiento por Áreas")
+    st.caption(
+        "Sube documentos (Word, PDF, Excel, TXT) organizados por áreas de la empresa. "
+        "El agente podrá responder preguntas usando únicamente los documentos de cada área."
+    )
+
+    # ── Inicializar estado ────────────────────────────────────────────────────
+    if "kb_selected_area" not in st.session_state:
+        st.session_state["kb_selected_area"] = None
+    if "kb_refresh" not in st.session_state:
+        st.session_state["kb_refresh"] = 0
+
+    areas = kb.list_areas()
+
+    # ── Layout: columna áreas | columna documentos ────────────────────────────
+    col_areas, col_docs = st.columns([1, 2], gap="large")
+
+    # ──────────────── Columna izquierda: lista de áreas ───────────────────────
+    with col_areas:
+        st.markdown("### 🏢 Áreas de la empresa")
+
+        # Crear nueva área
+        with st.expander("➕ Crear nueva área", expanded=not areas):
+            with st.form("form_create_area", clear_on_submit=True):
+                new_name = st.text_input("Nombre del área", placeholder="Ej: Recursos Humanos")
+                new_desc = st.text_area("Descripción (opcional)", height=80)
+                submitted = st.form_submit_button("Crear área", use_container_width=True)
+                if submitted:
+                    if new_name.strip():
+                        try:
+                            kb.create_area(new_name.strip(), new_desc.strip())
+                            st.success(f"✅ Área '{new_name}' creada.")
+                            st.session_state["kb_refresh"] += 1
+                            st.rerun()
+                        except ValueError as e:
+                            st.error(str(e))
+                    else:
+                        st.warning("Escribe un nombre para el área.")
+
+        if not areas:
+            st.info("No hay áreas creadas todavía. Crea la primera usando el formulario de arriba.")
+        else:
+            for area in areas:
+                area_id = area["id"]
+                is_selected = st.session_state["kb_selected_area"] == area_id
+                btn_label = f"{'▶ ' if is_selected else ''}{area['name']} ({area['doc_count']} docs)"
+                if st.button(btn_label, key=f"btn_area_{area_id}", use_container_width=True,
+                             type="primary" if is_selected else "secondary"):
+                    st.session_state["kb_selected_area"] = area_id
+                    st.rerun()
+
+    # ──────────────── Columna derecha: gestión de documentos ─────────────────
+    with col_docs:
+        area_id = st.session_state.get("kb_selected_area")
+        if area_id is None:
+            st.markdown("### 📄 Documentos")
+            st.info("👈 Selecciona un área en el panel izquierdo para gestionar sus documentos.")
+            return
+
+        area_meta = kb.get_area(area_id)
+        if area_meta is None:
+            st.warning("El área seleccionada ya no existe.")
+            st.session_state["kb_selected_area"] = None
+            return
+
+        st.markdown(f"### 📂 {area_meta['name']}")
+        if area_meta.get("description"):
+            st.caption(area_meta["description"])
+
+        # Subir documentos
+        st.markdown("#### ⬆️ Subir documentos")
+        uploaded_files = st.file_uploader(
+            f"Selecciona archivos para **{area_meta['name']}**",
+            type=ACCEPTED_TYPES,
+            accept_multiple_files=True,
+            key=f"uploader_{area_id}",
+            help=f"Tipos aceptados: {ACCEPTED_LABEL}",
+        )
+        if uploaded_files:
+            if st.button(f"📥 Subir {len(uploaded_files)} archivo(s)", key=f"btn_upload_{area_id}",
+                         use_container_width=True, type="primary"):
+                progress = st.progress(0, text="Subiendo...")
+                errors: list[str] = []
+                for idx, uf in enumerate(uploaded_files):
+                    try:
+                        kb.upload_document(area_id, uf.name, uf.read())
+                    except Exception as e:
+                        errors.append(f"{uf.name}: {e}")
+                    progress.progress((idx + 1) / len(uploaded_files), text=f"Procesando {uf.name}...")
+                progress.empty()
+                if errors:
+                    st.error("⚠️ Errores al subir:\n" + "\n".join(errors))
+                else:
+                    st.success(f"✅ {len(uploaded_files)} archivo(s) subido(s) y listos para búsqueda.")
+                st.rerun()
+
+        st.markdown("---")
+
+        # Listar documentos existentes
+        docs = kb.list_documents(area_id)
+        st.markdown(f"#### 📋 Documentos ({len(docs)})")
+
+        if not docs:
+            st.info("No hay documentos en esta área. Sube archivos usando el formulario de arriba.")
+        else:
+            for doc in docs:
+                import time as _time
+                uploaded_str = ""
+                try:
+                    uploaded_str = _time.strftime("%d/%m/%Y %H:%M", _time.localtime(doc.get("uploaded_at", 0)))
+                except Exception:
+                    pass
+                size_kb = doc.get("size_bytes", 0) / 1024
+                chunks = doc.get("chunk_count", 0)
+                col_name, col_info, col_del = st.columns([3, 2, 1])
+                with col_name:
+                    ext = doc["filename"].rsplit(".", 1)[-1].upper() if "." in doc["filename"] else "?"
+                    icons = {"PDF": "📕", "DOCX": "📘", "DOC": "📘", "XLSX": "📗", "XLS": "📗",
+                             "XLSM": "📗", "TXT": "📄", "CSV": "📊", "MD": "📝"}
+                    icon = icons.get(ext, "📎")
+                    st.markdown(f"{icon} **{doc['filename']}**")
+                with col_info:
+                    st.caption(f"{size_kb:.1f} KB · {chunks} fragmentos · {uploaded_str}")
+                with col_del:
+                    if st.button("🗑️", key=f"del_{doc['id']}", help=f"Eliminar {doc['filename']}"):
+                        kb.delete_document(area_id, doc["id"])
+                        st.success(f"Documento '{doc['filename']}' eliminado.")
+                        st.rerun()
+
+        st.markdown("---")
+
+        # Zona de prueba de búsqueda
+        with st.expander("🔍 Probar búsqueda en esta área", expanded=False):
+            test_q = st.text_input("Consulta de prueba", placeholder="Escribe algo para buscar...",
+                                   key=f"test_q_{area_id}")
+            if st.button("Buscar", key=f"btn_test_search_{area_id}"):
+                if test_q.strip():
+                    # Intentar con embeddings del orquestador si está disponible
+                    embeddings = None
+                    orq = st.session_state.get("orquestador")
+                    if orq:
+                        try:
+                            agente = list(orq.agentes.values())[0]
+                            embeddings = agente.embeddings
+                        except Exception:
+                            pass
+                    results = kb.search(area_id, test_q.strip(), k=4, embeddings=embeddings)
+                    if results:
+                        for i, r in enumerate(results, 1):
+                            st.markdown(f"**Fragmento {i}** — `{r['filename']}`")
+                            st.text_area("", r["text"], height=100, key=f"res_{area_id}_{i}", disabled=True)
+                    else:
+                        st.warning("No se encontraron resultados.")
+                else:
+                    st.warning("Escribe una consulta para buscar.")
+
+        # Botón eliminar área
+        st.markdown("---")
+        with st.expander("⚠️ Zona de peligro", expanded=False):
+            st.warning(f"Esto eliminará el área **{area_meta['name']}** y **todos** sus documentos permanentemente.")
+            if st.button(f"🗑️ Eliminar área '{area_meta['name']}'", key=f"del_area_{area_id}",
+                         type="secondary", use_container_width=True):
+                kb.delete_area(area_id)
+                st.session_state["kb_selected_area"] = None
+                st.success("Área eliminada.")
+                st.rerun()
+
+
 def main() -> None:
     import os
+    import secrets
     import streamlit as st
+
+    st.set_page_config(
+        page_title="Soporte Informático IA",
+        page_icon="⚙️",
+        layout="wide",
+        initial_sidebar_state="expanded",
+    )
+
+    st.markdown("""
+    <style>
+    /* ── Fuente global ── */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+
+    /* ── Fondo principal blanco/gris muy claro ── */
+    .stApp { background: #f5f6fa !important; }
+
+    /* ── Sidebar blanco con borde sutil ── */
+    [data-testid="stSidebar"] {
+        background: #ffffff !important;
+        border-right: 1px solid #e2e6f0 !important;
+        box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+    }
+    [data-testid="stSidebar"] .stMarkdown h3 {
+        color: #4f46e5 !important;
+        font-weight: 700 !important;
+        font-size: 0.82rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.1em !important;
+    }
+
+    /* ── Texto general legible ── */
+    html, body, p, span, div, label { color: #1e293b !important; }
+    h1, h2, h3, h4 { color: #1e293b !important; font-weight: 700 !important; }
+
+    /* ── Área de contenido principal ── */
+    [data-testid="stAppViewContainer"] > .main { background: #f5f6fa !important; }
+    .block-container { 
+        background: #f5f6fa !important;
+        padding-top: 2rem !important;
+    }
+
+    /* ── Tarjetas / contenedores internos ── */
+    [data-testid="stVerticalBlock"] > div {
+        background: transparent;
+    }
+
+    /* ── Botones primarios (azul/índigo) ── */
+    .stButton > button[kind="primary"] {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.02em !important;
+        transition: transform 0.15s, box-shadow 0.15s !important;
+        box-shadow: 0 3px 12px rgba(79, 70, 229, 0.3) !important;
+    }
+    .stButton > button[kind="primary"]:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 18px rgba(79, 70, 229, 0.45) !important;
+    }
+
+    /* ── Botones secundarios ── */
+    .stButton > button[kind="secondary"] {
+        background: #ffffff !important;
+        color: #374151 !important;
+        border: 1px solid #d1d5db !important;
+        border-radius: 10px !important;
+        font-weight: 500 !important;
+        transition: all 0.15s !important;
+    }
+    .stButton > button[kind="secondary"]:hover {
+        background: #ede9fe !important;
+        border-color: #4f46e5 !important;
+        color: #4f46e5 !important;
+    }
+
+    /* ── Inputs y selectboxes ── */
+    .stTextInput > div > div > input {
+        background: #ffffff !important;
+        border: 1.5px solid #d1d5db !important;
+        border-radius: 8px !important;
+        color: #1e293b !important;
+    }
+    .stTextInput > div > div > input:focus {
+        border-color: #4f46e5 !important;
+        box-shadow: 0 0 0 3px rgba(79,70,229,0.12) !important;
+    }
+
+    /* ── Chat input ── */
+    [data-testid="stChatInput"] > div {
+        background: #ffffff !important;
+        border: 1.5px solid #d1d5db !important;
+        border-radius: 12px !important;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important;
+    }
+    [data-testid="stChatInput"] textarea { color: #1e293b !important; }
+
+    /* ── Mensajes del asistente ── */
+    [data-testid="stChatMessage"] {
+        background: #ffffff !important;
+        border-radius: 12px !important;
+        border: 1px solid #e9ecf3 !important;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.05) !important;
+        margin-bottom: 8px !important;
+    }
+
+    /* ── Alertas con colores vivos legibles ── */
+    [data-testid="stNotification"], .stSuccess, .element-container .stSuccess > div {
+        background: #ecfdf5 !important;
+        border-left: 4px solid #10b981 !important;
+        border-radius: 8px !important;
+        color: #065f46 !important;
+    }
+    .stWarning, .element-container .stWarning > div {
+        background: #fffbeb !important;
+        border-left: 4px solid #f59e0b !important;
+        border-radius: 8px !important;
+        color: #78350f !important;
+    }
+    .stError, .element-container .stError > div {
+        background: #fef2f2 !important;
+        border-left: 4px solid #ef4444 !important;
+        border-radius: 8px !important;
+        color: #7f1d1d !important;
+    }
+    .stInfo, .element-container .stInfo > div {
+        background: #eef2ff !important;
+        border-left: 4px solid #4f46e5 !important;
+        border-radius: 8px !important;
+        color: #312e81 !important;
+    }
+
+    /* ── Expanders ── */
+    [data-testid="stExpander"] {
+        background: #ffffff !important;
+        border: 1px solid #e2e6f0 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.05) !important;
+        overflow: hidden !important;
+    }
+    [data-testid="stExpander"] summary {
+        font-weight: 600 !important;
+        color: #1e293b !important;
+    }
+
+    /* ── Métricas ── */
+    [data-testid="stMetricValue"] { color: #4f46e5 !important; font-weight: 700 !important; }
+    [data-testid="stMetricLabel"] { color: #6b7280 !important; font-size: 0.85rem !important; }
+
+    /* ── Divider ── */
+    hr { border-color: #e2e6f0 !important; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #4f46e5; }
+
+    /* ── Caption ── */
+    .stCaption, small { color: #6b7280 !important; font-size: 0.82rem !important; }
+
+    /* ── Radio ── */
+    .stRadio > div { gap: 6px; }
+    .stRadio label {
+        background: #ffffff !important;
+        border: 1.5px solid #e2e6f0 !important;
+        border-radius: 8px !important;
+        padding: 6px 14px !important;
+        transition: all 0.15s !important;
+        color: #374151 !important;
+    }
+    .stRadio label:hover { border-color: #4f46e5 !important; background: #eef2ff !important; }
+
+    /* ── Checkbox ── */
+    .stCheckbox label span { color: #374151 !important; }
+
+    /* ── Selectbox ── */
+    .stSelectbox > div > div { 
+        background: #ffffff !important;
+        border: 1.5px solid #d1d5db !important;
+        border-radius: 8px !important;
+        color: #1e293b !important;
+    }
+
+    /* ── Código ── */
+    code, pre { 
+        background: #f1f5f9 !important; 
+        color: #1e293b !important;
+        border-radius: 6px !important;
+    }
+
+    /* ── Dataframe ── */
+    [data-testid="stDataFrame"] { border-radius: 10px !important; overflow: hidden !important; }
+    </style>
+    """, unsafe_allow_html=True)
+
     USER_FILE = os.path.join(os.path.expanduser("~"), ".ai_support_user_data")
 
-    # Restaurar usuario y state persistente al cargar la app
+    # Restaurar usuario al cargar la app.
+    # NO restaurar google_oauth_state — siempre se genera uno fresco en cada intento de login.
     if os.path.exists(USER_FILE):
         try:
             with open(USER_FILE, "r", encoding="utf-8") as f:
                 data = f.read().strip().split("\n")
-                if len(data) >= 2:
-                    email, oauth_state = data[0], data[1]
+                if len(data) >= 1:
+                    email = data[0]
                     if email:
                         st.session_state["current_user"] = email
-                    if oauth_state:
-                        st.session_state["google_oauth_state"] = oauth_state
         except Exception:
             pass
-    # Nunca regenerar google_oauth_state si ya existe en disco o en session_state
 
-    # --- PROCESAR CALLBACK OAUTH AL INICIO ---
-    google_enabled = google_auth_enabled()
-    if google_enabled:
-        if "google_oauth_state" not in st.session_state:
-            st.session_state["google_oauth_state"] = secrets.token_urlsafe(24)
-
-        def _get_query_params():
-            return st.query_params
-
-        def _qp_first(qp_mapping, key: str) -> str | None:
-            val = qp_mapping.get(key) if qp_mapping is not None else None
-            if isinstance(val, list):
-                return val[0] if val else None
-            if val is None:
-                return None
-            return str(val)
-
-        qp = _get_query_params()
-        code = _qp_first(qp, "code")
-        state = _qp_first(qp, "state")
-        oauth_error = _qp_first(qp, "error")
-
-        if oauth_error:
-            st.error(f"Google OAuth error: {oauth_error}")
-
-        # Procesar el callback antes de cualquier st.stop()
-        if code and state and not st.session_state.get("_google_oauth_done"):
-            # Leer el state persistente de disco para comparar
-            STATE_FILE = os.path.join(os.path.expanduser("~"), ".ai_support_oauth_state")
-            expected_state = st.session_state.get("google_oauth_state")
-            if os.path.exists(STATE_FILE):
-                try:
-                    with open(STATE_FILE, "r", encoding="utf-8") as f:
-                        expected_state = f.read().strip()
-                except Exception:
-                    pass
-            if state != expected_state:
-                st.error("OAuth inválido (state no coincide).")
-                st.warning(f"[DEBUG] state recibido: {state}")
-                st.warning(f"[DEBUG] state esperado: {expected_state}")
-                st.warning(f"[DEBUG] session_state completo: {dict(st.session_state)}")
-            else:
-                try:
-                    tokens = exchange_code_for_tokens(code=code)
-                    raw_id_token = tokens.get("id_token")
-                    if not raw_id_token:
-                        st.error("Respuesta de Google no incluye id_token")
-                        st.warning(f"[DEBUG] tokens recibidos: {tokens}")
-                        raise ValueError("Respuesta de Google no incluye id_token")
-                    email = None
-                    try:
-                        import jwt
-                        payload = jwt.decode(raw_id_token, options={"verify_signature": False})
-                        st.warning(f"[DEBUG] Email en id_token: {payload.get('email')}")
-                        email = verify_id_token_and_get_email(raw_id_token=raw_id_token)
-                    except Exception as ve:
-                        st.error(f"No se pudo verificar el id_token: {ve}")
-                        st.warning(f"[DEBUG] id_token recibido: {raw_id_token}")
-                    if email:
-                        st.session_state["current_user"] = email
-                        st.session_state["_google_oauth_done"] = True
-                        # Guardar usuario y state en disco para persistencia
-                        with open(USER_FILE, "w", encoding="utf-8") as f:
-                            f.write(f"{email}\n{st.session_state['google_oauth_state']}")
-                        st.success(f"[DEBUG] Login exitoso, usuario: {email}")
-
-                    else:
-                        st.error("No se pudo obtener el email del usuario o el dominio no es permitido.")
-                except Exception as e:
-                    st.error(f"No se pudo autenticar: {e}")
-                    st.warning(f"[DEBUG] Error en login OAuth: {e}")
-
-    st.title("⚙️ Sistema Multi-Agente de Soporte Informático")
-    st.markdown("Sistema con orquestación, agentes especializados y colaboración entre agentes")
+    st.markdown("""
+    <div style='padding: 1.5rem 0 0.5rem 0;'>
+        <h1 style='margin:0; font-size:2.2rem; font-weight:700; color:#1e293b;'>
+            ⚙️ Sistema Multi-Agente de Soporte Informático
+        </h1>
+        <p style='margin:0.4rem 0 0 0; color:#6b7280; font-size:0.95rem;'>
+            Orquestación inteligente · Agentes especializados · Colaboración multi-agente
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
     st.divider()
 
     # ...existing code...
@@ -365,50 +678,48 @@ def main() -> None:
             state = _qp_first(qp, "state")
             oauth_error = _qp_first(qp, "error")
 
-            print(f"[DEBUG] OAuth params: code={code}, state={state}, error={oauth_error}")
-
             if oauth_error:
                 st.error(f"Google OAuth error: {oauth_error}")
                 _clear_query_params()
 
             if code and state and not st.session_state.get("_google_oauth_done"):
-                if state != st.session_state.get("google_oauth_state"):
-                    st.error("OAuth inválido (state no coincide).")
-                    st.warning(f"[DEBUG] state recibido: {state}")
-                    st.warning(f"[DEBUG] state esperado: {st.session_state.get('google_oauth_state')}")
-                    st.warning(f"[DEBUG] session_state completo: {dict(st.session_state)}")
-                    _clear_oauth_state()
+                # Leer el state desde disco (STATE_FILE) como fuente de verdad
+                _STATE_FILE = os.path.join(os.path.expanduser("~"), ".ai_support_oauth_state")
+                _expected_state = None
+                if os.path.exists(_STATE_FILE):
+                    try:
+                        with open(_STATE_FILE, "r", encoding="utf-8") as f:
+                            _expected_state = f.read().strip()
+                    except Exception:
+                        pass
+                if not _expected_state or state != _expected_state:
+                    st.error("Error de autenticación. Por favor intenta iniciar sesión nuevamente.")
+                    # No borrar google_oauth_state aquí para que el botón pueda seguir funcionando
                 else:
                     try:
                         tokens = exchange_code_for_tokens(code=code)
                         raw_id_token = tokens.get("id_token")
                         if not raw_id_token:
-                            st.error("Respuesta de Google no incluye id_token")
-                            st.warning(f"[DEBUG] tokens recibidos: {tokens}")
+                            st.error("Respuesta de Google no incluye id_token.")
                             raise ValueError("Respuesta de Google no incluye id_token")
                         email = None
                         try:
-                            email = None
-                            import jwt
-                            try:
-                                payload = jwt.decode(raw_id_token, options={"verify_signature": False})
-                                st.warning(f"[DEBUG] Email en id_token: {payload.get('email')}")
-                            except Exception as jwt_e:
-                                st.warning(f"[DEBUG] Error decodificando id_token: {jwt_e}")
                             email = verify_id_token_and_get_email(raw_id_token=raw_id_token)
                         except Exception as ve:
                             st.error(f"No se pudo verificar el id_token: {ve}")
-                            st.warning(f"[DEBUG] id_token recibido: {raw_id_token}")
                         if email:
                             st.session_state["current_user"] = email
                             st.session_state["_google_oauth_done"] = True
                             st.session_state["orquestador"] = None
-                            st.success(f"[DEBUG] Login exitoso, usuario: {email}")
+                            try:
+                                with open(USER_FILE, "w", encoding="utf-8") as _uf:
+                                    _uf.write(email)
+                            except Exception:
+                                pass
                         else:
                             st.error("No se pudo obtener el email del usuario o el dominio no es permitido.")
                     except Exception as e:
                         st.error(f"No se pudo autenticar: {e}")
-                        st.warning(f"[DEBUG] Error en login OAuth: {e}")
                     finally:
                         _clear_oauth_state()
 
@@ -421,20 +732,21 @@ def main() -> None:
                     st.error("Falta `AI_SUPPORT_GOOGLE_REDIRECT_URI` para Google OAuth.")
                 else:
                     try:
-                        auth_url = build_google_auth_url(state=st.session_state["google_oauth_state"])
+                        # Mostrar botón; el state y auth_url se generan DENTRO del click para evitar stale state
                         if st.button("🔐 Iniciar sesión con Google", use_container_width=True):
-                            # Guardar el state en disco al iniciar login
-                            STATE_FILE = os.path.join(os.path.expanduser("~"), ".ai_support_oauth_state")
-                            with open(STATE_FILE, "w", encoding="utf-8") as f:
-                                f.write(st.session_state["google_oauth_state"])
-                            st.markdown(f'<meta http-equiv="refresh" content="0; url={auth_url}">', unsafe_allow_html=True)
+                            # Generar un state fresco en cada intento de login
+                            _new_state = secrets.token_urlsafe(24)
+                            st.session_state["google_oauth_state"] = _new_state
+                            _STATE_FILE_LOGIN = os.path.join(os.path.expanduser("~"), ".ai_support_oauth_state")
+                            with open(_STATE_FILE_LOGIN, "w", encoding="utf-8") as f:
+                                f.write(_new_state)
+                            _auth_url = build_google_auth_url(state=_new_state)
+                            st.markdown(f'<meta http-equiv="refresh" content="0; url={_auth_url}">', unsafe_allow_html=True)
                         st.caption("Debes usar tu correo @uchile.cl")
                     except Exception as e:
                         st.error(f"Google OAuth no configurado: {e}")
 
                 st.warning("⚠️ Inicia sesión para usar el chat")
-                st.markdown("---")
-                st.info(f"[DEBUG] session_state: {dict(st.session_state)}")
                 st.stop()
 
             # Si el usuario está presente, mostrar el chat
@@ -507,9 +819,8 @@ def main() -> None:
 
 
             if st.button("🗑️ Borrar historial", use_container_width=True):
-                if persistence.delete_user_memory(current_user):
-                    st.success("Historial borrado")
-                # También borrar conversaciones UI persistidas (estilo ChatGPT)
+                persistence.delete_user_memory(current_user)
+                # Borrar archivo de conversaciones UI en disco
                 try:
                     safe_id = persistence._sanitize_user_id(current_user)
                     ui_path = os.path.join(str(persistence.storage_dir), f"{safe_id}_ui_conversations.json")
@@ -517,7 +828,15 @@ def main() -> None:
                         os.remove(ui_path)
                 except Exception:
                     pass
-                # Línea eliminada: no se borra orquestador
+                # Limpiar session_state para que la UI se actualice inmediatamente
+                st.session_state["_conversations"] = []
+                st.session_state["_conversation_messages"] = {}
+                st.session_state["_current_conversation_id"] = None
+                st.session_state["_ui_conv_loaded"] = True  # evitar re-carga del archivo borrado
+                st.session_state["_gen_text"] = ""
+                st.session_state["_gen_result"] = None
+                st.success("✅ Historial borrado")
+                st.rerun()
 
 
         # --- Fallback local (sin Google OAuth) ---
@@ -531,9 +850,8 @@ def main() -> None:
             st.caption("Historial guardado localmente en tu perfil.")
 
             if st.button("🗑️ Borrar historial", use_container_width=True):
-                if persistence.delete_user_memory(current_user):
-                    st.success("Historial borrado")
-                # También borrar conversaciones UI persistidas (estilo ChatGPT)
+                persistence.delete_user_memory(current_user)
+                # Borrar archivo de conversaciones UI en disco
                 try:
                     safe_id = persistence._sanitize_user_id(current_user)
                     ui_path = os.path.join(str(persistence.storage_dir), f"{safe_id}_ui_conversations.json")
@@ -541,7 +859,15 @@ def main() -> None:
                         os.remove(ui_path)
                 except Exception:
                     pass
-                # Línea eliminada: no se borra orquestador
+                # Limpiar session_state para que la UI se actualice inmediatamente
+                st.session_state["_conversations"] = []
+                st.session_state["_conversation_messages"] = {}
+                st.session_state["_current_conversation_id"] = None
+                st.session_state["_ui_conv_loaded"] = True  # evitar re-carga del archivo borrado
+                st.session_state["_gen_text"] = ""
+                st.session_state["_gen_result"] = None
+                st.success("✅ Historial borrado")
+                st.rerun()
 
         
         st.markdown("---")
@@ -855,7 +1181,7 @@ def main() -> None:
     with st.sidebar:
         st.markdown("---")
         st.markdown("### 🗂️ Opciones")
-        menu = st.radio("Selecciona una sección:", ("Agentes",), key="menu_navegacion")
+        menu = st.radio("Selecciona una sección:", ("Agentes", "📚 Base de Conocimiento"), key="menu_navegacion")
         st.markdown("---")
         if st.button("🔄 Limpiar Memoria", key="limpiar_memoria", use_container_width=True):
             if st.session_state.get("orquestador"):
@@ -1016,6 +1342,10 @@ def main() -> None:
                 st.code(logline.strip(), language="text")
         except Exception:
             st.info("No hay logs disponibles aún.")
+
+    elif menu == "📚 Base de Conocimiento":
+        _render_knowledge_base_section()
+        return  # No renderizar el chat cuando está activa la KB
 
     # Layout estilo ChatGPT: chat a la izquierda, conversaciones a la derecha
     chat_col, conv_col = st.columns([3, 1])
@@ -1212,7 +1542,7 @@ def main() -> None:
                 type="primary",
                 disabled=bool(st.session_state.get("_gen_active")),
             ):
-                import datetime
+                import datetime, time
 
                 new_id = f"conv_{int(time.time())}_{secrets.token_hex(4)}"
                 new_conv = {
@@ -1670,7 +2000,7 @@ def main() -> None:
                                 for p in stored_inner
                             ]
                             sel_inner = str(st.session_state.get("_mysql_printer_choice") or "")
-                            idx_inner = options_inner.index(sel_inner) if sel_inner in options_inner : 0
+                            idx_inner = options_inner.index(sel_inner) if sel_inner in options_inner else 0
                             chosen_inner = stored_inner[idx_inner]
                             st.session_state["_selected_printer_record"] = chosen_inner
                             # Autocompletar campos existentes
@@ -2496,18 +2826,15 @@ def main() -> None:
                                     }
                                 )
                                 _persist_ui_conversations()
-                            
-                            # Forzar rerun inmediato para actualizar UI
+                            st.rerun()  # Actualizar UI: ocultar Stop, mostrar respuesta
 
-                            
                         elif msg.get("type") == "error":
                             st.session_state["_gen_error"] = msg.get("error")
                             st.session_state["_gen_error_obj"] = msg.get("error_obj")
                             st.session_state["_gen_active"] = False
                             st.session_state["_gen_stop_event"] = None
                             st.session_state["_gen_queue"] = None  # Limpiar la cola también
-                            
-                            # Forzar rerun inmediato para actualizar UI
+                            st.rerun()  # Actualizar UI: mostrar error, habilitar input
 
                 except queue.Empty:
                     pass
@@ -2554,6 +2881,7 @@ def main() -> None:
             # Verificar de nuevo antes de rerun por si se procesó mensaje final
             if st.session_state.get("_gen_active"):
                 time.sleep(0.2)
+                st.rerun()  # ← re-ejecuta la página para leer la cola del hilo
 
 
         if (not st.session_state.get("_gen_active")) and st.session_state.get("_gen_result"):
@@ -2572,6 +2900,13 @@ def main() -> None:
                 if "colaboracion" in resultado:
                     with st.expander("🔗 Colaboración Multi-Agente"):
                         st.markdown(resultado["colaboracion"])
+
+                if resultado.get("kb_usado"):
+                    with st.expander("📚 Base de Conocimiento utilizada", expanded=True):
+                        st.success("✅ Se encontraron procedimientos relevantes en la Base de Conocimiento")
+                        if resultado.get("kb_preview"):
+                            st.markdown("**Fragmento recuperado:**")
+                            st.text(resultado["kb_preview"])
 
                 if resultado.get("faiss_usado"):
                     with st.expander("🔍 FAISS RAG Utilizado"):

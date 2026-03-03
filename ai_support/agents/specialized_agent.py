@@ -158,9 +158,14 @@ class AgenteEspecializado:
                 f"- Memoria vectorial: {self._formatear_memoria(contexto_memoria.get('vector', []))}"
             )
 
+        # KB context (documentación oficial subida por el administrador)
+        kb_context_block = ""
+        if contexto and contexto.get("kb_context"):
+            kb_context_block = f"""\n\nDocumentación oficial de la empresa (úsala como FUENTE PRINCIPAL de verdad):\n{contexto['kb_context']}\n---"""
+
         system_prompt = f"""
 Eres {self.nombre}, un agente especializado en {self.especialidad}.
-
+{kb_context_block}
 Conocimiento del área (FAISS RAG):
 {contexto_faiss if contexto_faiss else self.material_cargado[:material_limit]}
 
@@ -173,7 +178,8 @@ Directrices:
 3. Si necesitas colaborar con otro agente, indícalo
 4. Mantén un tono profesional y útil
 5. Usa el contexto de memoria y FAISS para respuestas más personalizadas
-6. Si no tienes información específica, indícalo claramente
+6. Si tienes documentación oficial subida, responde ÚNICAMENTE basándote en ella
+7. Si no tienes información específica, indícalo claramente
 """
 
         messages: List[Any] = [SystemMessage(content=system_prompt)]

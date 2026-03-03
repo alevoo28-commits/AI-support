@@ -93,12 +93,35 @@ class OrquestadorMultiagente:
         self.metricas_globales["total_consultas"] += 1
 
         agente_principal = self.determinar_agente_principal(consulta)
+
+        # ── Búsqueda en base de conocimiento ────────────────────────────────
+        contexto_kb: Optional[Dict[str, Any]] = None
+        kb_used = False
+        kb_preview = ""
+        try:
+            from ai_support.core.knowledge_base import get_kb_manager
+            kb = get_kb_manager()
+            agente_obj = self.agentes[agente_principal]
+            embeddings = getattr(agente_obj, "embeddings", None)
+            kb_text = kb.get_full_context_for_query(consulta, k=4, embeddings=embeddings)
+            if kb_text:
+                # Limitar a ~6000 caracteres para no saturar el contexto del LLM
+                kb_text_limited = kb_text[:6000] + ("\n[...contenido truncado...]" if len(kb_text) > 6000 else "")
+                contexto_kb = {"kb_context": kb_text_limited}
+                kb_used = True
+                kb_preview = kb_text[:300]
+        except Exception as kb_err:
+            print(f"⚠️ KB search error (no interrumpe): {kb_err}")
+
         resultado = self.agentes[agente_principal].procesar_consulta(
             consulta,
+            contexto=contexto_kb,
             stream_callback=stream_callback,
             should_stop=should_stop,
         )
         resultado["agente_principal"] = agente_principal
+        resultado["kb_usado"] = kb_used
+        resultado["kb_preview"] = kb_preview
 
         necesita_colaboracion = self._evaluar_colaboracion(consulta)
 

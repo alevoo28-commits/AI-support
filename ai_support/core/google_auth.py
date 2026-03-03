@@ -18,6 +18,7 @@ import os
 import json
 import urllib.parse
 import urllib.request
+import urllib.error
 from typing import Any, Dict, Optional
 
 
@@ -113,6 +114,16 @@ def exchange_code_for_tokens(*, code: str) -> Dict[str, Any]:
         with urllib.request.urlopen(req, timeout=15) as resp:
             raw = resp.read().decode("utf-8")
         return json.loads(raw)
+    except urllib.error.HTTPError as e:
+        try:
+            body = e.read().decode("utf-8")
+        except Exception:
+            body = "(no body)"
+        raise ValueError(
+            f"Error intercambiando code por tokens: HTTP {e.code} — {body}\n"
+            f"  client_id usado: {client_id[:8]}...\n"
+            f"  redirect_uri usado: {redirect_uri}"
+        )
     except Exception as e:
         raise ValueError(f"Error intercambiando code por tokens: {e}")
 

@@ -83,6 +83,34 @@ class DatabaseManager:
             logger.error(f"Error registrando IP: {e}")
             return False
     
+    def registrar_o_actualizar_ip(self, correo: str, ip: str) -> bool:
+        """Actualiza la IP del usuario identificado por correo en la tabla personal.
+
+        Hace UPDATE personal SET IP=%s WHERE correo=%s.
+        Si el correo no existe en la tabla, registra un warning y retorna False.
+        """
+        try:
+            cursor = self.conexion.cursor()
+            query = "UPDATE personal SET IP = %s WHERE correo = %s"
+            cursor.execute(query, (ip, correo))
+            self.conexion.commit()
+            filas = cursor.rowcount
+            cursor.close()
+
+            if filas == 0:
+                logger.warning(
+                    f"No se encontró el correo '{correo}' en la tabla personal. "
+                    "La IP no fue registrada."
+                )
+                return False
+
+            logger.info(f"IP {ip} actualizada para el usuario {correo} en MySQL.")
+            return True
+
+        except Error as e:
+            logger.error(f"Error actualizando IP para {correo}: {e}")
+            return False
+
     def desconectar(self):
         """Cierra la conexión con la base de datos"""
         if self.conexion and self.conexion.is_connected():

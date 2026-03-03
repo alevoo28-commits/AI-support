@@ -182,13 +182,9 @@ def pick_free_ip_from_mysql_pool(
     """Elige una IP candidata que no esté registrada en MySQL y que no esté configurada localmente.
 
     Si require_no_ping_response=True, además exige que la IP NO responda a Test-NetConnection.
-
-    Nota: esto evita "escanear toda la red" porque solo prueba IPs candidatas que vienen del pool.
     """
-
     assigned = fetch_assigned_ipv4_from_mysql()
     candidates = fetch_candidate_ipv4_pool_from_mysql()
-
     local_ips = _local_ipv4_set(interface_alias)
 
     checked = 0
@@ -197,27 +193,135 @@ def pick_free_ip_from_mysql_pool(
             continue
         if ip in local_ips:
             continue
-
         if require_no_ping_response:
             ps = run_powershell(safe_net_command_test_ip_in_use(ip), timeout_s=5)
             raw = (ps.stdout or "").strip().lower()
-            # Test-NetConnection -InformationLevel Quiet devuelve True/False
             if raw == "true":
                 continue
-
+        checked += 1
+        if checked >= max_checks:
+            break
         return ip, (
             f"Elegida IP candidata {ip}. "
             f"(MySQL assigned={len(assigned)}, candidates={len(candidates)}, local={sorted(local_ips)})"
         )
 
-        checked += 1
-        if checked >= max_checks:
-            break
-
     return None, (
         f"No se encontró IP libre en el pool. "
         f"(MySQL assigned={len(assigned)}, candidates={len(candidates)}, local={sorted(local_ips)})"
     )
+
+
+def iter_free_ips_from_pool(
+    *,
+    interface_alias: str,
+    require_no_ping_response: bool = True,
+    max_candidates: int = 300,
+):
+    """Generador que yield IPs libres del pool una a una (no asignadas en MySQL, sin ping).
+
+    Permite iterar sobre candidatas y probar conectividad tras cada asignación.
+    """
+    assigned = fetch_assigned_ipv4_from_mysql()
+    candidates = fetch_candidate_ipv4_pool_from_mysql()
+    local_ips = _local_ipv4_set(interface_alias)
+
+    checked = 0
+    for ip in candidates:
+        if ip in assigned:
+            continue
+        if ip in local_ips:
+            continue
+        if require_no_ping_response:
+            ps = run_powershell(safe_net_command_test_ip_in_use(ip), timeout_s=5)
+            raw = (ps.stdout or "").strip().lower()
+            if raw == "true":
+                continue
+        yield ip
+        checked += 1
+        if checked >= max_candidates:
+            break
+
+
+def assign_ip_until_connectivity(
+    *,
+    user_key: str,
+    interface_alias: str,
+    prefix_length: int = 24,
+    default_gateway: Optional[str] = None,
+    dns_servers: Optional[list] = None,
+    connectivity_target: str = "8.8.8.8",
+    max_attempts: int = 10,
+    wait_secs: float = 3.0,
+) -> IPAssignResult:
+    """Asigna IPs del pool una a una hasta encontrar una que dé conectividad.
+
+    Flujo por cada candidata:
+    1. Aplica la IP en el adaptador local (requiere admin).
+    2. Espera wait_secs.
+    3. Prueba ping a connectivity_target.
+    4. Si hay conectividad → registra en MySQL y retorna ok=True.
+    5. Si no → prueba la siguiente IP del pool.
+    6. Si se agotan max_attempts → retorna ok=False con última IP intentada.
+    """
+    import time as _time
+
+    gw = default_gateway or "172.17.87.1"
+    dns = dns_servers or ["172.17.66.9", "172.17.40.9"]
+
+    last_ip: Optional[str] = None
+    attempt = 0
+
+    for ip in iter_free_ips_from_pool(interface_alias=interface_alias):
+        attempt += 1
+        last_ip = ip
+
+        # Aplicar IP
+        cmd = safe_net_command_set_static_ipv4(
+            interface_alias=interface_alias,
+            ip=ip,
+            prefix_length=int(prefix_length),
+            default_gateway=gw,
+            dns_servers=dns,
+        )
+        res = run_powershell(cmd, timeout_s=40)
+        if res.returncode != 0:
+            if attempt >= max_attempts:
+                return IPAssignResult(ok=False, assigned_ip=ip, details=f"Falló asignación PowerShell en {ip}: {res.stderr[-500:]}")
+            continue
+
+        # Esperar a que se aplique
+        _time.sleep(wait_secs)
+
+        # Probar conectividad
+        conn = test_connectivity_on_interface(interface_alias, connectivity_target)
+        if conn.get("success"):
+            # Registrar en MySQL
+            try:
+                rows = register_user_ipv4_in_mysql(user_key=user_key, ip=ip)
+            except Exception as reg_err:
+                rows = 0
+                return IPAssignResult(
+                    ok=True,
+                    assigned_ip=ip,
+                    details=f"IP {ip} con conectividad OK. Advertencia: no se registró en MySQL: {reg_err}",
+                )
+            return IPAssignResult(
+                ok=True,
+                assigned_ip=ip,
+                details=f"IP {ip} asignada con conectividad OK (intento {attempt}). MySQL filas={rows}.",
+            )
+
+        if attempt >= max_attempts:
+            break
+
+    if last_ip:
+        return IPAssignResult(
+            ok=False,
+            assigned_ip=last_ip,
+            details=f"Se probaron {attempt} IPs del pool sin obtener conectividad a {connectivity_target}. Última IP intentada: {last_ip}.",
+        )
+    return IPAssignResult(ok=False, details="No se encontraron IPs disponibles en el pool.")
 
 
 def assign_ip_to_ethernet_and_register(

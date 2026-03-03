@@ -196,20 +196,24 @@ def _candidate_pool_from_env() -> list[str]:
     """Genera IPs candidatas desde env, sin depender de una tabla.
 
     Soporta:
-    - AI_SUPPORT_IP_POOL_CIDR     (ej. 172.17.87.0/24)
-    - AI_SUPPORT_IP_POOL_RANGE_START / AI_SUPPORT_IP_POOL_RANGE_END (ej. 172.17.87.50 .. 172.17.87.200)
+    - AI_SUPPORT_IP_POOL_CIDR     (ej. 172.17.82.0/24 o múltiples separados por coma:
+                                   172.17.82.0/24,172.17.83.0/24,172.17.84.0/24)
+    - AI_SUPPORT_IP_POOL_RANGE_START / AI_SUPPORT_IP_POOL_RANGE_END (ej. 172.17.82.1 .. 172.17.87.254)
     """
 
-    cidr = (_env("AI_SUPPORT_IP_POOL_CIDR") or "").strip()
-    if cidr:
-        try:
-            net = ipaddress.ip_network(cidr, strict=False)
-            if net.version != 4:
-                return []
-            # hosts() excluye red/broadcast
-            return [str(ip) for ip in net.hosts()]
-        except Exception:
-            return []
+    cidr_raw = (_env("AI_SUPPORT_IP_POOL_CIDR") or "").strip()
+    if cidr_raw:
+        out: list[str] = []
+        for cidr in [c.strip() for c in cidr_raw.split(",") if c.strip()]:
+            try:
+                net = ipaddress.ip_network(cidr, strict=False)
+                if net.version != 4:
+                    continue
+                # hosts() excluye red/broadcast
+                out.extend(str(ip) for ip in net.hosts())
+            except Exception:
+                continue
+        return out
 
     start = (_env("AI_SUPPORT_IP_POOL_RANGE_START") or "").strip()
     end = (_env("AI_SUPPORT_IP_POOL_RANGE_END") or "").strip()

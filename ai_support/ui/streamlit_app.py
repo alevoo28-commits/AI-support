@@ -435,20 +435,20 @@ def main() -> None:
         background: transparent;
     }
 
-    /* ── Botones primarios (azul/índigo) ── */
+    /* ── Botones primarios (azul personalizado) ── */
     .stButton > button[kind="primary"] {
-        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+        background: #004B93 !important;
         color: #ffffff !important;
         border: none !important;
         border-radius: 10px !important;
         font-weight: 600 !important;
         letter-spacing: 0.02em !important;
         transition: transform 0.15s, box-shadow 0.15s !important;
-        box-shadow: 0 3px 12px rgba(79, 70, 229, 0.3) !important;
+        box-shadow: 0 3px 12px rgba(0, 75, 147, 0.3) !important;
     }
     .stButton > button[kind="primary"]:hover {
         transform: translateY(-2px) !important;
-        box-shadow: 0 6px 18px rgba(79, 70, 229, 0.45) !important;
+        box-shadow: 0 6px 18px rgba(0, 75, 147, 0.45) !important;
     }
 
     /* ── Botones secundarios ── */
@@ -612,9 +612,6 @@ def main() -> None:
     </div>
     """, unsafe_allow_html=True)
     st.divider()
-
-    # ...existing code...
-
 
     # Mostrar el chat si el usuario está autenticado
     if st.session_state.get("current_user"):

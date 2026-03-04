@@ -1,4 +1,156 @@
-## Resumen Ejecutivo: Sistema Multi-Agente con Observabilidad Total y Plan de Sostenibilidad
+# Historial de Cambios — AI-Support FCFM
+
+---
+
+## [2026-03-04] Limpieza de código y herramienta standalone de asignación de IPs
+
+### Contexto
+Se realizó una revisión completa del proyecto para eliminar código obsoleto y se implementó una herramienta ejecutable standalone (`ConfiguradorRed_FCFM.exe`) que asigna una IP estática al PC del cliente con verificación de conectividad y registro en MySQL. El agente web ya no intenta ejecutar operaciones de red en el cliente; en su lugar redirige al usuario a ejecutar el `.exe` manualmente.
+
+---
+
+### 1. Limpieza de archivos obsoletos
+
+Se eliminaron los siguientes archivos que habían dejado de usarse:
+
+| Archivo eliminado | Motivo |
+|---|---|
+| `temp_net_block.py`, `temp_net_diagnostic_indented.py`, `temp_net_diagnostic_realtime.py` | Scripts temporales de diagnóstico, nunca importados |
+| `sistema_completo_agentes_monolito_legacy.py` | Versión monolítica anterior reemplazada por arquitectura modular |
+| `ai_support/server_api.py` (Flask) | API Flask reemplazada por `run_server.py` |
+| `ai_support/run_server.py` | Runner no utilizado en producción |
+| `ai_support/core/nextcloud_integration.py` | Integración Nextcloud descartada |
+| `ai_support/core/onlyoffice_integration.py` | Integración OnlyOffice descartada |
+| `ai_support/core/excel_query_engine.py` | Motor de consultas Excel no importado en ningún módulo activo |
+| `test_excel_import.py`, `test_user_memory.py` | Tests de desarrollo manual |
+| `serve_temp_files.py` | Servidor temporal de archivos, sin uso |
+| `scripts/github_models_azure_smoke_test.py`, `scripts/github_models_langchain_smoke_test.py` | Smoke tests manuales de desarrollo |
+| `connectivity_reports.json`, `trigger_test.json` | Artefactos de prueba |
+| `agents/` (carpeta vacía), `memory/` (carpeta vacía) | Directorios huérfanos |
+
+---
+
+### 2. Corrección crítica en `network_diagnostics.py`
+
+**Archivo:** `ai_support/ui/automation/network_diagnostics.py`
+
+- **Bug corregido:** Existía un `return None` incondicional después del bloque de Remote Control con el comentario `"Si no hay Remote Control, NO ejecutar diagnóstico local"`. Esto bloqueaba toda ejecución de diagnóstico local.
+- **Código muerto eliminado:** Bloque duplicado de Remote Control que nunca se ejecutaba.
+- Se agregó detección explícita de solicitudes de asignación de IP mediante lista de palabras clave (`assign_explicit_keywords`): `"asignar ip"`, `"configurar red"`, `"sin internet"`, etc.
+
+---
+
+### 3. Cambio de arquitectura — Asignación de IP
+
+**Problema identificado:** El agente web no puede ejecutar programas `.exe` en el PC del cliente. La implementación anterior intentaba asignar IPs remotamente (via WinRM o agente remoto), lo cual es arquitectónicamente incorrecto para el caso de uso real.
+
+**Solución adoptada:** modelo de dos capas:
+
+| Capa | Componente | Responsabilidad |
+|---|---|---|
+| Agente web (servidor) | `network_diagnostics.py` — bloque `force_assign` | Detecta la solicitud y redirige al usuario a ejecutar el `.exe` |
+| Cliente (PC del usuario) | `ConfiguradorRed_FCFM.exe` | Asigna la IP, verifica conectividad, registra en MySQL |
+
+**Bloque `force_assign` simplificado** — ya no contiene lógica de WinRM/agente remoto. Devuelve un mensaje que le indica al usuario ejecutar el `.exe` manualmente como Administrador.
+
+---
+
+### 4. Nueva herramienta standalone: `ConfiguradorRed_FCFM.exe`
+
+**Ubicación fuente:** `instalable/src/`
+
+#### Flujo de ejecución
+
+```
+1. Verificar si ya hay conectividad (ping 8.8.8.8)
+   └─ Sí → salir sin cambios
+   └─ No → continuar
+
+2. Pedir correo institucional (@uchile.cl)
+
+3. Conectar a MySQL → obtener IPs ya asignadas (SELECT IP FROM personal)
+
+4. Ping sweep paralelo en segmentos 172.17.82-87.x
+   └─ Descartar IPs que respondan ping (ya ocupadas)
+   └─ Descartar IPs registradas en BD
+   └─ Generar lista ordenada de candidatas
+
+5. Iterar candidatas (máx. 15 intentos):
+   ├─ Aplicar IP via netsh en adaptador Ethernet
+   ├─ Esperar 3 segundos
+   ├─ Ping 8.8.8.8 → si OK:
+   │   ├─ UPDATE personal SET IP=? WHERE correo=?
+   │   └─ Mostrar resumen y salir
+   └─ Si no → siguiente candidata
+
+6. Si se agotan intentos → mensaje de error con instrucciones
+```
+
+#### Archivos modificados / creados
+
+| Archivo | Cambios |
+|---|---|
+| `instalable/src/main.py` | Reescrito completamente. Rutas frozen-aware (`BASE_DIR`), `.env` junto al `.exe`, logs en carpeta del `.exe`, loop iterate-until-connectivity, sin Flask ni subprocess externo |
+| `instalable/src/database_manager.py` | Agregado método `registrar_o_actualizar_ip(correo, ip)` → `UPDATE personal SET IP=%s WHERE correo=%s` |
+| `instalable/requirements.txt` | Limpiado: eliminados `flask`, `waitress`, `requests`, `scapy`, `psutil`, `pymysql`. Solo `mysql-connector-python`, `python-dotenv`, `pyinstaller` |
+| `instalable/build.bat` | Corregido: agrega `--paths src` (para que PyInstaller encuentre los módulos locales) y `--hidden-import mysql.connector` |
+
+#### Segmentos de red cubiertos
+
+```
+172.17.82.0/24  172.17.83.0/24  172.17.84.0/24
+172.17.85.0/24  172.17.86.0/24  172.17.87.0/24
+```
+Total: hasta 1.524 IPs candidatas por ejecución.
+
+#### Variables de entorno requeridas (`.env` junto al `.exe`)
+
+```env
+DB_HOST=172.17.87.250
+DB_PORT=3306
+DB_USER=<usuario>
+DB_PASSWORD=<contraseña>
+DB_NAME=FCFMUCHILE
+GATEWAY=            # dejar vacío → se autodetecta como x.x.x.1
+DNS_PRIMARY=172.17.66.9
+DNS_SECONDARY=172.17.40.9
+```
+
+#### Compilación
+
+```bat
+# Desde la carpeta instalable/
+build.bat
+# Genera: instalable/dist/ConfiguradorRed_FCFM.exe
+```
+
+#### Distribución al cliente
+
+Entregar junto al ejecutable el archivo `.env` completado. El usuario ejecuta con **clic derecho → Ejecutar como administrador**.
+
+---
+
+### 5. Mejoras en el pool de IPs del servidor (`ai_support/core/`)
+
+| Archivo | Cambio |
+|---|---|
+| `ai_support/core/ip_pool_mysql.py` | `_candidate_pool_from_env()` ahora soporta múltiples CIDRs separados por coma en `AI_SUPPORT_IP_POOL_CIDR` |
+| `ai_support/core/ip_assignment.py` | Agregadas funciones `iter_free_ips_from_pool()` (generador) y `assign_ip_until_connectivity()` (loop con ping de verificación) |
+| `.env` (raíz) | Añadida variable `AI_SUPPORT_IP_POOL_CIDR=172.17.82.0/24,...,172.17.87.0/24` con los 6 segmentos FCFM |
+
+---
+
+## [2026-03-04] Resumen de Resumen Ejecutivo
+
+El sistema entra en 2026 con una arquitectura limpia dividida en:
+- **Backend web (Streamlit + LangChain):** diagnóstico, chat, memoria, RAG.
+- **Herramienta de campo (`.exe`):** configuración de red en el PC del cliente de forma autónoma.
+
+---
+
+## [2025] Resumen Ejecutivo: Sistema Multi-Agente con Observabilidad Total y Plan de Sostenibilidad
+
+
 
 ### 🎯 Estado Actual del Sistema
 

@@ -1,10 +1,51 @@
+"""Herramientas para análisis determinista y robusto de consultas FCFM.
+
+Implementa enrutamiento a 15 áreas especializadas con:
+- Determinismo: siempre mismo agente para misma consulta
+- Robustez: tolera tildes, typos y variaciones usando fuzzy matching
+- Sin dependencias: usa solo bibliotecas estándar de Python
+"""
+
 from typing import Any, Dict
+from difflib import SequenceMatcher
+import unicodedata
+
+
+def normalizar_texto(texto: str) -> str:
+    """Normaliza texto removiendo tildes y convirtiendo a minúsculas.
+    
+    Ejemplo:
+        "Tesorería" → "tesoreria"
+        "ADMINISTRACIÓN" → "administracion"
+    """
+    # Remover tildes
+    nfd = unicodedata.normalize('NFD', texto.lower())
+    sin_tildes = ''.join(c for c in nfd if unicodedata.category(c) != 'Mn')
+    return sin_tildes.strip()
+
+
+def similitud_fuzzy(texto1: str, texto2: str) -> float:
+    """Calcula similitud entre dos strings (0.0 - 1.0).
+    
+    Usa SequenceMatcher de difflib (determinista, sin dependencias externas).
+    Tolerante a typos pequeños.
+    
+    Args:
+        texto1: Primer texto (ej: palabra clave)
+        texto2: Segundo texto (ej: consulta del usuario)
+        
+    Returns:
+        Float entre 0.0 (muy diferente) y 1.0 (idéntico)
+    """
+    t1 = normalizar_texto(texto1)
+    t2 = normalizar_texto(texto2)
+    return SequenceMatcher(None, t1, t2).ratio()
 
 
 class HerramientaSoporte:
-    """Herramientas para análisis de consultas de FCFM (Facultad de Ciencias Físicas y Matemáticas)."""
+    """Herramientas para análisis determinista y robusto de consultas FCFM."""
 
-    # Mapeo de áreas FCFM con palabras clave para enrutamiento determinista
+    # Mapeo de 15 áreas FCFM con palabras clave para enrutamiento
     AREAS_FCFM = {
         "tesoreria": ["tesorería", "presupuesto", "gasto", "fondo", "pago", "finanzas", "contrato", "viatico", "reembolso", "factura"],
         "arquitectura": ["arquitectura", "diseño", "plano", "estructura", "proyecto editorial", "infraestructura física"],
@@ -49,26 +90,84 @@ class HerramientaSoporte:
 
     @staticmethod
     def analizar_problema(descripcion: str) -> Dict[str, Any]:
-        """Analiza consulta FCFM y enruta a área determinista por palabras clave."""
-        desc_lower = descripcion.lower()
+        """Analiza consulta FCFM y enruta a área determinista usando fuzzy matching.
+        
+        DETERMINISTA: Siempre devuelve el mismo área para la misma consulta.
+        ROBUSTO: Tolera tildes, typos pequeños y variaciones mediante fuzzy matching.
+        
+        Estrategia de matching (en orden de prioridad):
+        1. Substring exacto normalizado (máxima confianza 0.95)
+        2. Fuzzy match (similitud >= 0.85 para palabras largas, >= 0.80 para cortas)
+        3. Fallback a decanato
+        
+        Args:
+            descripcion: Consulta del usuario
+            
+        Returns:
+            Dict con:
+            - categoria: Área FCFM determinada (ej: "infraestructura")
+            - prioridad: "alta", "media", "baja" basada en confianza
+            - confianza: Float 0.0-1.0 indicando precisión del enrutamiento
+            - sugerencias: Lista de pasos recomendados
+        """
+        desc_normalizado = normalizar_texto(descripcion)
+        palabras_consulta = desc_normalizado.split()
+        
+        # Calcular puntuación de similitud por área
+        area_scores: Dict[str, float] = {}
+        
+        for area, palabras_clave in HerramientaSoporte.AREAS_FCFM.items():
+            max_similitud_area = 0.0
+            
+            # Estrategia 1: Búsqueda de palabras completas como substring (máxima prioridad)
+            for palabra_clave in palabras_clave:
+                pc_norm = normalizar_texto(palabra_clave)
+                if pc_norm in desc_normalizado:
+                    # Coincidencia exacta (substring normalizado)
+                    max_similitud_area = max(max_similitud_area, 0.95)
+            
+            # Estrategia 2: Fuzzy matching palabra por palabra (tolera typos)
+            # Pero con umbral más alto para evitar confusiones entre palabras similares
+            for palabra_clave in palabras_clave:
+                pc_len = len(normalizar_texto(palabra_clave))
+                # Umbral adaptativo: más alto para palabras largas (menos ambigüedad)
+                umbral = 0.85 if pc_len > 7 else 0.78
+                
+                for palabra_consulta in palabras_consulta:
+                    similitud = similitud_fuzzy(palabra_clave, palabra_consulta)
+                    
+                    if similitud >= umbral:
+                        # Ponderar por longitud relativa
+                        similitud_ponderada = similitud * (pc_len / 12.0)
+                        max_similitud_area = max(max_similitud_area, similitud_ponderada)
+            
+            if max_similitud_area > 0:
+                area_scores[area] = max_similitud_area
 
-        # Contar coincidencias por área
-        area_scores: Dict[str, int] = {}
-        for area, palabras in HerramientaSoporte.AREAS_FCFM.items():
-            score = sum(1 for p in palabras if p in desc_lower)
-            if score > 0:
-                area_scores[area] = score
-
-        # Área con mayor puntuación
+        # Determinar categoría y confianza (DETERMINISTA: max siempre elige lo mismo)
         if area_scores:
             categoria = max(area_scores, key=area_scores.get)
-            prioridad = "alta"  # Todas las consultas FCFM son importantes
+            confianza = area_scores[categoria]
+            
+            # Prioridad basada en confianza
+            if confianza >= 0.90:
+                prioridad = "alta"
+            elif confianza >= 0.75:
+                prioridad = "media"
+            else:
+                prioridad = "baja"
         else:
-            categoria = "decanato"  # Fallback a decanato (área general)
+            # Fallback: decanato (área general)
+            categoria = "decanato"
             prioridad = "media"
+            confianza = 0.0
 
         return {
             "categoria": categoria,
             "prioridad": prioridad,
-            "sugerencias": [f"Consultar procedimiento de {categoria.replace('_', ' ')}", f"Revisar documentación en {categoria.replace('_', ' ')}"],
+            "confianza": round(confianza, 2),
+            "sugerencias": [
+                f"Consultar procedimiento de {categoria.replace('_', ' ')}",
+                f"Revisar documentación en {categoria.replace('_', ' ')}"
+            ],
         }

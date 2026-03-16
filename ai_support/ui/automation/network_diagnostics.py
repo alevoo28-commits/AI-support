@@ -179,7 +179,7 @@ def run_network_diagnostics(
                 st.info("Si ya lo instalaste, asegúrate que esté ejecutándose y que la variable AI_SUPPORT_USER_KEY coincida con tu usuario.")
             # Prompt explícito para la IA
             return (
-                f"NO SE PUDO REALIZAR DIAGN�"STICO REMOTO EN EL PC DEL USUARIO.\n"
+                f"NO SE PUDO REALIZAR DIAGNOSTICO REMOTO EN EL PC DEL USUARIO.\n"
                 f"No se detecta el agente poller (AI-Support-RemotePoller.exe) ejecutándose en el PC del usuario (user_key={rc_user_key}).\n"
                 "Indica al usuario que debe descargar e instalar el programa para poder hacer pruebas automáticas de red en su computador.\n"
                 "No asumas ningún resultado de conectividad ni de IP.\n"
@@ -226,17 +226,17 @@ def run_network_diagnostics(
     # Si Remote Control está activo, nunca ejecutar diagnóstico local ni por WinRM/Agente HTTP
     if use_remote_control:
         with progress_container:
-            with st.status("�Y>�️ Remote Control: ejecutando diagnóstico en el PC cliente", expanded=True) as rcst:
+            with st.status("Remote Control: ejecutando diagnóstico en el PC cliente", expanded=True) as rcst:
                 try:
-                    st.write(f"�Y'� Usuario (user_key): {rc_user_key}")
-                    st.write("�Y"Z Buscando agente conectado...")
+                    st.write(f"Usuario (user_key): {rc_user_key}")
+                    st.write("Buscando agente conectado...")
                     agent_id = _rc_pick_agent_id_ui()
                     if not agent_id:
-                        rcst.update(label="�s�️ No hay agente conectado", state="error")
+                        rcst.update(label="No hay agente conectado", state="error")
                         return None
 
-                    st.write(f"�o. Agente seleccionado: {agent_id}")
-                    st.write("�Y"� Enviando job diagnose_and_fix...")
+                    st.write(f"Agente seleccionado: {agent_id}")
+                    st.write("Enviando job diagnose_and_fix...")
                     resp = _rc_post(
                         "/admin/job",
                         payload={
@@ -298,7 +298,7 @@ def run_network_diagnostics(
 
     # Mostrar SIEMPRE el precheck en UI cuando es un caso de red/internet.
     with progress_container:
-        with st.status("�YO� Precheck de conectividad", expanded=True) as pre:
+        with st.status("Precheck de conectividad", expanded=True) as pre:
             try:
                 if use_agent:
                     adapters = remote_list_adapters(remote_cfg)
@@ -316,8 +316,8 @@ def run_network_diagnostics(
                     pre.update(label="�s�️ Precheck: sin interfaz activa", state="error")
                     st.write("�s�️ No encontré una interfaz de red activa (Status=Up).")
                 else:
-                    st.write(f"�Y"Z Interfaz para prueba: {quick_test_adapter}")
-                    st.write("�Y"� Probando conectividad a 8.8.8.8...")
+                    st.write(f"Interfaz para prueba: {quick_test_adapter}")
+                    st.write("Probando conectividad a 8.8.8.8...")
                     if use_agent:
                         quick_result = remote_test_connectivity(
                             remote_cfg,
@@ -336,7 +336,7 @@ def run_network_diagnostics(
 
                     if has_connectivity:
                         pre.update(label="�o. Precheck: conectividad OK", state="complete")
-                        st.write("�o. Hay conectividad. No ejecuto diagnóstico adicional.")
+                        st.write("Hay conectividad. No ejecuto diagnóstico adicional.")
                     else:
                         pre.update(label="�O Precheck: sin conectividad", state="error")
                         detail = str(quick_result.get("details") or "").strip()

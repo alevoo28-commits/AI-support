@@ -72,11 +72,3 @@ class HerramientaSoporte:
             "prioridad": prioridad,
             "sugerencias": [f"Consultar procedimiento de {categoria.replace('_', ' ')}", f"Revisar documentación en {categoria.replace('_', ' ')}"],
         }
-            categoria = "excel"
-            prioridad = "media"
-
-        return {
-            "categoria": categoria,
-            "prioridad": prioridad,
-            "sugerencias": [f"Verificar {categoria}", f"Contactar especialista en {categoria}"],
-        }

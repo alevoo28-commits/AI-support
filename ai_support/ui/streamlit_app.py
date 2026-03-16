@@ -1651,14 +1651,6 @@ def main() -> None:
 
         consulta = str(st.session_state.get("_last_user_query") or "")
 
-        # --- Actualización automática del resultado de conectividad cada 3 segundos ---
-        import streamlit as st
-        import time
-        if "_diagnostico_remoto_en_espera" in st.session_state and st.session_state["_diagnostico_remoto_en_espera"]:
-            mostrar_ultimo_reporte_conectividad(str(st.session_state.get("current_user") or "local_user"))
-            time.sleep(3)
-            st.experimental_rerun()
-
         # --- UX simple: lista de impresoras + conectar automático ---
         consulta_l = (consulta or "").strip().lower()
         wants_printer_menu = (
@@ -2374,35 +2366,6 @@ def main() -> None:
                     "inyección SQL, ataques, acceso no autorizado o actividades peligrosas. Por favor, formula una consulta apropiada."
                 )
             else:
-                # --- INTEGRACIÓN TRIGGER DIAGNÓSTICO ---
-                if 'no tengo internet' in consulta.lower():
-                    trigger_diagnostico_remoto()
-                    st.info("Se ha solicitado el diagnóstico remoto al cliente. Espera unos segundos para el resultado.")
-                    # Esperar y mostrar el resultado del cliente (polling simple)
-                    import time
-                    max_wait = 15  # segundos
-                    poll_interval = 2
-                    waited = 0
-                    while waited < max_wait:
-                        try:
-                            url = "http://localhost:5000/api/report/latest"
-                            resp = requests.get(url, timeout=3)
-                            if resp.status_code == 200:
-                                data = resp.json().get('latest_report', {})
-                                resultado = data.get('resultado', '')
-                                if resultado:
-                                    usuario_rep = data.get('usuario', str(st.session_state.get("current_user") or "local_user"))
-                                    st.success(f"Diagnóstico de conectividad ({usuario_rep}): {resultado}")
-                                    st.caption(f"Timestamp: {data.get('timestamp', '')}")
-                                    break
-                            time.sleep(poll_interval)
-                            waited += poll_interval
-                        except Exception:
-                            time.sleep(poll_interval)
-                            waited += poll_interval
-                    else:
-                        st.warning("No se recibió reporte de conectividad del cliente tras esperar 15 segundos.")
-                    st.stop()
                 # Atajo: operaciones directas sobre Excel cargado (ChatGPT para Excel)
                 df_excel = st.session_state.get("_excel_df")
                 if df_excel is not None:
@@ -2625,63 +2588,7 @@ def main() -> None:
                 if printer_diag_for_prompt:
                     prompt = f"{prompt}\n\n{printer_diag_for_prompt}"
 
-                # Diagnóstico de conectividad: EJECUTAR ANTES de agregar mensaje al historial y generar respuesta.
-                # Importante: el precheck se ejecuta SIEMPRE cuando la consulta es de red/internet.
-                # La variable AI_SUPPORT_NET_AUTOMATION_AUTO solo controla si se permiten CAMBIOS (asignar IP).
-                net_allow_changes = os.getenv("AI_SUPPORT_NET_AUTOMATION_AUTO", "true").strip().lower() in {
-                    "1",
-                    "true",
-                    "yes",
-                    "y",
-                    "on",
-                }
 
-                from ai_support.ui.automation.network_diagnostics import run_network_diagnostics
-
-                user_key = str(st.session_state.get("current_user") or "local_user").strip()
-
-                # Remote Control auto: si está configurado en el servidor, se usa automáticamente
-                # para ejecutar el diagnóstico/cambio de red en el PC cliente.
-                rc_url = str(os.getenv("AI_SUPPORT_REMOTE_CONTROL_URL") or st.session_state.get("_rc_url") or "").strip()
-                rc_admin_token = str(os.getenv("AI_SUPPORT_ADMIN_TOKEN") or st.session_state.get("_rc_admin_token") or "").strip()
-                rc_auto = os.getenv("AI_SUPPORT_REMOTE_CONTROL_AUTO", "true").strip().lower() in {
-                    "1",
-                    "true",
-                    "yes",
-                    "y",
-                    "on",
-                }
-
-                remote_mode = str(st.session_state.get("_remote_exec_mode") or "Servidor (local)")
-                remote_agent_url = (
-                    str(st.session_state.get("_remote_agent_url") or "").strip()
-                    if remote_mode == "Cliente (Agente HTTP)"
-                    else ""
-                )
-                remote_winrm_host = (
-                    str(st.session_state.get("_remote_client_host") or "").strip()
-                    if remote_mode == "Cliente (WinRM/PowerShell Remoting)"
-                    else ""
-                )
-
-                # Si Remote Control está activo, ignoramos el selector WinRM/Agente HTTP para red.
-                rc_use = bool(rc_auto and rc_url and rc_admin_token and user_key)
-
-                net_result = run_network_diagnostics(
-                    consulta,
-                    progress_container,
-                    user_key,
-                    allow_changes=net_allow_changes,
-                    remote_agent_url=remote_agent_url or None,
-                    remote_winrm_host=remote_winrm_host or None,
-                    remote_control_url=(rc_url if rc_use else None),
-                    remote_control_admin_token=(rc_admin_token if rc_use else None),
-                    remote_control_user_key=(user_key if rc_use else None),
-                )
-
-                # Si retorna un prompt, hubo diagnóstico (y posiblemente acciones). Usar ese prompt.
-                if net_result:
-                    prompt = net_result
 
                 # Automatización: si se pide conectar impresora por IP, intentar flujo automático.
                 # Para evitar ejecuciones no deseadas, solo corre si AI_SUPPORT_PRINTER_AUTOMATION_AUTO=true.
@@ -3084,65 +2991,6 @@ def main() -> None:
                     if len(df) > preview_rows:
                         st.caption(f"Mostrando {preview_rows} de {len(df)} filas")
                     st.info("💬 Haz preguntas en el chat principal")
-
-
-# --- INTEGRACIÓN TRIGGER DIAGNÓSTICO ---
-
-TRIGGER_SERVER_URL = "http://172.17.87.11:5000"
-CLIENT_ID = os.getenv('COMPUTERNAME', 'cliente_windows')
-
-def mostrar_ultimo_reporte_conectividad(client_id):
-    import requests
-    import streamlit as st
-    try:
-        resp = requests.get(f"{TRIGGER_SERVER_URL}/api/report")
-        if resp.status_code == 200:
-            data = resp.json()
-            # Buscar el último reporte para el client_id
-            if isinstance(data, list):
-                reportes_usuario = [r for r in data if str(r.get("usuario") or r.get("client_id") or "").lower() == client_id.lower()]
-                if reportes_usuario:
-                    ultimo = sorted(reportes_usuario, key=lambda r: r.get("timestamp", ""), reverse=True)[0]
-                    st.info(f"Último diagnóstico: {ultimo.get('resultado', ultimo)}")
-                else:
-                    st.info("No hay reportes de conectividad recientes para este usuario.")
-            else:
-                st.info("No se pudo leer el historial de reportes.")
-        else:
-            st.info("No se pudo consultar el historial de reportes.")
-    except Exception as e:
-        st.info(f"No se pudo consultar el historial de reportes: {e}")
-
-def trigger_diagnostico_remoto():
-    import os
-    import subprocess
-    import streamlit as st
-    client_id = str(st.session_state.get("current_user") or os.getenv('COMPUTERNAME', 'cliente_windows'))
-    exe_path = r"C:\\ConfiguradorRed_FCFM.exe"
-    exe_launched = False
-    if os.path.exists(exe_path):
-        try:
-            subprocess.Popen([exe_path], shell=True)
-            exe_launched = True
-        except Exception as e:
-            st.error(f"No se pudo ejecutar {exe_path}: {e}")
-    try:
-        import requests
-        resp = requests.post(f"{TRIGGER_SERVER_URL}/api/trigger-test", json={"client_id": client_id})
-        if resp.status_code == 200:
-            msg = f"Se ha solicitado el diagnóstico remoto para {client_id}."
-            if exe_launched:
-                msg += "\nSe abrió el programa de conectividad en C:."
-            else:
-                msg += "\nNo se encontró o no se pudo abrir C:\\ConfiguradorRed_FCFM.exe."
-            st.success(msg)
-            # Marcar que estamos esperando el diagnóstico remoto
-            st.session_state["_diagnostico_remoto_en_espera"] = True
-            mostrar_ultimo_reporte_conectividad(client_id)
-        else:
-            st.error(f"Error al solicitar diagnóstico remoto: {resp.text}")
-    except Exception as e:
-        st.error(f"No se pudo conectar al servidor de triggers: {e}")
 
 
 if __name__ == "__main__":

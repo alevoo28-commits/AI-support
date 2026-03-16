@@ -1,16 +1,20 @@
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS
-    Setup de usuario MySQL para AI-Support
+    Setup de usuario MySQL para AI-Support con acceso GLOBAL
     
 .DESCRIPTION
-    Crea usuario, BD y permisos para AI-Support con contraseña segura
+    Crea usuario, BD y permisos para AI-Support
+    - Acceso desde CUALQUIER IP (global)
+    - Permisos limitados SOLO a BD 'ai_support'
+    - Contraseña segura
     
 .EXAMPLE
-    .\setup_mysql_user.ps1 -MySQLPassword "your_root_password"
+    .\setup_mysql_user.ps1 -MySQLRootPassword "your_root_password"
     
 .NOTES
-    Requiere: MySQL server running en localhost:3306
+    Requiere: MySQL server running (localhost o remoto)
+    Acceso: Global ('ai_support_user'@'%')
 #>
 
 param(
@@ -30,7 +34,11 @@ param(
     [string]$AiSupportDatabase = "ai_support",
     
     [Parameter(Mandatory=$false)]
-    [string]$AiSupportPassword = "Ai#Support2024`$Secure!"
+    [string]$AiSupportPassword = "Ai#Support2024`$Secure!",
+    
+    # NUEVO: Permitir acceso global (%)
+    [Parameter(Mandatory=$false)]
+    [string]$AllowHost = "%"  # "%" = cualquier IP, "localhost" = solo local
 )
 
 $ErrorActionPreference = "Stop"
@@ -47,10 +55,11 @@ function Write-Status {
 }
 
 try {
-    Write-Status "🔧 Setup de usuario MySQL para AI-Support" "Info"
-    Write-Status "Host: $MySQLHost" "Info"
+    Write-Status "🔧 Setup de usuario MySQL para AI-Support (ACCESO GLOBAL)" "Info"
+    Write-Status "Host MySQL servidor: $MySQLHost" "Info"
     Write-Status "Port: $MySQLPort" "Info"
-    write-Status "Usuario: $AiSupportUser" "Info"
+    Write-Status "Usuario: $AiSupportUser" "Info"
+    Write-Status "Acceso desde: $AllowHost (% = desde cualquier IP)" "Info"
     Write-Status "BD: $AiSupportDatabase" "Info"
     Write-Status ""
     
@@ -63,18 +72,18 @@ try {
     
     Write-Status "✅ MySQL client encontrado: $($mysqlCmd.Source)" "Success"
     
-    # Preparar SQL
+    # Preparar SQL (usar %AllowHost para permitir acceso global)
     $sqlCommands = @"
--- Crear usuario
-CREATE USER IF NOT EXISTS '$AiSupportUser'@'$MySQLHost' IDENTIFIED BY '$AiSupportPassword';
+-- Crear usuario con acceso GLOBAL
+CREATE USER IF NOT EXISTS '$AiSupportUser'@'$AllowHost' IDENTIFIED BY '$AiSupportPassword';
 
 -- Crear BD
 CREATE DATABASE IF NOT EXISTS $AiSupportDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Permisos
-GRANT SELECT, INSERT, UPDATE, DELETE ON $AiSupportDatabase.* TO '$AiSupportUser'@'$MySQLHost';
+-- Permisos LIMITADOS a BD ai_support
+GRANT SELECT, INSERT, UPDATE, DELETE ON $AiSupportDatabase.* TO '$AiSupportUser'@'$AllowHost';
 
--- Aplicar
+-- Aplicar cambios
 FLUSH PRIVILEGES;
 "@
     
@@ -99,7 +108,7 @@ FLUSH PRIVILEGES;
     $result = $verifySQL | mysql -h $MySQLHost -P $MySQLPort -u root -p"$MySQLRootPassword" 2>&1
     
     if ($result -match $AiSupportUser) {
-        Write-Status "✅ Usuario verificado en MySQL" "Success"
+        Write-Status "✅ Usuario verificado en MySQL (Host: $AllowHost)" "Success"
     }
     
     # Generar .env
@@ -110,11 +119,16 @@ FLUSH PRIVILEGES;
 # ============================================================
 # Configuración MySQL para AI-Support
 # ============================================================
+# ACCESO GLOBAL: El usuario puede conectar desde cualquier IP
+# LIMITADO: Solo tiene acceso a BD 'ai_support'
+# ============================================================
 
 # Habilitar MySQL
 AI_SUPPORT_MYSQL_ENABLE=true
 
 # Conexión
+# NOTA: Host puede ser IP pública, dominio, o localhost
+# El usuario 'ai_support_user' puede conectar desde CUALQUIER IP
 AI_SUPPORT_MYSQL_HOST=$MySQLHost
 AI_SUPPORT_MYSQL_PORT=$MySQLPort
 AI_SUPPORT_MYSQL_USER=$AiSupportUser

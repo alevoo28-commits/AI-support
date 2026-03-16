@@ -11,7 +11,7 @@ from langchain_community.vectorstores import FAISS
 
 from ai_support.core.memory import SistemaMemoriaAvanzada
 from ai_support.core.config import EmbeddingsProviderConfig, LLMProviderConfig
-from ai_support.core.prompts import get_system_prompt_agente
+from ai_support.core.prompts_mysql import obtener_prompt
 
 
 _FAISS_MATERIAL_ERROR_SEEN: set[str] = set()
@@ -162,8 +162,9 @@ class AgenteEspecializado:
         # KB context (documentación oficial subida por el administrador)
         kb_context = contexto.get("kb_context", "") if contexto else ""
 
-        # Generar system prompt usando configuración centralizada
-        system_prompt = get_system_prompt_agente(
+        # Generar system prompt usando gestor centralizado (MySQL o fallback local)
+        system_prompt = obtener_prompt(
+            "system_prompt_agente",
             nombre_agente=self.nombre,
             especialidad=self.especialidad,
             kb_context=kb_context,

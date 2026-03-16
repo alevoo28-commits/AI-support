@@ -1,8 +1,8 @@
 import streamlit as st
 def main():
     # Bloque superior de usuario y configuración de modelo (estilo original)
-    st.title("⚙️ Sistema Multi-Agente de Soporte Informático")
-    st.markdown("Sistema con orquestación, agentes especializados y colaboración entre agentes")
+    st.title("🏛️ Sistema Multi-Agente FCFM")
+    st.markdown("Asistente de procedimientos para 15 áreas de decanato y vicedecanato - FCFM")
     st.divider()
 
     cols = st.columns([1,2])
@@ -216,10 +216,10 @@ def _render_knowledge_base_section() -> None:
 
     kb = get_kb_manager()
 
-    st.markdown("## 📚 Base de Conocimiento por Áreas")
+    st.markdown("## 📚 Base de Conocimiento - Procedimientos FCFM")
     st.caption(
-        "Sube documentos (Word, PDF, Excel, TXT) organizados por áreas de la empresa. "
-        "El agente podrá responder preguntas usando únicamente los documentos de cada área."
+        "Sube documentos PDF con procedimientos y tareas de cada área FCFM. "
+        "Los agentes responderán basándose en los procedimientos de tu área."
     )
 
     # ── Inicializar estado ────────────────────────────────────────────────────

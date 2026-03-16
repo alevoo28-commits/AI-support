@@ -9,7 +9,30 @@ from ai_support.core.tools import HerramientaSoporte
 
 
 class OrquestadorMultiagente:
-    """Sistema que orquesta múltiples agentes especializados."""
+    """Orquestador determinista de agentes especializados en áreas FCFM (Facultad de Ciencias Físicas y Matemáticas).
+    
+    Gestiona 15 agentes, uno por cada área administrativa/académica.
+    El enrutamiento es determinista: basado en palabras clave que coinciden exactamente.
+    """
+
+    # Mapeo área -> (nombre agente, especialidad, emoji)
+    AREAS_MAPA = {
+        "tesoreria": ("💰 Agente Tesorería", "procedimientos y tareas de tesorería, presupuestos, gastos"),
+        "arquitectura": ("🏗️ Agente Arquitectura", "procedimientos de arquitectura, diseño, proyectos editoriales"),
+        "infraestructura": ("🏢 Agente Infraestructura", "procedimientos de infraestructura, mantenimiento, edificios"),
+        "proyectos": ("📋 Agente Proyectos", "procedimientos de proyectos, becas, investigación"),
+        "atencion_alumnos": ("👥 Agente Atención Alumnos", "procedimientos de atención a estudiantes, inscripción, tutorías"),
+        "postgrado": ("🎓 Agente Postgrado", "procedimientos de postgrado, diplomados, educación continua"),
+        "sustentabilidad": ("🌱 Agente Sustentabilidad", "procedimientos de sustentabilidad, sostenibilidad, responsabilidad social"),
+        "comunicaciones": ("📢 Agente Comunicaciones", "procedimientos de comunicaciones, prensa, difusión"),
+        "vinculacion": ("🌍 Agente Vinculación", "procedimientos de vinculación externa, relaciones internacionales"),
+        "rrhh": ("👔 Agente RRHH", "procedimientos de recursos humanos, contratación, adquisiciones, administración"),
+        "contabilidad": ("📊 Agente Contabilidad", "procedimientos contables, registros, auditoría, estados financieros"),
+        "direccion_economica": ("💵 Agente Dir. Económica", "procedimientos de dirección económica, análisis financiero"),
+        "direccion_academica": ("📚 Agente Dir. Académica", "procedimientos académicos, currícula, planes de estudio"),
+        "diversidad": ("🌈 Agente Diversidad", "procedimientos de diversidad, género, inclusión, equidad"),
+        "decanato": ("🏛️ Agente Decanato", "procedimientos del decanato, normas facultad, administración general"),
+    }
 
     def __init__(
         self,
@@ -18,57 +41,17 @@ class OrquestadorMultiagente:
         user_id: Optional[str] = None,
     ):
         self.user_id = user_id
-        self.agentes: Dict[str, AgenteEspecializado] = {
-            "hardware": AgenteEspecializado(
-                "🔧 Agente Hardware",
-                "hardware y componentes físicos",
+        self.agentes: Dict[str, AgenteEspecializado] = {}
+
+        # Crear 15 agentes especializados por área FCFM
+        for area_id, (nombre_agente, especialidad) in self.AREAS_MAPA.items():
+            self.agentes[area_id] = AgenteEspecializado(
+                nombre=nombre_agente,
+                especialidad=especialidad,
                 llm_config=llm_config,
                 embeddings_config=embeddings_config,
                 user_id=user_id,
-            ),
-            "software": AgenteEspecializado(
-                "💻 Agente Software",
-                "aplicaciones y programas",
-                llm_config=llm_config,
-                embeddings_config=embeddings_config,
-                user_id=user_id,
-            ),
-            "redes": AgenteEspecializado(
-                "🌐 Agente Redes",
-                "conectividad y redes informáticas",
-                llm_config=llm_config,
-                embeddings_config=embeddings_config,
-                user_id=user_id,
-            ),
-            "seguridad": AgenteEspecializado(
-                "🔒 Agente Seguridad",
-                "seguridad informática y protección",
-                llm_config=llm_config,
-                embeddings_config=embeddings_config,
-                user_id=user_id,
-            ),
-            "excel": AgenteEspecializado(
-                "📊 Agente Excel",
-                "Excel, hojas de cálculo y automatización",
-                llm_config=llm_config,
-                embeddings_config=embeddings_config,
-                user_id=user_id,
-            ),
-            "impresoras": AgenteEspecializado(
-                "🖨️ Agente Impresoras",
-                "impresoras, colas de impresión y conexión (USB/red)",
-                llm_config=llm_config,
-                embeddings_config=embeddings_config,
-                user_id=user_id,
-            ),
-            "general": AgenteEspecializado(
-                "⚙️ Agente General",
-                "soporte técnico general",
-                llm_config=llm_config,
-                embeddings_config=embeddings_config,
-                user_id=user_id,
-            ),
-        }
+            )
 
         self.herramientas = HerramientaSoporte()
         self.comunicacion_agentes: List[Dict[str, Any]] = []
@@ -77,12 +60,17 @@ class OrquestadorMultiagente:
             "total_consultas": 0,
             "agentes_involucrados": {},
             "colaboraciones": 0,
+            "institucion": "FCFM - Facultad de Ciencias Físicas y Matemáticas",
         }
 
     def determinar_agente_principal(self, consulta: str) -> str:
+        """Enrutamiento DETERMINISTA: analiza la consulta y devuelve el área (agente) responsable.
+        
+        Sin LLM, sin aleatoriedad. Basado 100% en palabras clave en herramientas.
+        """
         analisis = self.herramientas.analizar_problema(consulta)
-        categoria = analisis.get("categoria", "general")
-        return categoria if categoria in self.agentes else "general"
+        categoria = analisis.get("categoria", "decanato")
+        return categoria if categoria in self.agentes else "decanato"
 
     def procesar_consulta_compleja(
         self,
@@ -90,11 +78,12 @@ class OrquestadorMultiagente:
         stream_callback: Optional[Callable[[str], None]] = None,
         should_stop: Optional[Callable[[], bool]] = None,
     ) -> Dict[str, Any]:
+        """Orquesta la consulta: agente principal + colaboradores si es necesario."""
         self.metricas_globales["total_consultas"] += 1
 
         agente_principal = self.determinar_agente_principal(consulta)
 
-        # ── Búsqueda en base de conocimiento ────────────────────────────────
+        # ── Búsqueda en base de conocimiento (PDFs de procedimientos subidos) ────────
         contexto_kb: Optional[Dict[str, Any]] = None
         kb_used = False
         kb_preview = ""
@@ -103,9 +92,16 @@ class OrquestadorMultiagente:
             kb = get_kb_manager()
             agente_obj = self.agentes[agente_principal]
             embeddings = getattr(agente_obj, "embeddings", None)
-            kb_text = kb.get_full_context_for_query(consulta, k=4, embeddings=embeddings)
+            
+            # Buscar en el área específica primero (si existe), luego en todas
+            area_context = kb.get_area_context(agente_principal, consulta, k=4, embeddings=embeddings)
+            if not area_context:
+                # Fallback: búsqueda global
+                kb_text = kb.get_full_context_for_query(consulta, k=4, embeddings=embeddings)
+            else:
+                kb_text = area_context
+                
             if kb_text:
-                # Limitar a ~6000 caracteres para no saturar el contexto del LLM
                 kb_text_limited = kb_text[:6000] + ("\n[...contenido truncado...]" if len(kb_text) > 6000 else "")
                 contexto_kb = {"kb_context": kb_text_limited}
                 kb_used = True
@@ -143,6 +139,12 @@ class OrquestadorMultiagente:
         return resultado
 
     def _evaluar_colaboracion(self, consulta: str) -> bool:
+        """Evalúa si la consulta requiere colaboración entre múltiples áreas FCFM.
+        
+        DETERMINISTA: solo colabora si:
+        1. Menciona explícitamente múltiples áreas
+        2. Contiene palabras indicadoras de complejidad multi-área
+        """
         consulta_lower = consulta.lower()
 
         palabras_multiple = [
@@ -150,7 +152,7 @@ class OrquestadorMultiagente:
             "además",
             "también necesito",
             "complejo",
-            "varios problemas",
+            "varios procedimientos",
             "y otro",
             "múltiples",
             "tanto",
@@ -161,87 +163,57 @@ class OrquestadorMultiagente:
             "aparte",
             "igualmente",
             "junto con",
+            "coordinación",
+            "articulación",
         ]
 
-        categorias_detectadas: List[str] = []
-        if any(
-            palabra in consulta_lower
-            for palabra in ["ram", "memoria", "disco", "procesador", "cpu", "hardware", "componente", "equipo"]
-        ):
-            categorias_detectadas.append("hardware")
-        if any(
-            palabra in consulta_lower
-            for palabra in ["programa", "software", "aplicación", "instalar", "actualizar", "ejecutar"]
-        ):
-            categorias_detectadas.append("software")
-        if any(
-            palabra in consulta_lower
-            for palabra in ["wifi", "red", "internet", "conexión", "router", "ip", "ethernet"]
-        ):
-            categorias_detectadas.append("redes")
-        if any(
-            palabra in consulta_lower
-            for palabra in ["virus", "seguridad", "contraseña", "hackeo", "malware", "antivirus", "firewall"]
-        ):
-            categorias_detectadas.append("seguridad")
-        if any(
-            palabra in consulta_lower
-            for palabra in ["excel", "hoja de cálculo", "power query", "tabla dinámica", "buscarv", "vlookup", "#n/a", "macro", "vba"]
-        ):
-            categorias_detectadas.append("excel")
+        # Contar áreas distintas mencionadas
+        areas_detectadas: set[str] = set()
+        for area, palabras_clave in HerramientaSoporte.AREAS_FCFM.items():
+            for palabra in palabras_clave:
+                if palabra in consulta_lower:
+                    areas_detectadas.add(area)
+                    break  # Ya detectamos esta área
 
-        if len(categorias_detectadas) > 1:
+        # Si hay 2+ áreas explícitamente mencionadas, colaboración obligatoria
+        if len(areas_detectadas) > 1:
             return True
 
-        if len(consulta) > 100:
-            return True
-
+        # Si hay palabras indicadoras de multi-complejidad
         if any(palabra in consulta_lower for palabra in palabras_multiple):
             return True
 
         return False
 
     def _identificar_colaboradores(self, consulta: str, agente_principal: str) -> List[str]:
+        """Identifica qué otros agentes deben colaborar (máx. 2 adicionales)."""
         colaboradores: List[str] = []
         consulta_lower = consulta.lower()
 
-        if agente_principal != "hardware" and any(
-            palabra in consulta_lower for palabra in ["ram", "memoria", "disco", "procesador", "cpu", "hardware", "componente"]
-        ):
-            colaboradores.append("hardware")
+        # Revisamos cada área para ver si debe colaborar
+        for area_id, palabras_clave in HerramientaSoporte.AREAS_FCFM.items():
+            if area_id != agente_principal:
+                if any(palabra in consulta_lower for palabra in palabras_clave):
+                    colaboradores.append(area_id)
+                    if len(colaboradores) >= 2:
+                        break
 
-        if agente_principal != "software" and any(
-            palabra in consulta_lower for palabra in ["programa", "software", "aplicación", "instalar", "actualizar"]
-        ):
-            colaboradores.append("software")
-
-        if agente_principal != "redes" and any(
-            palabra in consulta_lower for palabra in ["wifi", "red", "internet", "conexión", "router", "ip"]
-        ):
-            colaboradores.append("redes")
-
-        if agente_principal != "seguridad" and any(
-            palabra in consulta_lower for palabra in ["virus", "seguridad", "contraseña", "hackeo", "malware", "antivirus"]
-        ):
-            colaboradores.append("seguridad")
-
-        if agente_principal != "excel" and any(
-            palabra in consulta_lower for palabra in ["excel", "hoja de cálculo", "power query", "tabla dinámica", "buscarv", "vlookup", "macro", "vba", "#n/a"]
-        ):
-            colaboradores.append("excel")
-
-        if not colaboradores and agente_principal != "general":
-            colaboradores.append("general")
+        # Si no hay colaboradores identificados pero la consulta es compleja, 
+        # el decanato puede colaborar como fallback
+        if not colaboradores and agente_principal != "decanato":
+            colaboradores.append("decanato")
 
         return colaboradores[:2]
 
     def _obtener_contexto_colaborativo(self, colaboradores: List[str], consulta: str) -> str:
+        """Obtiene perspectivas de agentes colaboradores."""
         contexto_completo: List[str] = []
 
-        for agente_nombre in colaboradores:
-            agente = self.agentes[agente_nombre]
-            respuesta = agente.colaborar(f"Perspectiva sobre: {consulta[:100]}")
-            contexto_completo.append(respuesta)
+        for agente_id in colaboradores:
+            if agente_id in self.agentes:
+                agente = self.agentes[agente_id]
+                respuesta = agente.colaborar(f"Perspectiva sobre: {consulta[:100]}")
+                contexto_completo.append(respuesta)
 
         self.comunicacion_agentes.append(
             {
@@ -252,3 +224,4 @@ class OrquestadorMultiagente:
         )
 
         return "\n\n".join(contexto_completo)
+

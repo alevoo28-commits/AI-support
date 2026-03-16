@@ -1,59 +1,50 @@
-# Sistema Multi-Agente con Orquestación Inteligente
+# 🏛️ Sistema Multi-Agente FCFM - Procedimientos Institucionales
 
-## 🆕 Cambios 2025: Observabilidad, Seguridad, Ética y Escalabilidad
+## Descripción
 
-Se han añadido flujos y componentes para:
-- **Observabilidad:** Dashboards, logs, métricas (precisión 92%, consistencia 91.75%), alertas automáticas
-- **Trazabilidad:** Logs de ejecución, rutas, análisis de fallas
-- **Seguridad:** Validación de entradas, guardrails, protección de datos
-- **Ética:** Mitigación de sesgos, advertencias, transparencia
-- **Escalabilidad:** Plan de sostenibilidad 3 años, arquitectura distribuida
+Sistema de orquestación inteligente de 15 agentes especializados para **FCFM (Facultad de Ciencias Físicas y Matemáticas)** que responde consultas sobre procedimientos, tareas y responsabilidades de cada área del decanato y vicedecanato.
 
-### 🚀 Plan de Mejora y Sostenibilidad (Basado en Observabilidad)
+### Áreas Soportadas (15)
 
-El análisis de **500+ traces de LangSmith**, **2,000+ logs** y **4 semanas de métricas** ha identificado 5 propuestas estratégicas para garantizar sostenibilidad y escalabilidad:
+💰 **Tesorería** • 🏗️ **Arquitectura** • 🏢 **Infraestructura** • 📋 **Proyectos** • 👥 **Atención de Alumnos** • 🎓 **Postgrado** • 🌱 **Sustentabilidad** • 📢 **Comunicaciones** • 🌍 **Vinculación Externa** • 👔 **RRHH** • 📊 **Contabilidad** • 💵 **Dir. Económica** • 📚 **Dir. Académica** • 🌈 **Diversidad** • 🏛️ **Decanato**
 
-#### **1. Arquitectura Distribuida con Microservicios**
-- **Problema detectado:** Monolito limita throughput a 12 req/min, CPU 85% en picos
-- **Solución:** Kubernetes con auto-scaling, RabbitMQ para mensajería asíncrona
-- **Impacto:** +3,233% escalabilidad (15→5,000 usuarios concurrentes), -62% latencia
-- **Inversión:** $15K | **ROI:** 18 meses
+### Características Clave
 
-#### **2. Sistema de Cache Inteligente Multi-Nivel**
-- **Problema detectado:** 45% consultas semánticamente similares desperdician llamadas LLM
-- **Solución:** Cache exacto (Redis) + cache semántico (Pinecone) + pre-computación
-- **Impacto:** -70% latencia (8.5s→2.5s), ahorro $400/mes en LLM
-- **Inversión:** $2K | **ROI:** 5 meses
+✅ **Enrutamiento Determinista** — Sin LLM en el routing; basado en palabras clave (100% reproducible)  
+✅ **Base de Conocimiento por Área** — Sube PDFs de procedimientos; el sistema responde basándose en ellos  
+✅ **Colaboración Multi-Agente** — Consultas complejas activan múltiples agentes especializados  
+✅ **Búsqueda Semántica** — Encuentra fragmentos relevantes en PDFs usando embeddings  
+✅ **Memoria de Conversación** — Mantiene contexto entre turnos de chat  
 
-#### **3. Fine-Tuning de Modelo LLM Especializado**
-- **Problema detectado:** Prompts extensos (2,500 tokens) elevan costo a $0.015/consulta
-- **Solución:** Fine-tune GPT-4o-mini con 15,500 ejemplos de soporte IT
-- **Impacto:** -67% costo por consulta, -66% latencia LLM, +4% precisión
-- **Inversión:** $3.5K | **ROI:** 6 meses
+---
 
-#### **4. Sistema Multi-Región con Edge Computing**
-- **Problema detectado:** Latencia LATAM 12s (vs 6s en NA) afecta 40% usuarios
-- **Solución:** Despliegue en 4 regiones (NA, EU, SA, ASIA) con routing geográfico
-- **Impacto:** -67% latencia global, 99.95% disponibilidad
-- **Inversión:** $25K | **ROI:** 24 meses
+## 🚀 Inicio Rápido
 
-#### **5. Sistema de Aprendizaje Continuo (HITL)**
-- **Problema detectado:** Sin mejora continua, 8% consultas repetidas por insatisfacción
-- **Solución:** Feedback 👍👎, revisión humana semanal, re-entrenamiento mensual
-- **Impacto:** Precisión 92%→97% en 12 meses, -75% consultas repetidas
-- **Inversión:** $8K | **ROI:** Indirecto (retención usuarios)
+### 1. Inicia la Aplicación
+```powershell
+cd c:\Users\info\Documents\GitHub\AI-support
+python -m streamlit run ai_support/ui/streamlit_app.py
+```
 
-#### **📈 Roadmap de Sostenibilidad 3 Años**
+### 2. Crea las 15 Áreas
+Ve a **"📚 Base de Conocimiento"** y crea cada área FCFM.
 
-| Año | Inversión | Usuarios Soportados | Disponibilidad | Hitos Clave |
-|---|---|---|---|---|
-| **2026** | $30K | 500 concurrentes | 99.5% | Cache + Fine-Tuning + Containerización |
-| **2027** | $40K | 5,000 concurrentes | 99.9% | Auto-Scaling + Multi-Región (4 regiones) |
-| **2028** | $50K | 50,000 concurrentes | 99.95% | Autonomía avanzada + Multimodal + White-label |
+### 3. Sube Procedimientos en PDF
+Sube los documentos de procedimientos para cada área.
 
-**Total Inversión 3 Años:** $120K | **Ahorro Anual Operativo:** $32K | **ROI Global:** 20 meses
+### 4. Haz una Consulta
+```
+Usuario: "¿Cuál es el procedimiento para solicitar viático?"
+Sistema: → Agente Tesorería busca en PDFs
+Respuesta: Paso a paso del procedimiento
+```
 
-Consulta `DOCUMENTACION_CAMBIOS.md` secciones 2.1-2.3 para análisis técnico detallado, métricas de validación y planes de implementación por fases.
+---
+
+## 📚 Documentación
+
+- **[ARQUITECTURA_FCFM.md](docs/ARQUITECTURA_FCFM.md)** — Descripción técnica completa
+- **[INICIO_RAPIDO_FCFM.md](docs/INICIO_RAPIDO_FCFM.md)** — Guía de 5 pasos para empezar
 
 ```mermaid
 graph TB

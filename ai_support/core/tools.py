@@ -2,11 +2,30 @@ from typing import Any, Dict
 
 
 class HerramientaSoporte:
-    """Conjunto de herramientas para soporte informático."""
+    """Herramientas para análisis de consultas de FCFM (Facultad de Ciencias Físicas y Matemáticas)."""
+
+    # Mapeo de áreas FCFM con palabras clave para enrutamiento determinista
+    AREAS_FCFM = {
+        "tesoreria": ["tesorería", "presupuesto", "gasto", "fondo", "pago", "finanzas", "contrato", "viatico", "reembolso", "factura"],
+        "arquitectura": ["arquitectura", "diseño", "plano", "estructura", "proyecto editorial", "infraestructura física"],
+        "infraestructura": ["infraestructura", "mantenimiento", "edificio", "laboratorio", "aula", "reparación", "instalación espacial"],
+        "proyectos": ["proyecto", "beca", "investigación", "propuesta", "recursos proyecto", "seguimiento"],
+        "atencion_alumnos": ["alumno", "estudiante", "inscripción", "tutoría", "becas estudiante", "ayuda alumnos", "acta", "calificación"],
+        "postgrado": ["postgrado", "posgrado", "magister", "doctorado", "escuela de postgrado", "posgrado", "educación continua", "diplomado", "cursos"],
+        "sustentabilidad": ["sustentabilidad", "ambiental", "sostenible", "reciclaje", "responsabilidad social", "huella"],
+        "comunicaciones": ["comunicación", "prensa", "publicidad", "redes sociales", "medios", "difusión"],
+        "vinculacion": ["vinculación", "relaciones internacionales", "colaboración externa", "alianza", "cooperación internacional", "networking"],
+        "rrhh": ["recurso humano", "rrhh", "personal", "contratación", "administración", "adquisición", "compra", "licitación"],
+        "contabilidad": ["contabilidad", "balance", "auditoria", "estado financiero", "registro contable", "asiento"],
+        "direccion_economica": ["dirección económica", "economía", "análisis económico", "presupuesto general", "gestión económica"],
+        "direccion_academica": ["dirección académica", "académico", "currícula", "plan estudio", "docencia", "carrera", "titulación"],
+        "diversidad": ["diversidad", "género", "inclusión", "equidad", "minorías", "desarrollo inclusivo"],
+        "decanato": ["decanato", "vicedecanato", "decano", "vicedeacano", "rectoría", "administración facultad", "norma facultad"],
+    }
 
     @staticmethod
     def calculadora_matematica(expresion: str) -> str:
-        """Calcula expresiones matemáticas para hardware y capacidad."""
+        """Calcula expresiones matemáticas (ej: presupuestos, estadísticas)."""
         try:
             funciones_permitidas = {
                 "abs": abs,
@@ -25,79 +44,34 @@ class HerramientaSoporte:
 
     @staticmethod
     def buscar_informacion(query: str, categoria: str = "general") -> str:
-        """Busca información categorizada por tipo de soporte.
-
-        Mantiene el comportamiento actual: se basa en el material cargado por agentes.
-        """
-        return f"Información sobre {query} para la categoría {categoria}"
+        """Busca información en procedimientos del área FCFM."""
+        return f"Información sobre {query} del procedimiento en {categoria}"
 
     @staticmethod
     def analizar_problema(descripcion: str) -> Dict[str, Any]:
-        """Analiza la descripción del problema y sugiere una categoría."""
-        palabras_hardware = ["cpu", "ram", "disco", "hardware", "procesador", "memoria"]
-        palabras_software = ["programa", "aplicación", "software", "instalación", "bug", "error"]
-        palabras_redes = ["internet", "wifi", "conexión", "red", "router"]
-        palabras_seguridad = ["virus", "malware", "seguridad", "antivirus", "firewall"]
-        palabras_excel = [
-            "excel",
-            "hoja de cálculo",
-            "celdas",
-            "tabla dinámica",
-            "tablas dinámicas",
-            "power query",
-            "buscarv",
-            "vlookup",
-            "xlookup",
-            "macro",
-            "vba",
-            "#n/a",
-            "#valor",
-            "#¡div/0!",
-        ]
-
-        palabras_impresoras = [
-            "impresora",
-            "impresoras",
-            "printer",
-            "cola de impresión",
-            "spooler",
-            "atasco",
-            "sin conexión",
-            "offline",
-            "usb001",
-            "wfp",
-            "wsp",
-            "tcp/ip",
-            "ip_",
-            "hp",
-            "epson",
-            "canon",
-            "brother",
-            "xerox",
-            "ricoh",
-        ]
-
+        """Analiza consulta FCFM y enruta a área determinista por palabras clave."""
         desc_lower = descripcion.lower()
 
-        categoria = "general"
-        prioridad = "media"
+        # Contar coincidencias por área
+        area_scores: Dict[str, int] = {}
+        for area, palabras in HerramientaSoporte.AREAS_FCFM.items():
+            score = sum(1 for p in palabras if p in desc_lower)
+            if score > 0:
+                area_scores[area] = score
 
-        if any(palabra in desc_lower for palabra in palabras_hardware):
-            categoria = "hardware"
-            prioridad = "alta"
-        elif any(palabra in desc_lower for palabra in palabras_software):
-            categoria = "software"
+        # Área con mayor puntuación
+        if area_scores:
+            categoria = max(area_scores, key=area_scores.get)
+            prioridad = "alta"  # Todas las consultas FCFM son importantes
+        else:
+            categoria = "decanato"  # Fallback a decanato (área general)
             prioridad = "media"
-        elif any(palabra in desc_lower for palabra in palabras_redes):
-            categoria = "redes"
-            prioridad = "alta"
-        elif any(palabra in desc_lower for palabra in palabras_seguridad):
-            categoria = "seguridad"
-            prioridad = "crítica"
-        elif any(palabra in desc_lower for palabra in palabras_impresoras):
-            categoria = "impresoras"
-            prioridad = "alta"
-        elif any(palabra in desc_lower for palabra in palabras_excel):
+
+        return {
+            "categoria": categoria,
+            "prioridad": prioridad,
+            "sugerencias": [f"Consultar procedimiento de {categoria.replace('_', ' ')}", f"Revisar documentación en {categoria.replace('_', ' ')}"],
+        }
             categoria = "excel"
             prioridad = "media"
 

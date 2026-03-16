@@ -11,6 +11,7 @@ from langchain_community.vectorstores import FAISS
 
 from ai_support.core.memory import SistemaMemoriaAvanzada
 from ai_support.core.config import EmbeddingsProviderConfig, LLMProviderConfig
+from ai_support.core.prompts import get_system_prompt_agente
 
 
 _FAISS_MATERIAL_ERROR_SEEN: set[str] = set()
@@ -159,28 +160,16 @@ class AgenteEspecializado:
             )
 
         # KB context (documentación oficial subida por el administrador)
-        kb_context_block = ""
-        if contexto and contexto.get("kb_context"):
-            kb_context_block = f"""\n\nDocumentación oficial de la empresa (úsala como FUENTE PRINCIPAL de verdad):\n{contexto['kb_context']}\n---"""
+        kb_context = contexto.get("kb_context", "") if contexto else ""
 
-        system_prompt = f"""
-Eres {self.nombre}, un agente especializado en {self.especialidad}.
-{kb_context_block}
-Conocimiento del área (FAISS RAG):
-{contexto_faiss if contexto_faiss else self.material_cargado[:material_limit]}
-
-Contexto de memoria:
-{memory_block}
-
-Directrices:
-1. Responde específicamente sobre {self.especialidad}
-2. Proporciona soluciones prácticas y paso a paso
-3. Si necesitas colaborar con otro agente, indícalo
-4. Mantén un tono profesional y útil
-5. Usa el contexto de memoria y FAISS para respuestas más personalizadas
-6. Si tienes documentación oficial subida, responde ÚNICAMENTE basándote en ella
-7. Si no tienes información específica, indícalo claramente
-"""
+        # Generar system prompt usando configuración centralizada
+        system_prompt = get_system_prompt_agente(
+            nombre_agente=self.nombre,
+            especialidad=self.especialidad,
+            kb_context=kb_context,
+            faiss_context=contexto_faiss if contexto_faiss else self.material_cargado[:material_limit],
+            memory_block=memory_block,
+        )
 
         messages: List[Any] = [SystemMessage(content=system_prompt)]
 

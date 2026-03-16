@@ -1,3 +1,17 @@
 # Archivo .gitignore para proyecto con secretos
 .env
 .env.*
+
+# Entornos virtuales
+.venv/
+venv/
+env/
+ENV/
+
+# Cache de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter
+.ipynb_checkpoints/

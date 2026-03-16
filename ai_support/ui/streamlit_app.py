@@ -2757,9 +2757,9 @@ def main() -> None:
 
             if messages:
                 st.markdown("---")
-                st.caption("📜 Historial de conversación")
+                st.caption("📜 Historial de conversación (más recientes primero)")
                 
-            for msg in messages:
+            for msg in reversed(messages):
                 role = str(msg.get("role") or "").strip().lower()
                 content = str(msg.get("content") or "")
                 if role == "user":

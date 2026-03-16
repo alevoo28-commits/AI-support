@@ -1,6 +1,10 @@
 # Archivo .gitignore para proyecto con secretos
 .env
-.env.*
+.env.local
+.env.*.local
+
+# PERO permitir .env.example (plantilla sin credenciales)
+!.env.example
 
 # Entornos virtuales
 .venv/

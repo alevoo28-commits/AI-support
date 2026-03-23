@@ -98,7 +98,7 @@ def _users_department_id_column() -> str:
 
 
 def _departments_table() -> str:
-    return _safe_sql_identifier(_env("AI_SUPPORT_MYSQL_DEPARTMENTS_TABLE", "departamento") or "departamento", "departamento")
+    return _safe_sql_identifier(_env("AI_SUPPORT_MYSQL_DEPARTMENTS_TABLE", "departamentos") or "departamentos", "departamentos")
 
 
 def _departments_id_column() -> str:
@@ -106,7 +106,10 @@ def _departments_id_column() -> str:
 
 
 def _departments_name_column() -> str:
-    return _safe_sql_identifier(_env("AI_SUPPORT_MYSQL_DEPARTMENTS_NAME_COLUMN", "nombre") or "nombre", "nombre")
+    return _safe_sql_identifier(
+        _env("AI_SUPPORT_MYSQL_DEPARTMENTS_NAME_COLUMN", "nombre_departamento") or "nombre_departamento",
+        "nombre_departamento",
+    )
 
 
 def get_user_by_email(email: str) -> Optional[dict[str, Any]]:
@@ -116,12 +119,13 @@ def get_user_by_email(email: str) -> Optional[dict[str, Any]]:
 
     table = _users_table()
     email_col = _users_email_column()
+    dept_col = _users_department_id_column()
     conn = _mysql_connect()
     try:
         cur = conn.cursor(dictionary=True)
         try:
             cur.execute(
-                f"SELECT id, nombre, apellido, apellido_2, rut, departamento_id, tui, email, IP "
+                f"SELECT id, nombre, apellido, apellido_2, rut, `{dept_col}` AS departamento_id, tui, email, IP "
                 f"FROM `{table}` WHERE `{email_col}`=%s LIMIT 1",
                 (email,),
             )

@@ -237,7 +237,49 @@ def _department_name_to_area_id(department_name: str | None) -> str | None:
         "decanato": "decanato",
         "vicedecanato": "decanato",
     }
-    return aliases.get(key)
+    if key in aliases:
+        return aliases.get(key)
+
+    # Heurística para nombres institucionales largos (ej: unidad_de_tesoreria)
+    compact = key
+    compact = compact.replace("unidad_de_", "")
+    compact = compact.replace("unidad_", "")
+    compact = compact.replace("direccion_de_", "")
+    compact = compact.replace("direccion_", "")
+    compact = compact.replace("escuela_de_", "")
+
+    if "tesorer" in compact:
+        return "tesoreria"
+    if "arquitect" in compact:
+        return "arquitectura"
+    if "infraestructura" in compact:
+        return "infraestructura"
+    if "proyecto" in compact:
+        return "proyectos"
+    if "alumno" in compact or "estudiant" in compact:
+        return "atencion_alumnos"
+    if "postgrado" in compact or "posgrado" in compact:
+        return "postgrado"
+    if "sustentab" in compact or "sostenib" in compact:
+        return "sustentabilidad"
+    if "comunic" in compact:
+        return "comunicaciones"
+    if "vincul" in compact:
+        return "vinculacion"
+    if "rrhh" in compact or "recurso_humano" in compact:
+        return "rrhh"
+    if "contabil" in compact:
+        return "contabilidad"
+    if "econom" in compact:
+        return "direccion_economica"
+    if "academ" in compact:
+        return "direccion_academica"
+    if "divers" in compact or "genero" in compact:
+        return "diversidad"
+    if "decan" in compact:
+        return "decanato"
+
+    return None
 
 
 def _department_matches_area_name(department_name: str | None, area_name: str | None) -> bool:
@@ -803,7 +845,17 @@ def main() -> None:
             st.session_state["_user_department_name"] = None
             st.session_state["_allowed_area_ids"] = None
             if isinstance(current_user, str) and "@" in current_user:
+                enforce_registered = (
+                    (os.getenv("AI_SUPPORT_ENFORCE_REGISTERED_GOOGLE_USERS") or "true").strip().lower()
+                    in {"1", "true", "yes", "y", "on"}
+                )
                 mysql_ok = bool((os.getenv("AI_SUPPORT_MYSQL_ENABLE") or "").strip().lower() in {"1", "true", "yes", "y", "on"})
+                if enforce_registered and not mysql_ok:
+                    st.error(
+                        "Acceso denegado: validación de usuarios registrados requiere MySQL habilitado "
+                        "(AI_SUPPORT_MYSQL_ENABLE=true)."
+                    )
+                    st.stop()
                 if mysql_ok:
                     try:
                         dept_ctx = get_user_department_by_email(current_user)
@@ -812,7 +864,7 @@ def main() -> None:
                         st.stop()
 
                     if not dept_ctx:
-                        st.error("No existe un registro de usuario/departamento para tu correo.")
+                        st.error("Acceso denegado: tu correo no está registrado en la base de datos.")
                         st.stop()
 
                     dept_id = dept_ctx.get("departamento_id")

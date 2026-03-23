@@ -39,6 +39,7 @@ class OrquestadorMultiagente:
         llm_config: LLMProviderConfig,
         embeddings_config: EmbeddingsProviderConfig,
         user_id: Optional[str] = None,
+        allowed_area_ids: Optional[List[str]] = None,
     ):
         self.user_id = user_id
         self.agentes: Dict[str, AgenteEspecializado] = {}
@@ -56,6 +57,12 @@ class OrquestadorMultiagente:
         self.herramientas = HerramientaSoporte()
         self.comunicacion_agentes: List[Dict[str, Any]] = []
 
+        if allowed_area_ids:
+            normalized = [a for a in allowed_area_ids if a in self.agentes]
+            self.allowed_area_ids: set[str] = set(normalized)
+        else:
+            self.allowed_area_ids = set(self.agentes.keys())
+
         self.metricas_globales: Dict[str, Any] = {
             "total_consultas": 0,
             "agentes_involucrados": {},
@@ -70,6 +77,13 @@ class OrquestadorMultiagente:
         """
         analisis = self.herramientas.analizar_problema(consulta)
         categoria = analisis.get("categoria", "decanato")
+        if categoria in self.allowed_area_ids:
+            return categoria
+
+        if self.allowed_area_ids:
+            # Fallback determinista dentro del alcance permitido para el usuario.
+            return sorted(self.allowed_area_ids)[0]
+
         return categoria if categoria in self.agentes else "decanato"
 
     def procesar_consulta_compleja(
@@ -145,6 +159,9 @@ class OrquestadorMultiagente:
         1. Menciona explícitamente múltiples áreas
         2. Contiene palabras indicadoras de complejidad multi-área
         """
+        if len(self.allowed_area_ids) <= 1:
+            return False
+
         consulta_lower = consulta.lower()
 
         palabras_multiple = [
@@ -170,6 +187,8 @@ class OrquestadorMultiagente:
         # Contar áreas distintas mencionadas
         areas_detectadas: set[str] = set()
         for area, palabras_clave in HerramientaSoporte.AREAS_FCFM.items():
+            if area not in self.allowed_area_ids:
+                continue
             for palabra in palabras_clave:
                 if palabra in consulta_lower:
                     areas_detectadas.add(area)
@@ -192,7 +211,7 @@ class OrquestadorMultiagente:
 
         # Revisamos cada área para ver si debe colaborar
         for area_id, palabras_clave in HerramientaSoporte.AREAS_FCFM.items():
-            if area_id != agente_principal:
+            if area_id != agente_principal and area_id in self.allowed_area_ids:
                 if any(palabra in consulta_lower for palabra in palabras_clave):
                     colaboradores.append(area_id)
                     if len(colaboradores) >= 2:
@@ -200,7 +219,7 @@ class OrquestadorMultiagente:
 
         # Si no hay colaboradores identificados pero la consulta es compleja, 
         # el decanato puede colaborar como fallback
-        if not colaboradores and agente_principal != "decanato":
+        if not colaboradores and agente_principal != "decanato" and "decanato" in self.allowed_area_ids:
             colaboradores.append("decanato")
 
         return colaboradores[:2]

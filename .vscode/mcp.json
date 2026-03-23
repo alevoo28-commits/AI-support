@@ -1,0 +1,16 @@
+{
+  "servers": {
+    "ai-support-mcp": {
+      "type": "stdio",
+      "command": "${workspaceFolder}/mcp-langchain/.venv/Scripts/python.exe",
+      "args": [
+        "-m",
+        "mcp_langchain_server.server"
+      ],
+      "cwd": "${workspaceFolder}/mcp-langchain",
+      "env": {
+        "KNOWLEDGE_BASE_DIR": "${workspaceFolder}/knowledge_base"
+      }
+    }
+  }
+}

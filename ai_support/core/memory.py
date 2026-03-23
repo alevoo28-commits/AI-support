@@ -1,7 +1,7 @@
 import os
 from typing import Any, Dict, Optional
 
-from langchain_classic.memory import (
+from langchain.memory import (
     ConversationBufferMemory,
     ConversationBufferWindowMemory,
     ConversationEntityMemory,

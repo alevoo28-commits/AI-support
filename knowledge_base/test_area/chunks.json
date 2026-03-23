@@ -1,0 +1,7 @@
+{
+  "filename": "test.txt",
+  "total_chunks": 1,
+  "chunks": [
+    "\r\nCONFIGURACIN DE REDES\r\n\r\nInstruccin 1: Configurar IP esttica\r\n- Acceder a Configuracin de Red\r\n- Seleccionar adaptador Ethernet\r\n- Ingresar IP: 192.168.1.100\r\n- Mscara: 255.255.255.0\r\n- Gateway: 192.168.1.1\r\n\r\nInstruccin 2: Configurar DNS\r\n- Usar DNS 8.8.8.8\r\n- DNS secundario: 8.8.4.4\r\n"
+  ]
+}

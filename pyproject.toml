@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-support-fcfm"
+version = "1.0.0"
+description = "Sistema Multi-Agente para FCFM - Procedimientos Institucionales"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "FCFM Development Team"},
+]
+
+dependencies = [
+    # Base LangChain (OpenSource Agent Framework)
+    "langchain>=0.2.0",
+    "langchain-core>=1.1.0",
+    "langchain-openai>=1.0.3",
+    "langchain-community>=0.0.30",
+    "langchain-text-splitters>=0.0.1",
+    
+    # LLM & Embeddings
+    "openai>=1.32.2",
+    
+    # Vector Store & Search
+    "faiss-cpu>=1.7.4",
+    "tiktoken>=0.4.0",
+    
+    # Development & Debugging
+    "langsmith>=0.0.20",
+    
+    # Data Processing
+    "pandas",
+    "plotly",
+    "openpyxl",
+    "pdfplumber>=0.10.0",
+    "python-docx>=1.1.0",
+    "PyPDF2>=3.0.0",
+    
+    # Web Framework
+    "streamlit>=1.29.0",
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.27.0",
+    "flask>=2.0.0",
+    "waitress>=2.1.0",
+    
+    # Authentication & Security
+    "PyJWT",
+    "python-dotenv",
+    
+    # Database
+    "mysql-connector-python",
+    
+    # System & Performance
+    "psutil>=5.9.0",
+    "requests>=2.27.0",
+    
+    # Azure Integration
+    "azure-ai-inference",
+    "azure-core",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pyinstaller",
+    "pytest>=7.0",
+    "black>=23.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/info/AI-support"
+Documentation = "https://github.com/info/AI-support/tree/main/docs"
+
+[tool.setuptools]
+packages = ["ai_support"]
+
+[tool.setuptools.package-data]
+ai_support = ["**/*.json", "**/*.html"]

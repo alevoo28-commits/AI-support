@@ -80,19 +80,49 @@ def _users_table() -> str:
     return safe or "personal"
 
 
+def _safe_sql_identifier(value: str, fallback: str) -> str:
+    raw = (value or fallback).strip()
+    safe = "".join(c for c in raw if c.isalnum() or c == "_")
+    return safe or fallback
+
+
+def _users_email_column() -> str:
+    return _safe_sql_identifier(_env("AI_SUPPORT_MYSQL_USERS_EMAIL_COLUMN", "email") or "email", "email")
+
+
+def _users_department_id_column() -> str:
+    return _safe_sql_identifier(
+        _env("AI_SUPPORT_MYSQL_USERS_DEPARTMENT_ID_COLUMN", "departamento_id") or "departamento_id",
+        "departamento_id",
+    )
+
+
+def _departments_table() -> str:
+    return _safe_sql_identifier(_env("AI_SUPPORT_MYSQL_DEPARTMENTS_TABLE", "departamento") or "departamento", "departamento")
+
+
+def _departments_id_column() -> str:
+    return _safe_sql_identifier(_env("AI_SUPPORT_MYSQL_DEPARTMENTS_ID_COLUMN", "id") or "id", "id")
+
+
+def _departments_name_column() -> str:
+    return _safe_sql_identifier(_env("AI_SUPPORT_MYSQL_DEPARTMENTS_NAME_COLUMN", "nombre") or "nombre", "nombre")
+
+
 def get_user_by_email(email: str) -> Optional[dict[str, Any]]:
     email = (email or "").strip().lower()
     if not email:
         raise ValueError("email vacío")
 
     table = _users_table()
+    email_col = _users_email_column()
     conn = _mysql_connect()
     try:
         cur = conn.cursor(dictionary=True)
         try:
             cur.execute(
                 f"SELECT id, nombre, apellido, apellido_2, rut, departamento_id, tui, email, IP "
-                f"FROM `{table}` WHERE email=%s LIMIT 1",
+                f"FROM `{table}` WHERE `{email_col}`=%s LIMIT 1",
                 (email,),
             )
             row = cur.fetchone()
@@ -216,3 +246,54 @@ def upsert_user_by_email(
     # devolver el estado actualizado
     row = get_user_by_email(email_n)
     return row or {"email": email_n}
+
+
+def get_user_department_by_email(email: str) -> Optional[dict[str, Any]]:
+    """Obtiene el departamento del usuario por email.
+
+    Esquema esperado:
+      - Tabla usuarios con columna departamento_id
+      - Tabla departamentos con columnas id y nombre
+
+    Las tablas/columnas son configurables por variables AI_SUPPORT_MYSQL_*.
+    """
+
+    email_n = (email or "").strip().lower()
+    if not email_n:
+        raise ValueError("email vacío")
+
+    users_table = _users_table()
+    users_email_col = _users_email_column()
+    users_dept_col = _users_department_id_column()
+    departments_table = _departments_table()
+    departments_id_col = _departments_id_column()
+    departments_name_col = _departments_name_column()
+
+    conn = _mysql_connect()
+    try:
+        cur = conn.cursor(dictionary=True)
+        try:
+            cur.execute(
+                (
+                    f"SELECT u.`id` AS user_id, u.`{users_email_col}` AS email, "
+                    f"u.`{users_dept_col}` AS departamento_id, d.`{departments_name_col}` AS departamento_nombre "
+                    f"FROM `{users_table}` u "
+                    f"LEFT JOIN `{departments_table}` d "
+                    f"ON u.`{users_dept_col}` = d.`{departments_id_col}` "
+                    f"WHERE u.`{users_email_col}`=%s "
+                    f"LIMIT 1"
+                ),
+                (email_n,),
+            )
+            row = cur.fetchone()
+            return dict(row) if row else None
+        finally:
+            try:
+                cur.close()
+            except Exception:
+                pass
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass

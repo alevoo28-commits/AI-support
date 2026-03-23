@@ -1,9 +1,12 @@
+import logging
 import time
 from typing import Any, Callable, Dict, List, Optional
 
 import os
 
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+
+logger = logging.getLogger(__name__)
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
@@ -75,7 +78,7 @@ class AgenteEspecializado:
                     timeout=timeout_s,
                 )
             except Exception as e:
-                print(f"⚠️ {self.nombre}: Embeddings no disponibles ({e}). Se desactiva RAG/VectorMemory.")
+                logger.warning(f"{self.nombre}: Embeddings unavailable ({e}). RAG/VectorMemory disabled.")
                 self.embeddings = None
 
         self.memoria = SistemaMemoriaAvanzada(self.llm, self.embeddings, user_id=self.user_id)
@@ -113,7 +116,7 @@ class AgenteEspecializado:
             signature = f"{type(e).__name__}:{str(e)[:300]}"
             if signature not in _FAISS_MATERIAL_ERROR_SEEN:
                 _FAISS_MATERIAL_ERROR_SEEN.add(signature)
-                print(f"⚠️ Error cargando material FAISS para {self.nombre}: {e}")
+                logger.error(f"Error loading FAISS material for {self.nombre}: {e}")
             # Degradación controlada si embeddings no están disponibles o no hay acceso
             try:
                 msg = str(e).lower()
@@ -132,7 +135,7 @@ class AgenteEspecializado:
             docs = self.vectorstore_rag.similarity_search(consulta, k=3)
             return "\n\n".join([doc.page_content for doc in docs])
         except Exception as e:
-            print(f"⚠️ Error en búsqueda FAISS para {self.nombre}: {e}")
+            logger.error(f"FAISS search error for {self.nombre}: {e}")
             return ""
 
     def procesar_consulta(

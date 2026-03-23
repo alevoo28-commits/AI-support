@@ -98,6 +98,7 @@ from ai_support.core.ip_assignment import (
     get_adapter_ipv4,
 )
 from ai_support.core.users_mysql import get_user_by_email, upsert_user_by_email
+from ai_support.core.users_mysql import get_user_department_by_email
 from ai_support.core.windows_elevation import is_windows_admin, restart_streamlit_elevated
 from ai_support.core.google_auth import (
     build_google_auth_url,
@@ -204,9 +205,52 @@ def _is_rate_limit_error(err: Exception) -> bool:
     )
 
 
+def _normalize_key(value: str) -> str:
+    value = (value or "").strip().lower()
+    value = re.sub(r"\s+", "_", value)
+    return re.sub(r"[^a-z0-9_]", "", value)
+
+
+def _department_name_to_area_id(department_name: str | None) -> str | None:
+    key = _normalize_key(department_name or "")
+    if not key:
+        return None
+
+    aliases = {
+        "tesoreria": "tesoreria",
+        "arquitectura": "arquitectura",
+        "infraestructura": "infraestructura",
+        "proyectos": "proyectos",
+        "atencion_alumnos": "atencion_alumnos",
+        "atencion_de_alumnos": "atencion_alumnos",
+        "postgrado": "postgrado",
+        "sustentabilidad": "sustentabilidad",
+        "comunicaciones": "comunicaciones",
+        "vinculacion": "vinculacion",
+        "vinculacion_externa": "vinculacion",
+        "rrhh": "rrhh",
+        "recursos_humanos": "rrhh",
+        "contabilidad": "contabilidad",
+        "direccion_economica": "direccion_economica",
+        "direccion_academica": "direccion_academica",
+        "diversidad": "diversidad",
+        "decanato": "decanato",
+        "vicedecanato": "decanato",
+    }
+    return aliases.get(key)
+
+
+def _department_matches_area_name(department_name: str | None, area_name: str | None) -> bool:
+    dept = _normalize_key(department_name or "")
+    area = _normalize_key(area_name or "")
+    if not dept or not area:
+        return False
+    return dept == area or dept in area or area in dept
+
+
 # ── Base de Conocimiento UI ───────────────────────────────────────────────────
 
-def _render_knowledge_base_section() -> None:
+def _render_knowledge_base_section(department_name: str | None = None) -> None:
     """Renderiza la sección de Base de Conocimiento por Áreas."""
     import streamlit as st
     from ai_support.core.knowledge_base import get_kb_manager
@@ -229,6 +273,14 @@ def _render_knowledge_base_section() -> None:
         st.session_state["kb_refresh"] = 0
 
     areas = kb.list_areas()
+    if department_name:
+        areas = [a for a in areas if _department_matches_area_name(department_name, a.get("name", ""))]
+        if not areas:
+            st.warning(
+                "No hay un área de Base de Conocimiento asociada a tu departamento. "
+                "Pide al administrador crearla con el nombre del departamento."
+            )
+            return
 
     # ── Layout: columna áreas | columna documentos ────────────────────────────
     col_areas, col_docs = st.columns([1, 2], gap="large")
@@ -746,9 +798,48 @@ def main() -> None:
                 st.warning("⚠️ Inicia sesión para usar el chat")
                 st.stop()
 
+            # Resolver departamento (control de acceso por área)
+            st.session_state["_user_department_id"] = None
+            st.session_state["_user_department_name"] = None
+            st.session_state["_allowed_area_ids"] = None
+            if isinstance(current_user, str) and "@" in current_user:
+                mysql_ok = bool((os.getenv("AI_SUPPORT_MYSQL_ENABLE") or "").strip().lower() in {"1", "true", "yes", "y", "on"})
+                if mysql_ok:
+                    try:
+                        dept_ctx = get_user_department_by_email(current_user)
+                    except Exception as e:
+                        st.error(f"No se pudo obtener el departamento desde MySQL: {e}")
+                        st.stop()
+
+                    if not dept_ctx:
+                        st.error("No existe un registro de usuario/departamento para tu correo.")
+                        st.stop()
+
+                    dept_id = dept_ctx.get("departamento_id")
+                    dept_name = (dept_ctx.get("departamento_nombre") or "").strip()
+                    if not dept_name:
+                        st.error("Tu usuario no tiene nombre de departamento asociado en MySQL.")
+                        st.stop()
+
+                    area_id = _department_name_to_area_id(dept_name)
+                    if not area_id:
+                        st.error(
+                            "Tu departamento no tiene mapeo a un agente del sistema. "
+                            "Configura el nombre del departamento para que coincida con un área FCFM."
+                        )
+                        st.stop()
+
+                    st.session_state["_user_department_id"] = dept_id
+                    st.session_state["_user_department_name"] = dept_name
+                    st.session_state["_allowed_area_ids"] = [area_id]
+
             # Si el usuario está presente, mostrar el chat
             st.success(f"👤 Sesión: **{current_user}**")
             st.info("✅ Chat habilitado. Puedes interactuar con los agentes.")
+            if st.session_state.get("_user_department_name"):
+                st.caption(
+                    f"🔒 Acceso restringido a departamento: {st.session_state['_user_department_name']}"
+                )
 
             # --- Provisionamiento de usuario en MySQL (tabla usuarios) ---
             # Solo aplica si el usuario es un email (Google OAuth) y MySQL está habilitado.
@@ -809,6 +900,9 @@ def main() -> None:
             if st.button("🚪 Cerrar sesión", use_container_width=True):
                 st.session_state.pop("current_user", None)
                 st.session_state.pop("_google_oauth_done", None)
+                st.session_state.pop("_user_department_id", None)
+                st.session_state.pop("_user_department_name", None)
+                st.session_state.pop("_allowed_area_ids", None)
                 # Borrar usuario y state persistente en disco
                 if os.path.exists(USER_FILE):
                     os.remove(USER_FILE)
@@ -842,6 +936,9 @@ def main() -> None:
                 st.session_state["current_user"] = getpass.getuser()
 
             current_user = st.session_state["current_user"]
+            st.session_state["_user_department_id"] = None
+            st.session_state["_user_department_name"] = None
+            st.session_state["_allowed_area_ids"] = None
 
             st.success(f"👤 Sesión: **{current_user}**")
             st.caption("Historial guardado localmente en tu perfil.")
@@ -1110,7 +1207,8 @@ def main() -> None:
                 temp_orq = OrquestadorMultiagente(
                     llm_config=llm_cfg, 
                     embeddings_config=emb_cfg,
-                    user_id=st.session_state.get("current_user")
+                    user_id=st.session_state.get("current_user"),
+                    allowed_area_ids=st.session_state.get("_allowed_area_ids"),
                 )
                 resp = temp_orq.agentes["general"].procesar_consulta("Responde solo con: OK")
                 st.success(f"Conexión OK. Respuesta: {resp['respuesta'][:50]}")
@@ -1133,6 +1231,7 @@ def main() -> None:
                     llm_config=llm_cfg,
                     embeddings_config=emb_cfg,
                     user_id=st.session_state.get("current_user"),
+                    allowed_area_ids=st.session_state.get("_allowed_area_ids"),
                 )
             except Exception as e:
                 st.session_state.orquestador = None
@@ -1146,6 +1245,7 @@ def main() -> None:
             llm_config=default_github_llm(),
             embeddings_config=default_github_embeddings(),
             user_id=st.session_state.get("current_user"),
+            allowed_area_ids=st.session_state.get("_allowed_area_ids"),
         )
 
         try:
@@ -1341,7 +1441,7 @@ def main() -> None:
             st.info("No hay logs disponibles aún.")
 
     elif menu == "📚 Base de Conocimiento":
-        _render_knowledge_base_section()
+        _render_knowledge_base_section(department_name=st.session_state.get("_user_department_name"))
         return  # No renderizar el chat cuando está activa la KB
 
     # Layout estilo ChatGPT: chat a la izquierda, conversaciones a la derecha

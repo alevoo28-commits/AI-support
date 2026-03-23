@@ -22,17 +22,22 @@ def verificar_mysql():
         logger.error("❌ MySQL no habilitado. Ver: AI_SUPPORT_MYSQL_ENABLE")
         return False
     
+    # Permite variables específicas para prompts o fallback a variables MySQL generales.
     requeridas = [
-        "AI_SUPPORT_MYSQL_HOST",
-        "AI_SUPPORT_MYSQL_USER",
-        "AI_SUPPORT_MYSQL_PASSWORD",
-        "AI_SUPPORT_MYSQL_DATABASE"
+        ("host", ["AI_SUPPORT_PROMPTS_MYSQL_HOST", "AI_SUPPORT_MYSQL_HOST"]),
+        ("user", ["AI_SUPPORT_PROMPTS_MYSQL_USER", "AI_SUPPORT_MYSQL_USER"]),
+        ("password", ["AI_SUPPORT_PROMPTS_MYSQL_PASSWORD", "AI_SUPPORT_MYSQL_PASSWORD"]),
+        ("database", ["AI_SUPPORT_PROMPTS_MYSQL_DATABASE", "AI_SUPPORT_MYSQL_DATABASE"]),
     ]
-    
-    for var in requeridas:
-        if not os.getenv(var):
-            logger.error(f"❌ Falta variable de entorno: {var}")
-            return False
+
+    for field_name, candidates in requeridas:
+        if any(os.getenv(var) for var in candidates):
+            continue
+        logger.error(
+            f"❌ Falta configuración MySQL para prompts ({field_name}). "
+            f"Define alguna de: {', '.join(candidates)}"
+        )
+        return False
     
     logger.info("✅ MySQL configurado correctamente")
     return True

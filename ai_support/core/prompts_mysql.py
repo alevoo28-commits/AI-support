@@ -23,11 +23,17 @@ class ConfiguracionMySQL:
     """Configuración para conexión a MySQL."""
     
     def __init__(self):
-        self.host = os.getenv("AI_SUPPORT_MYSQL_HOST", "localhost")
-        self.user = os.getenv("AI_SUPPORT_MYSQL_USER", "root")
-        self.password = os.getenv("AI_SUPPORT_MYSQL_PASSWORD", "")
-        self.database = os.getenv("AI_SUPPORT_MYSQL_DATABASE", "ai_support")
-        self.port = int(os.getenv("AI_SUPPORT_MYSQL_PORT", "3306"))
+        self.host = os.getenv("AI_SUPPORT_PROMPTS_MYSQL_HOST") or os.getenv("AI_SUPPORT_MYSQL_HOST", "localhost")
+        self.user = os.getenv("AI_SUPPORT_PROMPTS_MYSQL_USER") or os.getenv("AI_SUPPORT_MYSQL_USER", "root")
+        self.password = os.getenv("AI_SUPPORT_PROMPTS_MYSQL_PASSWORD")
+        if self.password is None:
+            self.password = os.getenv("AI_SUPPORT_MYSQL_PASSWORD", "")
+        self.database = os.getenv("AI_SUPPORT_PROMPTS_MYSQL_DATABASE") or os.getenv("AI_SUPPORT_MYSQL_DATABASE", "ai_support")
+        self.port = int(os.getenv("AI_SUPPORT_PROMPTS_MYSQL_PORT") or os.getenv("AI_SUPPORT_MYSQL_PORT", "3306"))
+        self.auto_init_schema = (
+            os.getenv("AI_SUPPORT_PROMPTS_MYSQL_AUTO_INIT_SCHEMA", "false").strip().lower()
+            in {"1", "true", "yes", "y", "on"}
+        )
         self.enabled = (os.getenv("AI_SUPPORT_MYSQL_ENABLE", "false").lower() == "true")
     
     def validar(self) -> bool:
@@ -130,7 +136,7 @@ Extrae:
             logger.info("⚠️  MySQL deshabilitado o mal configurado. Usando prompts hardcodeados.")
     
     def _inicializar_mysql(self) -> bool:
-        """Intenta conectar y crear tabla de prompts."""
+        """Intenta conectar y, opcionalmente, crear tabla de prompts."""
         try:
             self.conexion = mysql.connector.connect(
                 host=self.config.host,
@@ -140,31 +146,35 @@ Extrae:
                 port=self.config.port
             )
             
-            # Crear tabla si no existe
             cursor = self.conexion.cursor()
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS system_prompts (
-                    id INT PRIMARY KEY AUTO_INCREMENT,
-                    nombre VARCHAR(100) UNIQUE NOT NULL,
-                    contenido LONGTEXT NOT NULL,
-                    version INT DEFAULT 1,
-                    descripcion VARCHAR(500),
-                    activo BOOLEAN DEFAULT TRUE,
-                    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                    actualizado_por VARCHAR(100),
-                    INDEX idx_nombre (nombre),
-                    INDEX idx_activo (activo)
-                )
-            """)
-            
-            # Migrar prompts por defecto si no existen
-            self._migrar_prompts_por_defecto(cursor)
-            
-            self.conexion.commit()
+            if self.config.auto_init_schema:
+                # Solo para entornos controlados (dev/migración).
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS system_prompts (
+                        id INT PRIMARY KEY AUTO_INCREMENT,
+                        nombre VARCHAR(100) UNIQUE NOT NULL,
+                        contenido LONGTEXT NOT NULL,
+                        version INT DEFAULT 1,
+                        descripcion VARCHAR(500),
+                        activo BOOLEAN DEFAULT TRUE,
+                        creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                        actualizado_por VARCHAR(100),
+                        INDEX idx_nombre (nombre),
+                        INDEX idx_activo (activo)
+                    )
+                """)
+
+                # Migrar prompts por defecto si no existen
+                self._migrar_prompts_por_defecto(cursor)
+                self.conexion.commit()
+
             cursor.close()
             
-            logger.info("✅ MySQL conectado: tabla 'system_prompts' lista")
+            if self.config.auto_init_schema:
+                logger.info("✅ MySQL conectado: tabla 'system_prompts' lista")
+            else:
+                logger.info("✅ MySQL conectado para prompts (sin inicialización de esquema)")
             return True
             
         except MySQLError as e:

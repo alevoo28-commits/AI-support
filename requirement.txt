@@ -4,7 +4,9 @@ openpyxl
 PyJWT
 streamlit>=1.29.0
 openai>=1.32.2
-langchain>=0.2.0
+langchain>=1.2.13
+langchain-core>=1.2.20
+langchain-classic>=1.0.0
 langchain-openai>=1.0.3
 langchain-community>=0.0.30
 langchain-text-splitters>=0.0.1

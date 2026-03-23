@@ -113,31 +113,18 @@ const response = await fetch('/api/prompts', {
 
 ## 🔧 Script de Setup (Actualizado)
 
-### Opción 1: Script PowerShell (RECOMENDADO)
-
-```powershell
-# Acceso GLOBAL (default)
-.\scripts\setup_mysql_user.ps1 `
-  -MySQLRootPassword "tu_password" `
-  -AllowHost "%"  # % = cualquier IP
-```
-
-**Resultado:**
-- Usuario: `ai_support_user`
-- Host: `%` (global)
-- Acceso: Desde cualquier IP
-
-### Opción 2: Script SQL Manual
+### Script único (RECOMENDADO)
 
 ```sql
--- Global (cualquier IP)
-CREATE USER 'ai_support_user'@'%' IDENTIFIED BY 'password';
-GRANT SELECT, INSERT, UPDATE, DELETE ON ai_support.* TO 'ai_support_user'@'%';
-
--- O local (solo localhost)
-CREATE USER 'ai_support_user'@'localhost' IDENTIFIED BY 'password';
-GRANT SELECT, INSERT, UPDATE, DELETE ON ai_support.* TO 'ai_support_user'@'localhost';
+-- Ejecutar como administrador MySQL:
+source scripts/repair_mysql_split_grants.sql;
 ```
+
+**Resultado esperado:**
+- Usuario: `ai_support_user`
+- Host: `%` (global)
+- Permisos en `FCFMUCHILE.personal` y `FCFMUCHILE.departamentos`
+- Permisos en `ai_support.system_prompts` y `ai_support.ai_support_user_memory`
 
 ---
 
@@ -294,9 +281,8 @@ SELECT User, Host FROM mysql.user WHERE User = 'ai_support_user';
 
 ## 📚 Referencias
 
-**Scripts**:
-- `scripts/setup_mysql_user.ps1` - Automatiza setup (con `-AllowHost "%"`)
-- `scripts/ setup_mysql_user.sql` - Script SQL manual
+**Script**:
+- `scripts/repair_mysql_split_grants.sql` - Script único de referencia para grants y tabla de memoria
 
 **Documentos**:
 - `docs/SETUP_MYSQL_USER.md` - Guía de setup (versión local/global)

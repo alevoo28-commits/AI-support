@@ -37,6 +37,58 @@ def ensure_remote_host(value: str) -> str:
     return value
 
 
+def _winrm_enabled() -> bool:
+    return (os.getenv("AI_SUPPORT_WINRM_ENABLE", "false") or "false").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "y",
+        "on",
+    }
+
+
+def _allowed_winrm_hosts_from_env() -> set[str]:
+    raw = (os.getenv("AI_SUPPORT_WINRM_ALLOWED_HOSTS") or "").strip()
+    if not raw:
+        return set()
+
+    allowed: set[str] = set()
+    for item in raw.split(","):
+        candidate = item.strip()
+        if not candidate:
+            continue
+        normalized = ensure_remote_host(candidate)
+        # Hostnames se comparan case-insensitive.
+        allowed.add(normalized.lower())
+    return allowed
+
+
+def _enforce_winrm_policy(host: str) -> str:
+    normalized = ensure_remote_host(host)
+
+    if not _winrm_enabled():
+        raise PermissionError(
+            "WinRM remoto está deshabilitado por seguridad. "
+            "Define AI_SUPPORT_WINRM_ENABLE=true para habilitarlo explícitamente."
+        )
+
+    allowed = _allowed_winrm_hosts_from_env()
+    if not allowed:
+        raise PermissionError(
+            "WinRM remoto requiere allowlist explícita. "
+            "Configura AI_SUPPORT_WINRM_ALLOWED_HOSTS con hostnames/IPs permitidos."
+        )
+
+    normalized_cmp = normalized.lower()
+    if normalized_cmp not in allowed:
+        raise PermissionError(
+            f"Host remoto no permitido por política WinRM: {normalized}. "
+            "Agrégalo en AI_SUPPORT_WINRM_ALLOWED_HOSTS si corresponde."
+        )
+
+    return normalized
+
+
 def _json_load_maybe(text: str):
     try:
         return json.loads(text)
@@ -72,7 +124,7 @@ def _winrm_config_from_env() -> WinRMConfig:
 
 def _invoke_command_ps(*, host: str, inner_ps: str) -> str:
     cfg = _winrm_config_from_env()
-    host = ensure_remote_host(host)
+    host = _enforce_winrm_policy(host)
 
     # Nota: no aceptamos credenciales aquí para evitar passwords en texto plano.
     # El proceso Streamlit debe correr bajo una cuenta con permisos (idealmente dominio).

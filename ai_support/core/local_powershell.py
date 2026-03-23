@@ -25,6 +25,38 @@ _SAFE_TEXT_RE = re.compile(r"^[\w\s\-_.:;,/\\()\[\]{}@|\$'\"=]+$", re.UNICODE)
 _SAFE_ARG_RE = re.compile(r"^[\w\s\-_.:;,/\\()\[\]{}@]+$", re.UNICODE)
 
 
+_BLOCKED_PS_PATTERNS: tuple[re.Pattern[str], ...] = (
+    re.compile(r"(?:^|\W)iex(?:\W|$)", re.IGNORECASE),
+    re.compile(r"invoke-expression", re.IGNORECASE),
+    re.compile(r"downloadstring\s*\(", re.IGNORECASE),
+    re.compile(r"-encodedcommand", re.IGNORECASE),
+    re.compile(r"frombase64string\s*\(", re.IGNORECASE),
+    re.compile(r"start-process\s+cmd(?:\.exe)?", re.IGNORECASE),
+    re.compile(r"powershell(?:\.exe)?\s+-enc", re.IGNORECASE),
+)
+
+
+def _powershell_blocklist_enabled() -> bool:
+    return (os.getenv("AI_SUPPORT_POWERSHELL_BLOCKLIST", "true") or "true").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "y",
+        "on",
+    }
+
+
+def _ensure_no_blocked_powershell_patterns(command: str) -> None:
+    if not _powershell_blocklist_enabled():
+        return
+    for pattern in _BLOCKED_PS_PATTERNS:
+        if pattern.search(command):
+            raise PermissionError(
+                "Comando bloqueado por política de seguridad PowerShell. "
+                "Si es un caso legítimo, revisa la política AI_SUPPORT_POWERSHELL_BLOCKLIST."
+            )
+
+
 def _ensure_safe_text(value: str, field: str) -> str:
     value = value.strip()
     if not value:
@@ -96,6 +128,7 @@ def run_powershell(command: str, timeout_s: int = 20) -> PowerShellResult:
         )
 
     command = _ensure_safe_text(command, "command")
+    _ensure_no_blocked_powershell_patterns(command)
 
     completed = subprocess.run(
         [

@@ -35,6 +35,11 @@ class AgenteEspecializado:
         self.especialidad = especialidad
         self.provider = llm_config.provider
         self.user_id = user_id
+        self.lmstudio_user_assistant_only = False
+
+        if llm_config.provider == "lmstudio":
+            raw = os.getenv("AI_SUPPORT_LMSTUDIO_USER_ASSISTANT_ONLY", "true")
+            self.lmstudio_user_assistant_only = raw.strip().lower() in {"1", "true", "yes", "y", "on"}
 
         # En GitHub Models, prompts grandes + historial suelen aumentar latencia.
         # Activamos un "modo rápido" por defecto para acercarse al comportamiento de smoke tests.
@@ -175,7 +180,21 @@ class AgenteEspecializado:
             memory_block=memory_block,
         )
 
-        messages: List[Any] = [SystemMessage(content=system_prompt)]
+        messages: List[Any] = []
+
+        # Compatibilidad LM Studio: algunos templates solo aceptan user/assistant.
+        # En ese caso, inyectamos instrucciones del sistema dentro de un mensaje user.
+        if self.provider == "lmstudio" and self.lmstudio_user_assistant_only:
+            messages.append(
+                HumanMessage(
+                    content=(
+                        "INSTRUCCIONES DEL SISTEMA (debes seguirlas estrictamente):\n"
+                        f"{system_prompt}"
+                    )
+                )
+            )
+        else:
+            messages.append(SystemMessage(content=system_prompt))
 
         history_n = 1 if self.github_fast_mode else 3
         for msg in self.historial[-history_n:]:

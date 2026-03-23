@@ -65,15 +65,33 @@ class UserMemoryPersistence:
             safe_user_id = "default"
         return safe_user_id[:128]
 
+    def _memory_mysql_env(self, key: str, default: Optional[str] = None) -> Optional[str]:
+        """Resuelve configuración MySQL para memoria con prioridad explícita.
+
+        Prioridad:
+        1) AI_SUPPORT_USER_MEMORY_MYSQL_* (dedicado para memoria)
+        2) AI_SUPPORT_USERS_MYSQL_* (config de usuarios/departamentos)
+        3) AI_SUPPORT_MYSQL_* (global)
+        """
+        dedicated = os.getenv(f"AI_SUPPORT_USER_MEMORY_MYSQL_{key}")
+        if dedicated is not None and dedicated != "":
+            return dedicated
+
+        users = os.getenv(f"AI_SUPPORT_USERS_MYSQL_{key}")
+        if users is not None and users != "":
+            return users
+
+        return os.getenv(f"AI_SUPPORT_MYSQL_{key}", default)
+
     def _mysql_enabled_and_configured(self) -> bool:
         raw = (os.getenv("AI_SUPPORT_MYSQL_ENABLE") or "false").strip().lower()
         if raw not in {"1", "true", "yes", "y", "on"}:
             return False
 
-        host = (os.getenv("AI_SUPPORT_MYSQL_HOST") or "").strip()
-        user = (os.getenv("AI_SUPPORT_MYSQL_USER") or "").strip()
-        password = os.getenv("AI_SUPPORT_MYSQL_PASSWORD")
-        database = (os.getenv("AI_SUPPORT_MYSQL_DATABASE") or "").strip()
+        host = (self._memory_mysql_env("HOST") or "").strip()
+        user = (self._memory_mysql_env("USER") or "").strip()
+        password = self._memory_mysql_env("PASSWORD")
+        database = (self._memory_mysql_env("DATABASE") or "").strip()
         return bool(host and user and password is not None and database)
 
     def _mysql_auto_create_schema_enabled(self) -> bool:
@@ -102,11 +120,11 @@ class UserMemoryPersistence:
         except Exception as e:
             raise RuntimeError("Falta dependencia mysql-connector-python. Instala requirements.") from e
 
-        host = (os.getenv("AI_SUPPORT_MYSQL_HOST") or "").strip()
-        user = (os.getenv("AI_SUPPORT_MYSQL_USER") or "").strip()
-        password = os.getenv("AI_SUPPORT_MYSQL_PASSWORD")
-        database = (os.getenv("AI_SUPPORT_MYSQL_DATABASE") or "").strip()
-        port_raw = (os.getenv("AI_SUPPORT_MYSQL_PORT") or "3306").strip()
+        host = (self._memory_mysql_env("HOST") or "").strip()
+        user = (self._memory_mysql_env("USER") or "").strip()
+        password = self._memory_mysql_env("PASSWORD")
+        database = (self._memory_mysql_env("DATABASE") or "").strip()
+        port_raw = (self._memory_mysql_env("PORT") or "3306").strip()
         try:
             port = int(port_raw)
         except Exception:

@@ -1,7 +1,0 @@
-{
-  "filename": "test_doc.txt",
-  "total_chunks": 1,
-  "chunks": [
-    "\r\nPROCEDIMIENTO DE MANTENIMIENTO DE SERVIDORES\r\n\r\n1. Verificacin de hardware\r\n   - Temperatura de procesadores\r\n   - Estado de ventiladores\r\n   - Capacidad de discos\r\n\r\n2. Actualizacin de sistema\r\n   - Parches de seguridad\r\n   - Actualizaciones de software\r\n   - Configuracin de firewall\r\n\r\n3. Respaldo de datos\r\n   - Copias de seguridad completas\r\n   - Verificacin de integridad\r\n   - Almacenamiento en mltiples ubicaciones\r\n"
-  ]
-}

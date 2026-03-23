@@ -1,7 +1,8 @@
 import os
+import warnings
 from typing import Any, Dict, Optional
 
-from langchain.memory import (
+from langchain_classic.memory import (
     ConversationBufferMemory,
     ConversationBufferWindowMemory,
     ConversationEntityMemory,
@@ -16,6 +17,17 @@ from .user_memory_persistence import (
     auto_save_user_memory,
     restore_user_memory_to_buffer,
 )
+
+try:
+    from langchain_core._api.deprecation import LangChainDeprecationWarning
+
+    warnings.filterwarnings(
+        "ignore",
+        category=LangChainDeprecationWarning,
+        message=r".*migrating_memory.*",
+    )
+except Exception:
+    pass
 
 
 _VECTORSTORE_INIT_ERROR_SEEN: set[str] = set()

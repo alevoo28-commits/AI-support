@@ -38,56 +38,17 @@ Charset: utf8mb4 (Unicode completo)
 
 ## 🚀 Instalación
 
-### Opción 1: Script PowerShell (Recomendado ⭐)
-
-Automático y seguro:
-
-```powershell
-# En PowerShell (como Administrator)
-cd c:\Users\info\Documents\GitHub\AI-support
-
-# Ejecutar script (cambiar password root si es diferente)
-.\scripts\setup_mysql_user.ps1 -MySQLRootPassword "tu_password_root"
-```
-
-**Salida esperada:**
-```
-[14:32:00] 🔧 Setup de usuario MySQL para AI-Support
-[14:32:00] Host: localhost
-[14:32:00] Port: 3306
-[14:32:00] Usuario: ai_support_user
-[14:32:00] BD: ai_support
-
-[14:32:01] ✅ MySQL client encontrado
-[14:32:02] ✅ Usuario y BD creados exitosamente
-[14:32:02] ✅ Usuario verificado en MySQL
-
-📋 Copiar esto en tu .env:
----
-AI_SUPPORT_MYSQL_ENABLE=true
-AI_SUPPORT_MYSQL_HOST=localhost
-AI_SUPPORT_MYSQL_PORT=3306
-AI_SUPPORT_MYSQL_USER=ai_support_user
-AI_SUPPORT_MYSQL_PASSWORD=Ai#Support2024$Secure!
-AI_SUPPORT_MYSQL_DATABASE=ai_support
----
-```
-
-### Opción 2: Script SQL Manual
-
-Si prefieres ejecutar manually:
+### Opción 1: Script SQL único (Recomendado ⭐)
 
 ```bash
-# 1. Abrir MySQL Workbench o línea de comandos
+# 1. Abrir MySQL CLI o Workbench como administrador
 mysql -u root -p
 
-# 2. Ejecutar script
-source scripts/setup_mysql_user.sql;
-
-# O copiar/pegar el contenido del archivo
+# 2. Ejecutar script único de referencia
+source scripts/repair_mysql_split_grants.sql;
 ```
 
-### Opción 3: MySQL Workbench UI
+### Opción 2: MySQL Workbench UI
 
 1. Conectar como root
 2. Menu: **Server → Users and Privileges**
@@ -286,8 +247,7 @@ ai_support/
 ## 📚 Referencias
 
 **Archivos relacionados:**
-- `scripts/setup_mysql_user.ps1` - Script PowerShell
-- `scripts/setup_mysql_user.sql` - Script SQL
+- `scripts/repair_mysql_split_grants.sql` - Script SQL único
 - `.env` - Configuración (CREAR manualmente)
 - `docs/PROMPTS_EXTERNALIZADOS.md` - Guía de prompts
 
@@ -299,7 +259,7 @@ ai_support/
 
 ## ✅ Checklist de Setup
 
-- ⬜ Ejecutar script PowerShell (`setup_mysql_user.ps1`)
+- ⬜ Ejecutar script SQL único (`repair_mysql_split_grants.sql`)
 - ⬜ Verificar usuario en MySQL
 - ⬜ Copiar credenciales a `.env`
 - ⬜ Ejecutar migración (`migrate_prompts.py`)

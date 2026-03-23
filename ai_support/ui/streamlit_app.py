@@ -1,32 +1,4 @@
 import streamlit as st
-def main():
-    # Bloque superior de usuario y configuración de modelo (estilo original)
-    st.title("🏛️ Sistema Multi-Agente FCFM")
-    st.markdown("Asistente de procedimientos para 15 áreas de decanato y vicedecanato - FCFM")
-    st.divider()
-
-    cols = st.columns([1,2])
-    with cols[0]:
-        st.subheader("👤 Usuario")
-        if st.session_state.get("current_user"):
-            st.success(f"Sesión: {st.session_state['current_user']}")
-            st.info("Chat habilitado. Puedes interactuar con los agentes.")
-        else:
-            st.warning("Inicia sesión con Google para habilitar el chat.")
-        st.button("Cerrar sesión", use_container_width=True)
-        st.button("Borrar historial", use_container_width=True)
-
-    st.divider()
-    st.subheader("⚙️ Configuración de Modelo")
-    st.selectbox("Proveedor LLM", ["GitHub Models", "LM Studio (local)"])
-    st.info("Configura GITHUB_TOKEN en tu archivo .env para usar GitHub Models.")
-    # Reducir ruido de warnings de LangChain (no afecta ejecución)
-    try:
-        from langchain_core._api.deprecation import LangChainDeprecationWarning
-        warnings.filterwarnings("ignore", category=LangChainDeprecationWarning)
-    except Exception:
-        pass
-    st.markdown("---")
 def enviar_client_id_al_cliente_windows(email: str, client_host: str = "localhost", client_port: int = 5001):
     """
     Envía el email del usuario autenticado al cliente Windows para que lo use como CLIENT_ID.
@@ -65,11 +37,10 @@ import uvicorn
 from dotenv import load_dotenv
 
 # Cargar variables de entorno desde .env
-load_dotenv()
+load_dotenv(override=True)
 
 from langsmith import Client
 
-from ai_support.core.logging_utils import setup_logging
 from ai_support.core.config import (
     default_github_embeddings,
     default_github_llm,
@@ -77,6 +48,7 @@ from ai_support.core.config import (
     default_lmstudio_llm,
 )
 from ai_support.orchestrator.multi_orchestrator import OrquestadorMultiagente
+from ai_support.core.logging_utils import setup_logging, log_event
 from ai_support.core.printer_diagnostics import (
     add_shared_printer,
     collect_printer_diagnostics,
@@ -211,31 +183,120 @@ def _normalize_key(value: str) -> str:
     return re.sub(r"[^a-z0-9_]", "", value)
 
 
+def _allowed_area_ids() -> set[str]:
+    return {
+        "tesoreria",
+        "arquitectura",
+        "infraestructura",
+        "proyectos",
+        "atencion_alumnos",
+        "postgrado",
+        "sustentabilidad",
+        "comunicaciones",
+        "vinculacion",
+        "rrhh",
+        "contabilidad",
+        "direccion_economica",
+        "direccion_academica",
+        "diversidad",
+        "decanato",
+    }
+
+
+def _department_env_map() -> dict[str, str]:
+    """Mapeo de departamento a área configurable por entorno.
+
+    Soporta dos formatos:
+    - AI_SUPPORT_DEPARTMENT_AREA_MAP_JSON='{"informatica":"infraestructura"}'
+    - AI_SUPPORT_DEPARTMENT_AREA_MAP='informatica=infraestructura;aranceles=tesoreria'
+    """
+
+    result: dict[str, str] = {}
+    allowed = _allowed_area_ids()
+
+    raw_json = (os.getenv("AI_SUPPORT_DEPARTMENT_AREA_MAP_JSON") or "").strip()
+    if raw_json:
+        try:
+            payload = json.loads(raw_json)
+            if isinstance(payload, dict):
+                for k, v in payload.items():
+                    nk = _normalize_key(str(k))
+                    nv = _normalize_key(str(v))
+                    if nk and nv in allowed:
+                        result[nk] = nv
+        except Exception:
+            pass
+
+    raw_pairs = (os.getenv("AI_SUPPORT_DEPARTMENT_AREA_MAP") or "").strip()
+    if raw_pairs:
+        for item in raw_pairs.split(";"):
+            pair = item.strip()
+            if not pair or "=" not in pair:
+                continue
+            left, right = pair.split("=", 1)
+            nk = _normalize_key(left)
+            nv = _normalize_key(right)
+            if nk and nv in allowed:
+                result[nk] = nv
+
+    return result
+
+
 def _department_name_to_area_id(department_name: str | None) -> str | None:
     key = _normalize_key(department_name or "")
     if not key:
         return None
 
+    env_map = _department_env_map()
+    if key in env_map:
+        return env_map.get(key)
+
     aliases = {
         "tesoreria": "tesoreria",
         "arquitectura": "arquitectura",
         "infraestructura": "infraestructura",
+        "informatica": "infraestructura",
+        "unidad_de_informatica": "infraestructura",
+        "cec": "infraestructura",
+        "centro_de_computacion": "infraestructura",
+        "centro_de_computacion_cec": "infraestructura",
+        "prevencion_de_riesgos": "infraestructura",
+        "administracion_de_campus": "infraestructura",
         "proyectos": "proyectos",
+        "centro_de_energia": "proyectos",
+        "centro_de_biotecnologia_y_bioingenieria": "proyectos",
+        "centro_de_modelamiento_matematico": "proyectos",
+        "centro_sismologico_nacional": "proyectos",
+        "amtc": "proyectos",
         "atencion_alumnos": "atencion_alumnos",
         "atencion_de_alumnos": "atencion_alumnos",
+        "secretaria_de_estudio": "direccion_academica",
+        "escuela_de_ingenieria": "direccion_academica",
+        "escuela_de_ingenieria_y_ciencias": "direccion_academica",
+        "escuela_de_verano": "direccion_academica",
         "postgrado": "postgrado",
         "sustentabilidad": "sustentabilidad",
         "comunicaciones": "comunicaciones",
         "vinculacion": "vinculacion",
         "vinculacion_externa": "vinculacion",
+        "relaciones_institucionales": "vinculacion",
+        "dirvex": "vinculacion",
         "rrhh": "rrhh",
         "recursos_humanos": "rrhh",
+        "administracion": "rrhh",
+        "adquisiciones": "rrhh",
+        "desarrollo_organizacional": "rrhh",
         "contabilidad": "contabilidad",
+        "aranceles": "tesoreria",
         "direccion_economica": "direccion_economica",
+        "direconimica": "direccion_economica",
+        "dir_econimica": "direccion_economica",
         "direccion_academica": "direccion_academica",
         "diversidad": "diversidad",
         "decanato": "decanato",
         "vicedecanato": "decanato",
+        "juridica": "decanato",
+        "otros": "decanato",
     }
     if key in aliases:
         return aliases.get(key)
@@ -254,7 +315,15 @@ def _department_name_to_area_id(department_name: str | None) -> str | None:
         return "arquitectura"
     if "infraestructura" in compact:
         return "infraestructura"
+    if "informat" in compact:
+        return "infraestructura"
+    if compact == "cec" or "computacion" in compact:
+        return "infraestructura"
     if "proyecto" in compact:
+        return "proyectos"
+    if compact.startswith("departamento_de_"):
+        return "direccion_academica"
+    if compact.startswith("centro_de_"):
         return "proyectos"
     if "alumno" in compact or "estudiant" in compact:
         return "atencion_alumnos"
@@ -279,6 +348,10 @@ def _department_name_to_area_id(department_name: str | None) -> str | None:
     if "decan" in compact:
         return "decanato"
 
+    fallback = _normalize_key((os.getenv("AI_SUPPORT_DEPARTMENT_FALLBACK_AREA") or "").strip())
+    if fallback in _allowed_area_ids():
+        return fallback
+
     return None
 
 
@@ -288,6 +361,119 @@ def _department_matches_area_name(department_name: str | None, area_name: str | 
     if not dept or not area:
         return False
     return dept == area or dept in area or area in dept
+
+
+def _department_catalog_seed_area_ids(department_name: str | None) -> list[str]:
+    """Busca áreas semilla asociadas al departamento desde knowledge_base/departments.json."""
+    dept_key = _normalize_key(department_name or "")
+    if not dept_key:
+        return []
+
+    try:
+        base = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        dep_path = os.path.join(base, "knowledge_base", "departments.json")
+        if not os.path.exists(dep_path):
+            return []
+
+        with open(dep_path, "r", encoding="utf-8") as f:
+            payload = json.load(f)
+        if not isinstance(payload, dict):
+            return []
+
+        seeds: list[str] = []
+        for meta in payload.values():
+            if not isinstance(meta, dict):
+                continue
+            name = _normalize_key(str(meta.get("name") or ""))
+            if name != dept_key:
+                continue
+            mapped = str(meta.get("mapped_area_id") or "").strip()
+            if mapped:
+                seeds.append(mapped)
+        return seeds
+    except Exception:
+        return []
+
+
+def _audit_auth_event(
+    email: str | None,
+    result: str,
+    reason: str,
+    department_id: int | None = None,
+    department_name: str | None = None,
+) -> None:
+    payload = {
+        "event": "auth_decision",
+        "email": (email or "").strip().lower() or None,
+        "result": result,
+        "reason": reason,
+        "department_id": department_id,
+        "department_name": department_name,
+    }
+    try:
+        log_event(json.dumps(payload, ensure_ascii=False), level="info")
+    except Exception:
+        pass
+
+
+_AUTH_RATE_LIMIT_LOCK = threading.Lock()
+_AUTH_RATE_LIMIT_STATE: dict[str, list[float]] = {}
+_AUTH_LOCK_UNTIL: dict[str, float] = {}
+
+
+def _env_int(name: str, default: int) -> int:
+    try:
+        value = int((os.getenv(name) or "").strip())
+        return value if value > 0 else default
+    except Exception:
+        return default
+
+
+def _auth_limits() -> tuple[int, int, int]:
+    max_attempts = _env_int("AI_SUPPORT_AUTH_MAX_ATTEMPTS", 5)
+    window_seconds = _env_int("AI_SUPPORT_AUTH_WINDOW_SECONDS", 300)
+    lock_seconds = _env_int("AI_SUPPORT_AUTH_LOCK_SECONDS", 900)
+    return max_attempts, window_seconds, lock_seconds
+
+
+def _auth_is_blocked(key: str) -> tuple[bool, int]:
+    now = time.time()
+    with _AUTH_RATE_LIMIT_LOCK:
+        lock_until = _AUTH_LOCK_UNTIL.get(key, 0.0)
+        if lock_until > now:
+            return True, int(lock_until - now)
+        if key in _AUTH_LOCK_UNTIL:
+            _AUTH_LOCK_UNTIL.pop(key, None)
+    return False, 0
+
+
+def _auth_register_failure(key: str) -> tuple[bool, int]:
+    now = time.time()
+    max_attempts, window_seconds, lock_seconds = _auth_limits()
+    with _AUTH_RATE_LIMIT_LOCK:
+        attempts = _AUTH_RATE_LIMIT_STATE.get(key, [])
+        cutoff = now - window_seconds
+        attempts = [ts for ts in attempts if ts >= cutoff]
+        attempts.append(now)
+        _AUTH_RATE_LIMIT_STATE[key] = attempts
+        if len(attempts) >= max_attempts:
+            _AUTH_LOCK_UNTIL[key] = now + lock_seconds
+            _AUTH_RATE_LIMIT_STATE[key] = []
+            return True, lock_seconds
+    return False, 0
+
+
+def _auth_register_success(key: str) -> None:
+    with _AUTH_RATE_LIMIT_LOCK:
+        _AUTH_RATE_LIMIT_STATE.pop(key, None)
+        _AUTH_LOCK_UNTIL.pop(key, None)
+
+
+def _auth_identity_key(email: str | None, session_key: str) -> str:
+    normalized = (email or "").strip().lower()
+    if normalized:
+        return f"email:{normalized}"
+    return f"session:{session_key}"
 
 
 # ── Base de Conocimiento UI ───────────────────────────────────────────────────
@@ -314,33 +500,81 @@ def _render_knowledge_base_section(department_name: str | None = None) -> None:
     if "kb_refresh" not in st.session_state:
         st.session_state["kb_refresh"] = 0
 
-    areas = kb.list_areas()
+    all_areas = kb.list_areas()
+    areas = list(all_areas)
+    missing_department_area = False
+    department_related_ids: set[str] = set()
     if department_name:
-        areas = [a for a in areas if _department_matches_area_name(department_name, a.get("name", ""))]
-        if not areas:
+        matched_ids = [
+            str(a.get("id"))
+            for a in all_areas
+            if _department_matches_area_name(department_name, a.get("name", ""))
+        ]
+        catalog_ids = _department_catalog_seed_area_ids(department_name)
+        matched_ids = sorted(set(matched_ids + catalog_ids))
+        if matched_ids:
+            department_related_ids = kb.get_related_area_ids(
+                matched_ids,
+                include_ancestors=True,
+                include_descendants=True,
+            )
+            areas = [a for a in all_areas if str(a.get("id")) in department_related_ids]
+        else:
+            missing_department_area = True
+            areas = []
             st.warning(
                 "No hay un área de Base de Conocimiento asociada a tu departamento. "
-                "Pide al administrador crearla con el nombre del departamento."
+                "Puedes crearla ahora con el botón de abajo."
             )
-            return
+            create_col1, create_col2 = st.columns([1, 2])
+            with create_col1:
+                if st.button("➕ Crear área de mi departamento", key="btn_create_dept_area", use_container_width=True, type="primary"):
+                    try:
+                        created = kb.create_area(
+                            str(department_name).strip(),
+                            f"Base de conocimiento del departamento {str(department_name).strip()}",
+                        )
+                        st.session_state["kb_selected_area"] = created.get("id")
+                        st.success(f"✅ Área '{department_name}' creada.")
+                        st.session_state["kb_refresh"] += 1
+                        st.rerun()
+                    except ValueError as e:
+                        st.error(str(e))
 
     # ── Layout: columna áreas | columna documentos ────────────────────────────
     col_areas, col_docs = st.columns([1, 2], gap="large")
 
     # ──────────────── Columna izquierda: lista de áreas ───────────────────────
     with col_areas:
-        st.markdown("### 🏢 Áreas de la empresa")
+        st.markdown("### 🏢 Áreas")
 
         # Crear nueva área
         with st.expander("➕ Crear nueva área", expanded=not areas):
             with st.form("form_create_area", clear_on_submit=True):
-                new_name = st.text_input("Nombre del área", placeholder="Ej: Recursos Humanos")
+                default_area_name = str(department_name).strip() if (department_name and missing_department_area) else ""
+                placeholder_name = default_area_name or "Ej: Recursos Humanos"
+                new_name = st.text_input("Nombre del área", value=default_area_name, placeholder=placeholder_name)
+                parent_options = ["(sin padre)"]
+                parent_map: dict[str, str | None] = {"(sin padre)": None}
+                for a in all_areas:
+                    label = str(a.get("full_path") or a.get("name") or a.get("id") or "").strip()
+                    if not label:
+                        continue
+                    parent_options.append(label)
+                    parent_map[label] = str(a.get("id") or "").strip() or None
+                selected_parent_label = st.selectbox("Área padre (opcional)", options=parent_options)
                 new_desc = st.text_area("Descripción (opcional)", height=80)
                 submitted = st.form_submit_button("Crear área", use_container_width=True)
                 if submitted:
                     if new_name.strip():
                         try:
-                            kb.create_area(new_name.strip(), new_desc.strip())
+                            parent_id = parent_map.get(selected_parent_label)
+                            if department_name and department_related_ids and parent_id and parent_id not in department_related_ids:
+                                st.error("El área padre seleccionada no pertenece a tu árbol de departamento.")
+                                st.stop()
+
+                            created = kb.create_area(new_name.strip(), new_desc.strip(), parent_id=parent_id)
+                            st.session_state["kb_selected_area"] = created.get("id")
                             st.success(f"✅ Área '{new_name}' creada.")
                             st.session_state["kb_refresh"] += 1
                             st.rerun()
@@ -352,10 +586,14 @@ def _render_knowledge_base_section(department_name: str | None = None) -> None:
         if not areas:
             st.info("No hay áreas creadas todavía. Crea la primera usando el formulario de arriba.")
         else:
+            if st.session_state.get("kb_selected_area") is None:
+                st.session_state["kb_selected_area"] = areas[0]["id"]
             for area in areas:
                 area_id = area["id"]
                 is_selected = st.session_state["kb_selected_area"] == area_id
-                btn_label = f"{'▶ ' if is_selected else ''}{area['name']} ({area['doc_count']} docs)"
+                depth = int(area.get("depth") or 0)
+                indent = "  " * max(0, depth)
+                btn_label = f"{'▶ ' if is_selected else ''}{indent}{area['name']} ({area['doc_count']} docs)"
                 if st.button(btn_label, key=f"btn_area_{area_id}", use_container_width=True,
                              type="primary" if is_selected else "secondary"):
                     st.session_state["kb_selected_area"] = area_id
@@ -489,7 +727,7 @@ def main() -> None:
         layout="wide",
         initial_sidebar_state="expanded",
     )
-
+    setup_logging()
     st.markdown("""
     <style>
     /* ── Fuente global ── */
@@ -735,9 +973,11 @@ def main() -> None:
         persistence = st.session_state["user_persistence"]
 
         # --- Google OAuth (si está configurado) ---
-
-        # --- Google OAuth (si está configurado) ---
         if google_enabled:
+            if "_auth_session_key" not in st.session_state:
+                st.session_state["_auth_session_key"] = secrets.token_urlsafe(16)
+            auth_session_key = str(st.session_state.get("_auth_session_key") or "unknown")
+
             # Solo generar el state si no existe, y nunca sobrescribirlo durante el flujo
             if "google_oauth_state" not in st.session_state:
                 st.session_state["google_oauth_state"] = secrets.token_urlsafe(24)
@@ -774,6 +1014,19 @@ def main() -> None:
                 _clear_query_params()
 
             if code and state and not st.session_state.get("_google_oauth_done"):
+                blocked, retry_after = _auth_is_blocked(_auth_identity_key(None, auth_session_key))
+                if blocked:
+                    st.error(
+                        f"Demasiados intentos de autenticación. Intenta nuevamente en {retry_after} segundos."
+                    )
+                    _audit_auth_event(
+                        email=None,
+                        result="deny",
+                        reason="auth_rate_limited_before_callback",
+                    )
+                    _clear_query_params()
+                    st.stop()
+
                 # Leer el state desde disco (STATE_FILE) como fuente de verdad
                 _STATE_FILE = os.path.join(os.path.expanduser("~"), ".ai_support_oauth_state")
                 _expected_state = None
@@ -785,6 +1038,12 @@ def main() -> None:
                         pass
                 if not _expected_state or state != _expected_state:
                     st.error("Error de autenticación. Por favor intenta iniciar sesión nuevamente.")
+                    _audit_auth_event(
+                        email=None,
+                        result="deny",
+                        reason="oauth_state_invalid_or_missing",
+                    )
+                    _auth_register_failure(_auth_identity_key(None, auth_session_key))
                     # No borrar google_oauth_state aquí para que el botón pueda seguir funcionando
                 else:
                     try:
@@ -792,12 +1051,24 @@ def main() -> None:
                         raw_id_token = tokens.get("id_token")
                         if not raw_id_token:
                             st.error("Respuesta de Google no incluye id_token.")
+                            _audit_auth_event(
+                                email=None,
+                                result="deny",
+                                reason="google_response_without_id_token",
+                            )
+                            _auth_register_failure(_auth_identity_key(None, auth_session_key))
                             raise ValueError("Respuesta de Google no incluye id_token")
                         email = None
                         try:
                             email = verify_id_token_and_get_email(raw_id_token=raw_id_token)
                         except Exception as ve:
                             st.error(f"No se pudo verificar el id_token: {ve}")
+                            _audit_auth_event(
+                                email=None,
+                                result="deny",
+                                reason="id_token_verification_failed",
+                            )
+                            _auth_register_failure(_auth_identity_key(None, auth_session_key))
                         if email:
                             st.session_state["current_user"] = email
                             st.session_state["_google_oauth_done"] = True
@@ -809,8 +1080,20 @@ def main() -> None:
                                 pass
                         else:
                             st.error("No se pudo obtener el email del usuario o el dominio no es permitido.")
+                            _audit_auth_event(
+                                email=None,
+                                result="deny",
+                                reason="email_not_obtained_or_domain_not_allowed",
+                            )
+                            _auth_register_failure(_auth_identity_key(None, auth_session_key))
                     except Exception as e:
                         st.error(f"No se pudo autenticar: {e}")
+                        _audit_auth_event(
+                            email=None,
+                            result="deny",
+                            reason="google_oauth_authentication_failed",
+                        )
+                        _auth_register_failure(_auth_identity_key(None, auth_session_key))
                     finally:
                         _clear_oauth_state()
 
@@ -821,6 +1104,12 @@ def main() -> None:
             if not current_user:
                 if not google_redirect_uri():
                     st.error("Falta `AI_SUPPORT_GOOGLE_REDIRECT_URI` para Google OAuth.")
+                    _audit_auth_event(
+                        email=None,
+                        result="deny",
+                        reason="google_redirect_uri_missing",
+                    )
+                    _auth_register_failure(_auth_identity_key(None, auth_session_key))
                 else:
                     try:
                         # Mostrar botón; el state y auth_url se generan DENTRO del click para evitar stale state
@@ -836,6 +1125,12 @@ def main() -> None:
                         st.caption("Debes usar tu correo @uchile.cl")
                     except Exception as e:
                         st.error(f"Google OAuth no configurado: {e}")
+                        _audit_auth_event(
+                            email=None,
+                            result="deny",
+                            reason="google_oauth_not_configured",
+                        )
+                        _auth_register_failure(_auth_identity_key(None, auth_session_key))
 
                 st.warning("⚠️ Inicia sesión para usar el chat")
                 st.stop()
@@ -845,6 +1140,19 @@ def main() -> None:
             st.session_state["_user_department_name"] = None
             st.session_state["_allowed_area_ids"] = None
             if isinstance(current_user, str) and "@" in current_user:
+                user_auth_key = _auth_identity_key(current_user, auth_session_key)
+                blocked, retry_after = _auth_is_blocked(user_auth_key)
+                if blocked:
+                    st.error(
+                        f"Tu acceso está temporalmente bloqueado por intentos fallidos. Reintenta en {retry_after} segundos."
+                    )
+                    _audit_auth_event(
+                        email=current_user,
+                        result="deny",
+                        reason="auth_rate_limited",
+                    )
+                    st.stop()
+
                 enforce_registered = (
                     (os.getenv("AI_SUPPORT_ENFORCE_REGISTERED_GOOGLE_USERS") or "true").strip().lower()
                     in {"1", "true", "yes", "y", "on"}
@@ -855,22 +1163,46 @@ def main() -> None:
                         "Acceso denegado: validación de usuarios registrados requiere MySQL habilitado "
                         "(AI_SUPPORT_MYSQL_ENABLE=true)."
                     )
+                    _audit_auth_event(
+                        email=current_user,
+                        result="deny",
+                        reason="mysql_required_but_disabled",
+                    )
+                    _auth_register_failure(user_auth_key)
                     st.stop()
                 if mysql_ok:
                     try:
                         dept_ctx = get_user_department_by_email(current_user)
                     except Exception as e:
                         st.error(f"No se pudo obtener el departamento desde MySQL: {e}")
+                        _audit_auth_event(
+                            email=current_user,
+                            result="deny",
+                            reason="mysql_department_lookup_error",
+                        )
+                        _auth_register_failure(user_auth_key)
                         st.stop()
 
                     if not dept_ctx:
                         st.error("Acceso denegado: tu correo no está registrado en la base de datos.")
+                        _audit_auth_event(
+                            email=current_user,
+                            result="deny",
+                            reason="email_not_registered_in_mysql",
+                        )
+                        _auth_register_failure(user_auth_key)
                         st.stop()
 
                     dept_id = dept_ctx.get("departamento_id")
                     dept_name = (dept_ctx.get("departamento_nombre") or "").strip()
                     if not dept_name:
                         st.error("Tu usuario no tiene nombre de departamento asociado en MySQL.")
+                        _audit_auth_event(
+                            email=current_user,
+                            result="deny",
+                            reason="department_name_missing",
+                        )
+                        _auth_register_failure(user_auth_key)
                         st.stop()
 
                     area_id = _department_name_to_area_id(dept_name)
@@ -879,11 +1211,27 @@ def main() -> None:
                             "Tu departamento no tiene mapeo a un agente del sistema. "
                             "Configura el nombre del departamento para que coincida con un área FCFM."
                         )
+                        _audit_auth_event(
+                            email=current_user,
+                            result="deny",
+                            reason="department_without_area_mapping",
+                            department_id=int(dept_id) if isinstance(dept_id, int) else None,
+                            department_name=dept_name,
+                        )
+                        _auth_register_failure(user_auth_key)
                         st.stop()
 
                     st.session_state["_user_department_id"] = dept_id
                     st.session_state["_user_department_name"] = dept_name
                     st.session_state["_allowed_area_ids"] = [area_id]
+                    _audit_auth_event(
+                        email=current_user,
+                        result="allow",
+                        reason="google_login_with_registered_department",
+                        department_id=int(dept_id) if isinstance(dept_id, int) else None,
+                        department_name=dept_name,
+                    )
+                    _auth_register_success(user_auth_key)
 
             # Si el usuario está presente, mostrar el chat
             st.success(f"👤 Sesión: **{current_user}**")
@@ -1262,7 +1610,16 @@ def main() -> None:
                     user_id=st.session_state.get("current_user"),
                     allowed_area_ids=st.session_state.get("_allowed_area_ids"),
                 )
-                resp = temp_orq.agentes["general"].procesar_consulta("Responde solo con: OK")
+                if not temp_orq.agentes:
+                    raise RuntimeError("No hay agentes disponibles para tu perfil.")
+
+                # Evitar clave fija ('general'). Priorizar áreas permitidas para el usuario.
+                allowed = sorted(getattr(temp_orq, "allowed_area_ids", set()) or set())
+                if allowed:
+                    first_agent_key = allowed[0]
+                else:
+                    first_agent_key = sorted(temp_orq.agentes.keys())[0]
+                resp = temp_orq.agentes[first_agent_key].procesar_consulta("Responde solo con: OK")
                 st.success(f"Conexión OK. Respuesta: {resp['respuesta'][:50]}")
             except Exception as e:
                 st.error(f"Fallo en conexión/configuración: {e}")
@@ -1691,13 +2048,13 @@ def main() -> None:
                 type="primary",
                 disabled=bool(st.session_state.get("_gen_active")),
             ):
-                import datetime, time
+                import datetime as _datetime
 
                 new_id = f"conv_{int(time.time())}_{secrets.token_hex(4)}"
                 new_conv = {
                     "id": new_id,
                     "title": "Nueva conversación",
-                    "created_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    "created_at": _datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
                     "messages": [],
                 }
                 st.session_state["_conversations"].insert(0, new_conv)

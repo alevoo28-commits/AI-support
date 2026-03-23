@@ -28,10 +28,12 @@ def mysql_enabled() -> bool:
 
 
 def _mysql_conn_config() -> MySQLConnConfig:
-    host = _env("AI_SUPPORT_MYSQL_HOST")
-    user = _env("AI_SUPPORT_MYSQL_USER")
-    password = os.getenv("AI_SUPPORT_MYSQL_PASSWORD")
-    database = _env("AI_SUPPORT_MYSQL_DATABASE")
+    host = _env("AI_SUPPORT_USERS_MYSQL_HOST") or _env("AI_SUPPORT_MYSQL_HOST")
+    user = _env("AI_SUPPORT_USERS_MYSQL_USER") or _env("AI_SUPPORT_MYSQL_USER")
+    password = os.getenv("AI_SUPPORT_USERS_MYSQL_PASSWORD")
+    if password is None:
+        password = os.getenv("AI_SUPPORT_MYSQL_PASSWORD")
+    database = _env("AI_SUPPORT_USERS_MYSQL_DATABASE") or _env("AI_SUPPORT_MYSQL_DATABASE")
 
     port_raw = _env("AI_SUPPORT_MYSQL_PORT", "3306")
     try:
@@ -41,7 +43,8 @@ def _mysql_conn_config() -> MySQLConnConfig:
 
     if not host or not user or password is None or not database:
         raise RuntimeError(
-            "Faltan variables MySQL: AI_SUPPORT_MYSQL_HOST/USER/PASSWORD/DATABASE"
+            "Faltan variables MySQL para usuarios: "
+            "AI_SUPPORT_USERS_MYSQL_* o AI_SUPPORT_MYSQL_*"
         )
 
     return MySQLConnConfig(

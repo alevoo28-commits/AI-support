@@ -1,0 +1,60 @@
+# ════════════════════════════════════════════════════════════════════════════
+# Streamlit Config - Tema Moderno 2026 (Glasmorphism + Dark Mode)
+# Copia este contenido a .streamlit/config.toml
+# ════════════════════════════════════════════════════════════════════════════
+
+[theme]
+# Tema base: DARK (por defecto para glasmorphism)
+base = "dark"
+
+# Colores principales - Paleta 2026 moderna
+primaryColor = "#6366f1"          # Índigo
+backgroundColor = "#0f172a"        # Dark base
+secondaryBackgroundColor = "#1e293b"  # Dark surface
+textColor = "#f9fafb"             # Blanco suave
+
+# Fuente - Sin-serif moderna
+font = "sans serif"
+
+# Raio de botones y bordes suaves
+borderRadius = 8
+
+[logger]
+level = "info"
+messageFormat = "%(asctime)s [%(name)s] %(message)s"
+
+[client]
+# Layout responsive
+showErrorDetails = true
+toolbarMode = "viewer"
+
+# Mostrar sidebar por defecto
+showSidebarNavigation = true
+
+[server]
+# Configuración de servidor
+headless = true
+port = 8501
+runOnSave = true
+
+# Máximo tamaño de upload: 200MB
+maxUploadSize = 200
+
+# Timeout de sesión: 3600 segundos (1 hora)
+sessionExpirationSeconds = 3600
+
+# Habilitar CORS para APIs externas
+enableCORS = true
+
+[browser]
+# Comportamiento del navegador
+gatherUsageStats = false  # Privacidad: no enviar telemetría
+serverAddress = "localhost"
+
+[runner]
+# Configuración del ejecutor
+magicCommandsDisabled = false
+fastReruns = true
+
+# Memoria máxima: 1GB
+maxCachedMessageAge = 3600

@@ -50,6 +50,7 @@ from ai_support.core.config import (
     default_lmstudio_llm,
 )
 from ai_support.core.logging_utils import setup_logging, log_event
+from ai_support.ui.styles import get_custom_styles
 from ai_support.core.printer_diagnostics import (
     add_shared_printer,
     collect_printer_diagnostics,
@@ -122,7 +123,12 @@ def _render_knowledge_base_section(department_name: str | None = None) -> None:
     ACCEPTED_TYPES = ["pdf", "docx", "doc", "xlsx", "xls", "xlsm", "txt", "csv", "md"]
     ACCEPTED_LABEL = ".pdf, .docx, .xlsx, .txt"
 
-    kb = get_kb_manager()
+    # Usar cache para evitar reinicializar KB en cada render
+    @st.cache_resource
+    def _get_cached_kb():
+        return get_kb_manager()
+    
+    kb = _get_cached_kb()
 
     st.markdown("## 📚 Base de Conocimiento - Procedimientos FCFM")
     st.caption(
@@ -368,211 +374,12 @@ def main() -> None:
         st.session_state["orquestador"] = None
 
     setup_logging()
-    st.markdown("""
-    <style>
-    /* ── Fuente global ── */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
-
-    /* ── Fondo principal blanco/gris muy claro ── */
-    .stApp { background: #f5f6fa !important; }
-
-    /* ── Sidebar blanco con borde sutil ── */
-    [data-testid="stSidebar"] {
-        background: #ffffff !important;
-        border-right: 1px solid #e2e6f0 !important;
-        box-shadow: 2px 0 8px rgba(0,0,0,0.04);
-    }
-    [data-testid="stSidebar"] .stMarkdown h3 {
-        color: #4f46e5 !important;
-        font-weight: 700 !important;
-        font-size: 0.82rem !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.1em !important;
-    }
-
-    /* ── Texto general legible ── */
-    html, body, p, span, div, label { color: #1e293b !important; }
-    h1, h2, h3, h4 { color: #1e293b !important; font-weight: 700 !important; }
-
-    /* ── Área de contenido principal ── */
-    [data-testid="stAppViewContainer"] > .main { background: #f5f6fa !important; }
-    .block-container { 
-        background: #f5f6fa !important;
-        padding-top: 2rem !important;
-    }
-
-    /* ── Tarjetas / contenedores internos ── */
-    [data-testid="stVerticalBlock"] > div {
-        background: transparent;
-    }
-
-    /* ── Botones primarios (azul personalizado) ── */
-    .stButton > button[kind="primary"] {
-        background: #004B93 !important;
-        color: #ffffff !important;
-        border: none !important;
-        border-radius: 10px !important;
-        font-weight: 600 !important;
-        letter-spacing: 0.02em !important;
-        transition: transform 0.15s, box-shadow 0.15s !important;
-        box-shadow: 0 3px 12px rgba(0, 75, 147, 0.3) !important;
-    }
-    .stButton > button[kind="primary"]:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 6px 18px rgba(0, 75, 147, 0.45) !important;
-    }
-
-    /* ── Botones secundarios ── */
-    .stButton > button[kind="secondary"] {
-        background: #ffffff !important;
-        color: #374151 !important;
-        border: 1px solid #d1d5db !important;
-        border-radius: 10px !important;
-        font-weight: 500 !important;
-        transition: all 0.15s !important;
-    }
-    .stButton > button[kind="secondary"]:hover {
-        background: #ede9fe !important;
-        border-color: #4f46e5 !important;
-        color: #4f46e5 !important;
-    }
-
-    /* ── Inputs y selectboxes ── */
-    .stTextInput > div > div > input {
-        background: #ffffff !important;
-        border: 1.5px solid #d1d5db !important;
-        border-radius: 8px !important;
-        color: #1e293b !important;
-    }
-    .stTextInput > div > div > input:focus {
-        border-color: #4f46e5 !important;
-        box-shadow: 0 0 0 3px rgba(79,70,229,0.12) !important;
-    }
-
-    /* ── Chat input ── */
-    [data-testid="stChatInput"] > div {
-        background: #ffffff !important;
-        border: 1.5px solid #d1d5db !important;
-        border-radius: 12px !important;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important;
-    }
-    [data-testid="stChatInput"] textarea { color: #1e293b !important; }
-
-    /* ── Mensajes del asistente ── */
-    [data-testid="stChatMessage"] {
-        background: #ffffff !important;
-        border-radius: 12px !important;
-        border: 1px solid #e9ecf3 !important;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.05) !important;
-        margin-bottom: 8px !important;
-    }
-
-    /* ── Alertas con colores vivos legibles ── */
-    [data-testid="stNotification"], .stSuccess, .element-container .stSuccess > div {
-        background: #ecfdf5 !important;
-        border-left: 4px solid #10b981 !important;
-        border-radius: 8px !important;
-        color: #065f46 !important;
-    }
-    .stWarning, .element-container .stWarning > div {
-        background: #fffbeb !important;
-        border-left: 4px solid #f59e0b !important;
-        border-radius: 8px !important;
-        color: #78350f !important;
-    }
-    .stError, .element-container .stError > div {
-        background: #fef2f2 !important;
-        border-left: 4px solid #ef4444 !important;
-        border-radius: 8px !important;
-        color: #7f1d1d !important;
-    }
-    .stInfo, .element-container .stInfo > div {
-        background: #eef2ff !important;
-        border-left: 4px solid #4f46e5 !important;
-        border-radius: 8px !important;
-        color: #312e81 !important;
-    }
-
-    /* ── Expanders ── */
-    [data-testid="stExpander"] {
-        background: #ffffff !important;
-        border: 1px solid #e2e6f0 !important;
-        border-radius: 12px !important;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.05) !important;
-        overflow: hidden !important;
-    }
-    [data-testid="stExpander"] summary {
-        font-weight: 600 !important;
-        color: #1e293b !important;
-    }
-
-    /* ── Métricas ── */
-    [data-testid="stMetricValue"] { color: #4f46e5 !important; font-weight: 700 !important; }
-    [data-testid="stMetricLabel"] { color: #6b7280 !important; font-size: 0.85rem !important; }
-
-    /* ── Divider ── */
-    hr { border-color: #e2e6f0 !important; }
-
-    /* ── Scrollbar ── */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #f1f5f9; }
-    ::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #4f46e5; }
-
-    /* ── Caption ── */
-    .stCaption, small { color: #6b7280 !important; font-size: 0.82rem !important; }
-
-    /* ── Botones de navegación en sidebar ── */
-    .nav-button {
-        background: #004B93 !important;
-        color: #ffffff !important;
-        border: none !important;
-        border-radius: 8px !important;
-        padding: 10px 14px !important;
-        margin: 4px 0 !important;
-        font-weight: 600 !important;
-        transition: all 0.15s !important;
-    }
-    .nav-button:hover {
-        background: #003366 !important;
-        transform: translateX(2px) !important;
-    }
-
-    /* ── Radio ── */
-    .stRadio > div { gap: 6px; }
-    .stRadio label {
-        background: #ffffff !important;
-        border: 1.5px solid #e2e6f0 !important;
-        border-radius: 8px !important;
-        padding: 6px 14px !important;
-        transition: all 0.15s !important;
-        color: #374151 !important;
-    }
-    .stRadio label:hover { border-color: #4f46e5 !important; background: #eef2ff !important; }
-
-    /* ── Checkbox ── */
-    .stCheckbox label span { color: #374151 !important; }
-
-    /* ── Selectbox ── */
-    .stSelectbox > div > div { 
-        background: #ffffff !important;
-        border: 1.5px solid #d1d5db !important;
-        border-radius: 8px !important;
-        color: #1e293b !important;
-    }
-
-    /* ── Código ── */
-    code, pre { 
-        background: #f1f5f9 !important; 
-        color: #1e293b !important;
-        border-radius: 6px !important;
-    }
-
-    /* ── Dataframe ── */
-    [data-testid="stDataFrame"] { border-radius: 10px !important; overflow: hidden !important; }
-    </style>
-    """, unsafe_allow_html=True)
+    st.markdown(get_custom_styles(), unsafe_allow_html=True)
+    
+    # ── Mostrar UI rápida antes de cálculos pesados ──
+    if "ui_initialized" not in st.session_state:
+        with st.spinner("⏳ Cargando..."):
+            st.session_state["ui_initialized"] = False
 
     USER_FILE = os.path.join(os.path.expanduser("~"), ".ai_support_user_data")
 
@@ -880,6 +687,7 @@ def main() -> None:
                     st.session_state["_user_department_id"] = dept_id
                     st.session_state["_user_department_name"] = dept_name
                     st.session_state["_allowed_area_ids"] = [area_id]
+                    st.session_state["_dept_just_detected"] = True  # Flag para auto-inicializar orquestador
                     _audit_auth_event(
                         email=current_user,
                         result="allow",
@@ -903,6 +711,7 @@ def main() -> None:
                 st.session_state.pop("_user_department_id", None)
                 st.session_state.pop("_user_department_name", None)
                 st.session_state.pop("_allowed_area_ids", None)
+                st.session_state.pop("_dept_just_detected", None)  # Limpiar flag de auto-init
                 # Borrar usuario y state persistente en disco
                 if os.path.exists(USER_FILE):
                     os.remove(USER_FILE)
@@ -1213,7 +1022,14 @@ def main() -> None:
             except Exception as e:
                 st.error(f"Fallo en conexión/configuración: {e}")
 
-        if apply_cfg:
+        # Auto-inicializar orquestador después de detectar departamento (si no existe)
+        auto_init_on_dept_detected = (
+            st.session_state.get("_dept_just_detected", False)
+            and not st.session_state.get("orquestador")
+            and st.session_state.get("_allowed_area_ids")
+        )
+
+        if apply_cfg or auto_init_on_dept_detected:
             st.session_state["_cfg_key"] = cfg_key
             # Si GitHub no tiene token, no dejar el sistema sin orquestador.
             if llm_cfg.provider == "github" and not llm_cfg.api_key:
@@ -1237,9 +1053,13 @@ def main() -> None:
                     user_id=str(st.session_state.get("current_user") or ""),
                     allowed_area_ids=tuple(str(a) for a in (st.session_state.get("_allowed_area_ids") or [])),
                 )
+                if auto_init_on_dept_detected:
+                    st.success(f"✅ Orquestador inicializado para {st.session_state.get('_user_department_name')}")
+                    st.session_state["_dept_just_detected"] = False  # Limpiar flag después de auto-init
             except Exception as e:
                 st.session_state.orquestador = None
                 st.error(f"No se pudo inicializar el orquestador: {e}")
+                st.session_state["_dept_just_detected"] = False  # Limpiar flag incluso si hay error
         elif prev_cfg_key is None:
             st.info("Presiona 'Aplicar Configuración' para inicializar el sistema.")
         elif prev_cfg_key != cfg_key:
@@ -1250,7 +1070,7 @@ def main() -> None:
         st.markdown("### � Navegación")
         
         # Menu principal para secciones
-        menu = st.radio("Secciones:", ("💬 Chat", "🤖 Agentes", "📚 Base de Conocimiento"), key="menu_navegacion", label_visibility="collapsed")
+        menu = st.radio("Secciones:", ("💬 Chat", "🤖 Agentes", "📚 Base de Conocimiento"), key="menu_navegacion", label_visibility="visible")
         
         st.markdown("---")
         st.markdown("**⚡ Herramientas**")

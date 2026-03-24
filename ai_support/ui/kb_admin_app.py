@@ -147,6 +147,31 @@ def _delete_department(dept_id: str) -> bool:
     return True
 
 
+def _delete_department_recursive(dept_id: str) -> int:
+    """Elimina un departamento y todos sus subdepartamentos.
+
+    Devuelve la cantidad de departamentos eliminados.
+    """
+    data = _load_departments()
+    if dept_id not in data:
+        return 0
+
+    children = _dept_children_map(data)
+    to_delete: list[str] = []
+    queue = [dept_id]
+    while queue:
+        current = queue.pop(0)
+        to_delete.append(current)
+        for child in children.get(current, []):
+            queue.append(child)
+
+    for current in reversed(to_delete):
+        data.pop(current, None)
+
+    _save_departments(data)
+    return len(to_delete)
+
+
 def _set_department_parent(dept_id: str, parent_id: str | None) -> dict:
     data = _load_departments()
     if dept_id not in data:
@@ -175,6 +200,23 @@ def _set_department_parent(dept_id: str, parent_id: str | None) -> dict:
     data[dept_id]["parent_id"] = parent_clean
     _save_departments(data)
     return data[dept_id]
+
+
+def _department_mapping_issues(departments: list[dict], areas: list[dict]) -> list[str]:
+    """Valida consistencia entre departamentos y areas KB asociadas."""
+    issues: list[str] = []
+    area_ids = {str(a.get("id") or "").strip() for a in areas}
+    area_ids.discard("")
+
+    for d in departments:
+        dept_path = str(d.get("full_path") or d.get("name") or d.get("id") or "(sin nombre)")
+        mapped_area_id = str(d.get("mapped_area_id") or "").strip()
+        if not mapped_area_id:
+            issues.append(f"{dept_path}: sin area KB asociada.")
+            continue
+        if mapped_area_id not in area_ids:
+            issues.append(f"{dept_path}: area KB asociada inexistente ({mapped_area_id}).")
+    return issues
 
 
 def _render_auth_gate() -> bool:
@@ -209,6 +251,29 @@ def main() -> None:
 
     kb = get_kb_manager()
     areas = kb.list_areas()
+    departments = _list_departments_view()
+
+    with st.expander("📘 Guia rapida: como crear Infraestructura > CEC > Informatica", expanded=True):
+        st.markdown(
+            """
+1. En **Areas de Base de Conocimiento**, crea **Infraestructura** con padre **(sin padre)**.
+2. Crea **CEC** con **Area padre = Infraestructura**.
+3. Crea **Informatica** con **Area padre = Infraestructura > CEC**.
+4. En **Departamentos**, crea o ajusta la misma jerarquia: Infraestructura > CEC > Informatica.
+5. En cada departamento, selecciona su **Area KB asociada** correcta:
+   - Infraestructura -> area Infraestructura
+   - CEC -> area CEC
+   - Informatica -> area Informatica
+6. Para subir archivos, entra a la app principal y usa **Base de Conocimiento**; selecciona el area y sube documentos.
+            """.strip()
+        )
+
+    mapping_issues = _department_mapping_issues(departments, areas)
+    if mapping_issues:
+        st.warning("Se detectaron departamentos con mapeo incompleto o invalido:")
+        for issue in mapping_issues:
+            st.write(f"- {issue}")
+        st.caption("Tip: si un departamento no tiene area KB valida, no podras filtrar ni subir documentos correctamente para ese contexto.")
 
     col_left, col_right = st.columns(2, gap="large")
 
@@ -271,18 +336,20 @@ def main() -> None:
             if st.button("🗑️ Eliminar area seleccionada", type="secondary", use_container_width=True):
                 area_id = delete_area_options.get(selected_area_label)
                 if area_id:
-                    ok = kb.delete_area(area_id)
-                    if ok:
-                        st.success("Area eliminada.")
-                        st.rerun()
-                    else:
-                        st.error("No se pudo eliminar el area.")
+                    try:
+                        ok = kb.delete_area(area_id)
+                        if ok:
+                            st.success("Area eliminada.")
+                            st.rerun()
+                        else:
+                            st.error("No se pudo eliminar el area.")
+                    except Exception as e:
+                        st.error(str(e))
         else:
             st.info("No hay areas creadas.")
 
     with col_right:
         st.subheader("🏢 Departamentos y Subdepartamentos")
-        departments = _list_departments_view()
 
         with st.expander("➕ Crear departamento", expanded=False):
             with st.form("create_dept_form"):
@@ -353,12 +420,25 @@ def main() -> None:
 
             delete_dept_options = {str(d.get("full_path") or d.get("name") or d.get("id")): str(d.get("id")) for d in departments}
             selected_dept_label = st.selectbox("Eliminar departamento", options=list(delete_dept_options.keys()), key="del_dept_sel")
+            force_recursive = st.checkbox(
+                "Eliminar tambien sus subdepartamentos",
+                value=False,
+                key="del_dept_recursive",
+                help="Si está activado, se borrará el departamento seleccionado junto con todos sus hijos.",
+            )
             if st.button("🗑️ Eliminar departamento seleccionado", type="secondary", use_container_width=True):
                 dept_id = delete_dept_options.get(selected_dept_label)
                 if dept_id:
                     try:
-                        _delete_department(dept_id)
-                        st.success("Departamento eliminado.")
+                        if force_recursive:
+                            deleted_count = _delete_department_recursive(dept_id)
+                            if deleted_count > 0:
+                                st.success(f"Se eliminaron {deleted_count} departamento(s).")
+                            else:
+                                st.error("No se pudo eliminar el departamento.")
+                        else:
+                            _delete_department(dept_id)
+                            st.success("Departamento eliminado.")
                         st.rerun()
                     except Exception as e:
                         st.error(str(e))

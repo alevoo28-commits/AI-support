@@ -42,12 +42,13 @@ load_dotenv(override=True)
 from langsmith import Client
 
 from ai_support.core.config import (
+    EmbeddingsProviderConfig,
+    LLMProviderConfig,
     default_github_embeddings,
     default_github_llm,
     default_lmstudio_embeddings,
     default_lmstudio_llm,
 )
-from ai_support.orchestrator.multi_orchestrator import OrquestadorMultiagente
 from ai_support.core.logging_utils import setup_logging, log_event
 from ai_support.core.printer_diagnostics import (
     add_shared_printer,
@@ -80,400 +81,35 @@ from ai_support.core.google_auth import (
     verify_id_token_and_get_email,
 )
 
-
-_IPV4_IN_TEXT_RE = re.compile(r"(?:\d{1,3}\.){3}\d{1,3}")
-
-
-def _extract_ipv4(text: str) -> str | None:
-    m = _IPV4_IN_TEXT_RE.search(text or "")
-    if not m:
-        return None
-    return m.group(0)
-
-
-def _lmstudio_fetch_model_ids(base_url: str) -> list[str]:
-    url = base_url.rstrip("/") + "/models"
-    req = urllib.request.Request(url, method="GET")
-    with urllib.request.urlopen(req, timeout=5) as resp:
-        payload = json.loads(resp.read().decode("utf-8"))
-    data = payload.get("data", [])
-    ids: list[str] = []
-    for item in data:
-        model_id = item.get("id")
-        if isinstance(model_id, str) and model_id:
-            ids.append(model_id)
-    return ids
-
-
-def _github_fetch_model_ids(base_url: str, token: str) -> list[str]:
-    """Lista modelos disponibles en GitHub Models (Azure AI Inference compatible).
-
-    Intenta con headers típicos para maximizar compatibilidad:
-    - Authorization: Bearer <token>
-    - api-key: <token>
-    """
-
-    url = base_url.rstrip("/") + "/models"
-    req = urllib.request.Request(
-        url,
-        method="GET",
-        headers={
-            "Authorization": f"Bearer {token}",
-            "api-key": token,
-            "Accept": "application/json",
-        },
-    )
-    with urllib.request.urlopen(req, timeout=10) as resp:
-        payload = json.loads(resp.read().decode("utf-8"))
-
-    # GitHub Models (Azure AI Inference) suele devolver una lista de objetos.
-    # Preferimos "name" (IDs cortos como gpt-4o-mini) cuando esté disponible.
-    if isinstance(payload, list):
-        data = payload
-    elif isinstance(payload, dict):
-        data = payload.get("data", [])
-    else:
-        data = []
-
-    ids: list[str] = []
-    for item in data:
-        if not isinstance(item, dict):
-            continue
-        model_name = item.get("name")
-        model_id = item.get("id")
-        if isinstance(model_name, str) and model_name:
-            ids.append(model_name)
-        elif isinstance(model_id, str) and model_id:
-            ids.append(model_id)
-
-    # De-dup preservando orden
-    seen: set[str] = set()
-    result: list[str] = []
-    for mid in ids:
-        if mid in seen:
-            continue
-        seen.add(mid)
-        result.append(mid)
-    return result
-
-
-def _is_github_no_access_error(err: Exception) -> bool:
-    msg = str(err).lower()
-    return (
-        "permissiondeniederror" in msg
-        or "no_access" in msg
-        or "no access to model" in msg
-        or "error code: 403" in msg
-    )
-
-
-def _is_rate_limit_error(err: Exception) -> bool:
-    msg = str(err).lower()
-    return (
-        "ratelimiterror" in msg
-        or "too many requests" in msg
-        or "error code: 429" in msg
-        or "rate limit" in msg
-    )
-
-
-def _normalize_key(value: str) -> str:
-    value = (value or "").strip().lower()
-    value = re.sub(r"\s+", "_", value)
-    return re.sub(r"[^a-z0-9_]", "", value)
-
-
-def _allowed_area_ids() -> set[str]:
-    return {
-        "tesoreria",
-        "arquitectura",
-        "infraestructura",
-        "proyectos",
-        "atencion_alumnos",
-        "postgrado",
-        "sustentabilidad",
-        "comunicaciones",
-        "vinculacion",
-        "rrhh",
-        "contabilidad",
-        "direccion_economica",
-        "direccion_academica",
-        "diversidad",
-        "decanato",
-    }
-
-
-def _department_env_map() -> dict[str, str]:
-    """Mapeo de departamento a área configurable por entorno.
-
-    Soporta dos formatos:
-    - AI_SUPPORT_DEPARTMENT_AREA_MAP_JSON='{"informatica":"infraestructura"}'
-    - AI_SUPPORT_DEPARTMENT_AREA_MAP='informatica=infraestructura;aranceles=tesoreria'
-    """
-
-    result: dict[str, str] = {}
-    allowed = _allowed_area_ids()
-
-    raw_json = (os.getenv("AI_SUPPORT_DEPARTMENT_AREA_MAP_JSON") or "").strip()
-    if raw_json:
-        try:
-            payload = json.loads(raw_json)
-            if isinstance(payload, dict):
-                for k, v in payload.items():
-                    nk = _normalize_key(str(k))
-                    nv = _normalize_key(str(v))
-                    if nk and nv in allowed:
-                        result[nk] = nv
-        except Exception:
-            pass
-
-    raw_pairs = (os.getenv("AI_SUPPORT_DEPARTMENT_AREA_MAP") or "").strip()
-    if raw_pairs:
-        for item in raw_pairs.split(";"):
-            pair = item.strip()
-            if not pair or "=" not in pair:
-                continue
-            left, right = pair.split("=", 1)
-            nk = _normalize_key(left)
-            nv = _normalize_key(right)
-            if nk and nv in allowed:
-                result[nk] = nv
-
-    return result
-
-
-def _department_name_to_area_id(department_name: str | None) -> str | None:
-    key = _normalize_key(department_name or "")
-    if not key:
-        return None
-
-    env_map = _department_env_map()
-    if key in env_map:
-        return env_map.get(key)
-
-    aliases = {
-        "tesoreria": "tesoreria",
-        "arquitectura": "arquitectura",
-        "infraestructura": "infraestructura",
-        "informatica": "infraestructura",
-        "unidad_de_informatica": "infraestructura",
-        "cec": "infraestructura",
-        "centro_de_computacion": "infraestructura",
-        "centro_de_computacion_cec": "infraestructura",
-        "prevencion_de_riesgos": "infraestructura",
-        "administracion_de_campus": "infraestructura",
-        "proyectos": "proyectos",
-        "centro_de_energia": "proyectos",
-        "centro_de_biotecnologia_y_bioingenieria": "proyectos",
-        "centro_de_modelamiento_matematico": "proyectos",
-        "centro_sismologico_nacional": "proyectos",
-        "amtc": "proyectos",
-        "atencion_alumnos": "atencion_alumnos",
-        "atencion_de_alumnos": "atencion_alumnos",
-        "secretaria_de_estudio": "direccion_academica",
-        "escuela_de_ingenieria": "direccion_academica",
-        "escuela_de_ingenieria_y_ciencias": "direccion_academica",
-        "escuela_de_verano": "direccion_academica",
-        "postgrado": "postgrado",
-        "sustentabilidad": "sustentabilidad",
-        "comunicaciones": "comunicaciones",
-        "vinculacion": "vinculacion",
-        "vinculacion_externa": "vinculacion",
-        "relaciones_institucionales": "vinculacion",
-        "dirvex": "vinculacion",
-        "rrhh": "rrhh",
-        "recursos_humanos": "rrhh",
-        "administracion": "rrhh",
-        "adquisiciones": "rrhh",
-        "desarrollo_organizacional": "rrhh",
-        "contabilidad": "contabilidad",
-        "aranceles": "tesoreria",
-        "direccion_economica": "direccion_economica",
-        "direconimica": "direccion_economica",
-        "dir_econimica": "direccion_economica",
-        "direccion_academica": "direccion_academica",
-        "diversidad": "diversidad",
-        "decanato": "decanato",
-        "vicedecanato": "decanato",
-        "juridica": "decanato",
-        "otros": "decanato",
-    }
-    if key in aliases:
-        return aliases.get(key)
-
-    # Heurística para nombres institucionales largos (ej: unidad_de_tesoreria)
-    compact = key
-    compact = compact.replace("unidad_de_", "")
-    compact = compact.replace("unidad_", "")
-    compact = compact.replace("direccion_de_", "")
-    compact = compact.replace("direccion_", "")
-    compact = compact.replace("escuela_de_", "")
-
-    if "tesorer" in compact:
-        return "tesoreria"
-    if "arquitect" in compact:
-        return "arquitectura"
-    if "infraestructura" in compact:
-        return "infraestructura"
-    if "informat" in compact:
-        return "infraestructura"
-    if compact == "cec" or "computacion" in compact:
-        return "infraestructura"
-    if "proyecto" in compact:
-        return "proyectos"
-    if compact.startswith("departamento_de_"):
-        return "direccion_academica"
-    if compact.startswith("centro_de_"):
-        return "proyectos"
-    if "alumno" in compact or "estudiant" in compact:
-        return "atencion_alumnos"
-    if "postgrado" in compact or "posgrado" in compact:
-        return "postgrado"
-    if "sustentab" in compact or "sostenib" in compact:
-        return "sustentabilidad"
-    if "comunic" in compact:
-        return "comunicaciones"
-    if "vincul" in compact:
-        return "vinculacion"
-    if "rrhh" in compact or "recurso_humano" in compact:
-        return "rrhh"
-    if "contabil" in compact:
-        return "contabilidad"
-    if "econom" in compact:
-        return "direccion_economica"
-    if "academ" in compact:
-        return "direccion_academica"
-    if "divers" in compact or "genero" in compact:
-        return "diversidad"
-    if "decan" in compact:
-        return "decanato"
-
-    fallback = _normalize_key((os.getenv("AI_SUPPORT_DEPARTMENT_FALLBACK_AREA") or "").strip())
-    if fallback in _allowed_area_ids():
-        return fallback
-
-    return None
-
-
-def _department_matches_area_name(department_name: str | None, area_name: str | None) -> bool:
-    dept = _normalize_key(department_name or "")
-    area = _normalize_key(area_name or "")
-    if not dept or not area:
-        return False
-    return dept == area or dept in area or area in dept
-
-
-def _department_catalog_seed_area_ids(department_name: str | None) -> list[str]:
-    """Busca áreas semilla asociadas al departamento desde knowledge_base/departments.json."""
-    dept_key = _normalize_key(department_name or "")
-    if not dept_key:
-        return []
-
-    try:
-        base = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        dep_path = os.path.join(base, "knowledge_base", "departments.json")
-        if not os.path.exists(dep_path):
-            return []
-
-        with open(dep_path, "r", encoding="utf-8") as f:
-            payload = json.load(f)
-        if not isinstance(payload, dict):
-            return []
-
-        seeds: list[str] = []
-        for meta in payload.values():
-            if not isinstance(meta, dict):
-                continue
-            name = _normalize_key(str(meta.get("name") or ""))
-            if name != dept_key:
-                continue
-            mapped = str(meta.get("mapped_area_id") or "").strip()
-            if mapped:
-                seeds.append(mapped)
-        return seeds
-    except Exception:
-        return []
-
-
-def _audit_auth_event(
-    email: str | None,
-    result: str,
-    reason: str,
-    department_id: int | None = None,
-    department_name: str | None = None,
-) -> None:
-    payload = {
-        "event": "auth_decision",
-        "email": (email or "").strip().lower() or None,
-        "result": result,
-        "reason": reason,
-        "department_id": department_id,
-        "department_name": department_name,
-    }
-    try:
-        log_event(json.dumps(payload, ensure_ascii=False), level="info")
-    except Exception:
-        pass
-
-
-_AUTH_RATE_LIMIT_LOCK = threading.Lock()
-_AUTH_RATE_LIMIT_STATE: dict[str, list[float]] = {}
-_AUTH_LOCK_UNTIL: dict[str, float] = {}
-
-
-def _env_int(name: str, default: int) -> int:
-    try:
-        value = int((os.getenv(name) or "").strip())
-        return value if value > 0 else default
-    except Exception:
-        return default
-
-
-def _auth_limits() -> tuple[int, int, int]:
-    max_attempts = _env_int("AI_SUPPORT_AUTH_MAX_ATTEMPTS", 5)
-    window_seconds = _env_int("AI_SUPPORT_AUTH_WINDOW_SECONDS", 300)
-    lock_seconds = _env_int("AI_SUPPORT_AUTH_LOCK_SECONDS", 900)
-    return max_attempts, window_seconds, lock_seconds
-
-
-def _auth_is_blocked(key: str) -> tuple[bool, int]:
-    now = time.time()
-    with _AUTH_RATE_LIMIT_LOCK:
-        lock_until = _AUTH_LOCK_UNTIL.get(key, 0.0)
-        if lock_until > now:
-            return True, int(lock_until - now)
-        if key in _AUTH_LOCK_UNTIL:
-            _AUTH_LOCK_UNTIL.pop(key, None)
-    return False, 0
-
-
-def _auth_register_failure(key: str) -> tuple[bool, int]:
-    now = time.time()
-    max_attempts, window_seconds, lock_seconds = _auth_limits()
-    with _AUTH_RATE_LIMIT_LOCK:
-        attempts = _AUTH_RATE_LIMIT_STATE.get(key, [])
-        cutoff = now - window_seconds
-        attempts = [ts for ts in attempts if ts >= cutoff]
-        attempts.append(now)
-        _AUTH_RATE_LIMIT_STATE[key] = attempts
-        if len(attempts) >= max_attempts:
-            _AUTH_LOCK_UNTIL[key] = now + lock_seconds
-            _AUTH_RATE_LIMIT_STATE[key] = []
-            return True, lock_seconds
-    return False, 0
-
-
-def _auth_register_success(key: str) -> None:
-    with _AUTH_RATE_LIMIT_LOCK:
-        _AUTH_RATE_LIMIT_STATE.pop(key, None)
-        _AUTH_LOCK_UNTIL.pop(key, None)
-
-
-def _auth_identity_key(email: str | None, session_key: str) -> str:
-    normalized = (email or "").strip().lower()
-    if normalized:
-        return f"email:{normalized}"
-    return f"session:{session_key}"
+# ── Importes desde módulos modularizados ──────────────────────────────────
+from ai_support.ui.ui_config import (
+    normalize_key as _normalize_key,
+    allowed_area_ids as _allowed_area_ids,
+    department_env_map as _department_env_map,
+    department_name_to_area_id as _department_name_to_area_id,
+    department_matches_area_name as _department_matches_area_name,
+    department_catalog_seed_area_ids as _department_catalog_seed_area_ids,
+    extract_ipv4 as _extract_ipv4,
+)
+from ai_support.ui.model_fetch import (
+    lmstudio_fetch_model_ids as _lmstudio_fetch_model_ids,
+    github_fetch_model_ids as _github_fetch_model_ids,
+    is_github_no_access_error as _is_github_no_access_error,
+    is_rate_limit_error as _is_rate_limit_error,
+)
+from ai_support.ui.agent_management import (
+    create_orchestrator as _create_orchestrator,
+    create_orchestrator_cached as _create_orchestrator_cached,
+)
+from ai_support.ui.auth_utils import (
+    auth_limits as _auth_limits,
+    auth_is_blocked as _auth_is_blocked,
+    auth_register_failure as _auth_register_failure,
+    auth_register_success as _auth_register_success,
+    auth_identity_key as _auth_identity_key,
+    audit_auth_event as _audit_auth_event,
+    env_int as _env_int,
+)
 
 
 # ── Base de Conocimiento UI ───────────────────────────────────────────────────
@@ -690,7 +326,8 @@ def _render_knowledge_base_section(department_name: str | None = None) -> None:
                     orq = st.session_state.get("orquestador")
                     if orq:
                         try:
-                            agente = list(orq.agentes.values())[0]
+                            available_ids = orq.get_available_agent_ids()
+                            agente = orq.get_or_create_agent(available_ids[0]) if available_ids else None
                             embeddings = agente.embeddings
                         except Exception:
                             pass
@@ -727,6 +364,9 @@ def main() -> None:
         layout="wide",
         initial_sidebar_state="expanded",
     )
+    if "orquestador" not in st.session_state:
+        st.session_state["orquestador"] = None
+
     setup_logging()
     st.markdown("""
     <style>
@@ -882,6 +522,22 @@ def main() -> None:
 
     /* ── Caption ── */
     .stCaption, small { color: #6b7280 !important; font-size: 0.82rem !important; }
+
+    /* ── Botones de navegación en sidebar ── */
+    .nav-button {
+        background: #004B93 !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 10px 14px !important;
+        margin: 4px 0 !important;
+        font-weight: 600 !important;
+        transition: all 0.15s !important;
+    }
+    .nav-button:hover {
+        background: #003366 !important;
+        transform: translateX(2px) !important;
+    }
 
     /* ── Radio ── */
     .stRadio > div { gap: 6px; }
@@ -1241,62 +897,6 @@ def main() -> None:
                     f"🔒 Acceso restringido a departamento: {st.session_state['_user_department_name']}"
                 )
 
-            # --- Provisionamiento de usuario en MySQL (tabla usuarios) ---
-            # Solo aplica si el usuario es un email (Google OAuth) y MySQL está habilitado.
-            if isinstance(current_user, str) and "@" in current_user:
-                with st.expander("🗃️ Perfil en MySQL", expanded=False):
-                    st.caption(
-                        "Crea/actualiza tu registro en la tabla `personal` usando el email de Google. "
-                        "Si no existes, completa el formulario para registrarte."
-                    )
-                    mysql_ok = bool((os.getenv("AI_SUPPORT_MYSQL_ENABLE") or "").strip().lower() in {"1", "true", "yes", "y", "on"})
-                    if not mysql_ok:
-                        st.info("MySQL no está habilitado (AI_SUPPORT_MYSQL_ENABLE=false).")
-                    else:
-                        try:
-                            db_user = get_user_by_email(current_user)
-                            st.session_state["_mysql_user_exists"] = bool(db_user)
-                        except Exception as e:
-                            db_user = None
-                            st.session_state["_mysql_user_exists"] = False
-                            st.error(f"No se pudo consultar usuario en MySQL: {e}")
-
-                        if db_user:
-                            st.success("Registro encontrado en MySQL.")
-                            st.caption(f"IP registrada: {str(db_user.get('IP') or db_user.get('ip') or '').strip() or '(vacía)'}")
-                        else:
-                            st.warning("No existe registro en MySQL para este email.")
-
-                        with st.form("mysql_user_profile_form", clear_on_submit=False):
-                            st.text_input("Email", value=current_user, disabled=True)
-                            nombre = st.text_input("Nombre", value=str((db_user or {}).get("nombre") or ""))
-                            apellido = st.text_input("Apellido", value=str((db_user or {}).get("apellido") or ""))
-                            apellido_2 = st.text_input("Segundo apellido (opcional)", value=str((db_user or {}).get("apellido_2") or ""))
-                            rut = st.text_input("RUT (opcional)", value=str((db_user or {}).get("rut") or ""))
-                            dep_raw = (db_user or {}).get("departamento_id")
-                            dep_default = int(dep_raw) if isinstance(dep_raw, (int, float)) and str(dep_raw).strip() else 0
-                            departamento_id = st.number_input("Departamento ID (opcional)", min_value=0, max_value=999999, value=dep_default, step=1)
-                            tui = st.text_input("TUI (opcional)", value=str((db_user or {}).get("tui") or ""))
-                            submitted_profile = st.form_submit_button("Guardar en MySQL", use_container_width=True)
-
-                        if submitted_profile:
-                            try:
-                                dep_val = int(departamento_id) if int(departamento_id) > 0 else None
-                                row = upsert_user_by_email(
-                                    email=current_user,
-                                    nombre=nombre,
-                                    apellido=apellido,
-                                    apellido_2=apellido_2,
-                                    rut=rut,
-                                    departamento_id=dep_val,
-                                    tui=tui,
-                                )
-                                st.session_state["_mysql_user_exists"] = True
-                                st.success("Perfil guardado/actualizado.")
-                                st.caption(f"ID: {row.get('id', '(desconocido)')} | IP: {row.get('IP', '')}")
-                            except Exception as e:
-                                st.error(f"No se pudo guardar perfil: {e}")
-
             if st.button("🚪 Cerrar sesión", use_container_width=True):
                 st.session_state.pop("current_user", None)
                 st.session_state.pop("_google_oauth_done", None)
@@ -1396,11 +996,7 @@ def main() -> None:
 
             detect_github = st.button("Detectar modelos (GitHub)", use_container_width=True)
 
-            if token and (
-                detect_github
-                or ("_github_models" not in st.session_state)
-                or (st.session_state.get("_github_models_base_url") != base_url_github)
-            ):
+            if token and detect_github:
                 try:
                     ids = _github_fetch_model_ids(base_url_github, token)
                     st.session_state["_github_models"] = ids
@@ -1495,12 +1091,8 @@ def main() -> None:
             base_url_current = st.session_state["cfg_lmstudio_base_url"].strip()
             detect = st.button("Detectar modelos (LM Studio)", use_container_width=True)
 
-            # Cache simple por base_url
-            if (
-                detect
-                or ("_lmstudio_models" not in st.session_state)
-                or (st.session_state.get("_lmstudio_models_base_url") != base_url_current)
-            ):
+            # Detectar solo bajo acción explícita del usuario.
+            if detect:
                 try:
                     ids = _lmstudio_fetch_model_ids(base_url_current)
                     st.session_state["_lmstudio_models"] = ids
@@ -1604,27 +1196,24 @@ def main() -> None:
         if test_cfg:
             try:
                 # Prueba mínima: crear un orquestador temporal y pedir respuesta corta
-                temp_orq = OrquestadorMultiagente(
-                    llm_config=llm_cfg, 
-                    embeddings_config=emb_cfg,
+                temp_orq = _create_orchestrator(
+                    llm_cfg=llm_cfg,
+                    emb_cfg=emb_cfg,
                     user_id=st.session_state.get("current_user"),
                     allowed_area_ids=st.session_state.get("_allowed_area_ids"),
                 )
-                if not temp_orq.agentes:
+                allowed = temp_orq.get_available_agent_ids()
+                if not allowed:
                     raise RuntimeError("No hay agentes disponibles para tu perfil.")
 
                 # Evitar clave fija ('general'). Priorizar áreas permitidas para el usuario.
-                allowed = sorted(getattr(temp_orq, "allowed_area_ids", set()) or set())
-                if allowed:
-                    first_agent_key = allowed[0]
-                else:
-                    first_agent_key = sorted(temp_orq.agentes.keys())[0]
-                resp = temp_orq.agentes[first_agent_key].procesar_consulta("Responde solo con: OK")
+                first_agent_key = allowed[0]
+                resp = temp_orq.get_or_create_agent(first_agent_key).procesar_consulta("Responde solo con: OK")
                 st.success(f"Conexión OK. Respuesta: {resp['respuesta'][:50]}")
             except Exception as e:
                 st.error(f"Fallo en conexión/configuración: {e}")
 
-        if apply_cfg or (prev_cfg_key is None):
+        if apply_cfg:
             st.session_state["_cfg_key"] = cfg_key
             # Si GitHub no tiene token, no dejar el sistema sin orquestador.
             if llm_cfg.provider == "github" and not llm_cfg.api_key:
@@ -1636,218 +1225,153 @@ def main() -> None:
                     pass
 
             try:
-                st.session_state.orquestador = OrquestadorMultiagente(
-                    llm_config=llm_cfg,
-                    embeddings_config=emb_cfg,
-                    user_id=st.session_state.get("current_user"),
-                    allowed_area_ids=st.session_state.get("_allowed_area_ids"),
+                st.session_state.orquestador = _create_orchestrator_cached(
+                    llm_provider=llm_cfg.provider,
+                    llm_base_url=llm_cfg.base_url,
+                    llm_api_key_env=llm_cfg.api_key_env,
+                    llm_model=llm_cfg.model,
+                    emb_provider=emb_cfg.provider,
+                    emb_base_url=emb_cfg.base_url,
+                    emb_api_key_env=emb_cfg.api_key_env,
+                    emb_model=emb_cfg.model,
+                    user_id=str(st.session_state.get("current_user") or ""),
+                    allowed_area_ids=tuple(str(a) for a in (st.session_state.get("_allowed_area_ids") or [])),
                 )
             except Exception as e:
                 st.session_state.orquestador = None
                 st.error(f"No se pudo inicializar el orquestador: {e}")
+        elif prev_cfg_key is None:
+            st.info("Presiona 'Aplicar Configuración' para inicializar el sistema.")
         elif prev_cfg_key != cfg_key:
             st.warning("Cambios detectados: presiona 'Aplicar' para reiniciar el sistema con el nuevo modelo.")
 
-    if "orquestador" not in st.session_state:
-        # Fallback (no debería pasar por el flujo anterior)
-        st.session_state.orquestador = OrquestadorMultiagente(
-            llm_config=default_github_llm(),
-            embeddings_config=default_github_embeddings(),
-            user_id=st.session_state.get("current_user"),
-            allowed_area_ids=st.session_state.get("_allowed_area_ids"),
-        )
-
-        try:
-            with open("soporte_informatica.txt", "r", encoding="utf-8") as f:
-                material_soporte = f.read()
-
-            materiales_especificos = {
-                "hardware": f"{material_soporte}\n\n**ESPECIALIDAD HARDWARE:**\n- Componentes físicos del computador (CPU, RAM, discos, tarjetas gráficas)\n- Problemas de rendimiento y capacidad\n- Instalación y configuración de hardware\n- Diagnóstico de fallos físicos",
-                "software": f"{material_soporte}\n\n**ESPECIALIDAD SOFTWARE:**\n- Programas y aplicaciones (Windows, Office, navegadores)\n- Instalación y desinstalación de software\n- Problemas de compatibilidad\n- Configuración de aplicaciones",
-                "redes": f"{material_soporte}\n\n**ESPECIALIDAD REDES:**\n- Conectividad (WiFi, Ethernet, routers, switches)\n- Configuración de red\n- Problemas de conectividad\n- Seguridad de red",
-                "seguridad": f"{material_soporte}\n\n**ESPECIALIDAD SEGURIDAD:**\n- Protección contra amenazas (antivirus, firewall, malware)\n- Configuración de seguridad\n- Detección de amenazas\n- Mejores prácticas de seguridad",
-                "excel": f"{material_soporte}\n\n**ESPECIALIDAD EXCEL:**\n- Fórmulas comunes (SI, Y/O, BUSCARV/XLOOKUP, SUMAR.SI.CONJUNTO)\n- Errores típicos (#N/A, #VALOR!, #¡DIV/0!)\n- Tablas dinámicas y segmentaciones\n- Power Query (importar/limpiar/unir datos)\n- Macros/VBA (nociones y diagnóstico de errores)",
-                "general": f"{material_soporte}\n\n**ESPECIALIDAD GENERAL:**\n- Soporte técnico general\n- Consultas diversas\n- Coordinación entre especialidades\n- Información general de TI",
-            }
-
-            for agente_nombre, agente in st.session_state.orquestador.agentes.items():
-                material = materiales_especificos.get(agente_nombre, material_soporte)
-                agente.cargar_material(material)
-
-            st.success("✅ Material de soporte cargado con FAISS para todos los agentes")
-
-        except FileNotFoundError:
-            st.error(
-                "❌ Archivo soporte_informatica.txt no encontrado. Por favor, crea este archivo con el material de soporte técnico."
-            )
-            st.stop()
-
-        st.session_state.historial_consultas = []
-
     with st.sidebar:
         st.markdown("---")
-        st.markdown("### 🗂️ Opciones")
-        menu = st.radio("Selecciona una sección:", ("Agentes", "📚 Base de Conocimiento"), key="menu_navegacion")
+        st.markdown("### � Navegación")
+        
+        # Menu principal para secciones
+        menu = st.radio("Secciones:", ("💬 Chat", "🤖 Agentes", "📚 Base de Conocimiento"), key="menu_navegacion", label_visibility="collapsed")
+        
+        st.markdown("---")
+        st.markdown("**⚡ Herramientas**")
+        
+        # Estadísticas de Memoria
+        if st.button("📊 Estadísticas de Memoria", use_container_width=True):
+            st.session_state["_show_memory_stats"] = not st.session_state.get("_show_memory_stats", False)
+            st.rerun()
+        
+        # Información de Agentes
+        if st.button("🤖 Información de Agentes", use_container_width=True):
+            st.session_state["_show_agent_info"] = not st.session_state.get("_show_agent_info", False)
+            st.rerun()
+        
+        # Análisis Excel
+        if st.button("📊 Análisis de Excel", use_container_width=True):
+            st.session_state["_show_excel_analysis"] = not st.session_state.get("_show_excel_analysis", False)
+            st.rerun()
+        
         st.markdown("---")
         if st.button("🔄 Limpiar Memoria", key="limpiar_memoria", use_container_width=True):
             if st.session_state.get("orquestador"):
-                for agente in st.session_state.orquestador.agentes.values():
+                for agente in st.session_state.orquestador.get_initialized_agents().values():
                     agente.memoria.limpiar_memoria()
                     agente.historial = []
                 st.success("✅ Memoria avanzada limpiada")
             else:
                 st.warning("⚠️ Sistema no inicializado. Presiona 'Aplicar' en la configuración.")
 
-    if menu == "Agentes":
-        with st.expander("🤖 Información de Agentes", expanded=False):
-            if not st.session_state.get("orquestador"):
-                st.warning("⚠️ Sistema no inicializado. Presiona 'Aplicar' en la configuración del sidebar para inicializar el orquestador.")
+    # Mostrar herramientas en la sección principal si se selecciona desde sidebar
+    if st.session_state.get("_show_memory_stats"):
+        st.header("📊 Estadísticas de Memoria")
+        if current_user and persistence:
+            stats = persistence.get_user_stats(current_user)
+            if stats:
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Mensajes totales", stats['total_messages'])
+                with col2:
+                    st.metric("Tus mensajes", stats['human_messages'])
+                with col3:
+                    st.metric("Respuestas IA", stats['ai_messages'])
+                st.caption(f"💾 Tamaño: {stats['file_size_kb']} KB")
+                if stats['last_updated']:
+                    st.caption(f"🕒 Última actualización: {stats['last_updated'][:19]}")
             else:
-                color_map = {
-                    "hardware": "#e3f2fd",
-                    "software": "#fce4ec",
-                    "redes": "#e8f5e9",
-                    "seguridad": "#fff3e0",
-                    "excel": "#e8eaf6",
-                    "general": "#ede7f6",
-                }
-                icon_map = {
-                    "hardware": "🔧",
-                    "software": "💻",
-                    "redes": "🌐",
-                    "seguridad": "🔒",
-                    "excel": "📊",
-                    "general": "⚙️",
-                }
-                cols = st.columns(2)
-                for idx, (nombre, agente) in enumerate(st.session_state.orquestador.agentes.items()):
-                    metricas = agente.metricas
-                    color = color_map.get(nombre, "#f5f5f5")
-                    icon = icon_map.get(nombre, "🤖")
-                    with cols[idx % 2]:
-                        st.markdown(
-                            f"""
-                            <div style='background-color:{color}; border-radius:12px; padding:18px 18px 10px 18px; margin-bottom:18px; box-shadow:0 2px 8px #00000010;'>
-                                <h3 style='margin-bottom:0;'>{icon} {nombre.upper()}</h3>
-                                <ul style='list-style:none; padding-left:0;'>
-                                    <li><b>Consultas atendidas:</b> {metricas['consultas_atendidas']}</li>
-                                    <li><b>Tiempo promedio:</b> {metricas['tiempo_promedio']:.2f} s</li>
-                                    <li><b>Problemas resueltos:</b> {metricas['problemas_resueltos']}</li>
-                                </ul>
-                            </div>
-                            """,
-                            unsafe_allow_html=True,
-                        )
-
-    elif menu == "Métricas":
-        st.header("📊 Métricas del Sistema")
-
-        total_consultas = st.session_state.orquestador.metricas_globales["total_consultas"]
-        colaboraciones = st.session_state.orquestador.metricas_globales["colaboraciones"]
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric(
-                "Total de consultas",
-                total_consultas,
-                delta=None,
-                help="Consultas totales procesadas por el sistema",
-            )
-            st.metric(
-                "Colaboraciones multi-agente",
-                colaboraciones,
-                delta=None,
-                help="Colaboraciones entre agentes en consultas complejas",
-            )
-            import psutil
-
-            cpu = psutil.cpu_percent(interval=0.5)
-            ram = psutil.virtual_memory().percent
-            st.metric("CPU (%)", cpu)
-            st.metric("RAM (%)", ram)
-        with col2:
-            if os.path.exists("metrica.png"):
-                st.image("metrica.png", width=64)
-
-        if client is not None:
-            try:
-                import pandas as pd
-                import plotly.express as px
-
-                project_name = os.getenv("LANGSMITH_PROJECT")
-                projects = list(client.list_projects(name=project_name))
-                if projects:
-                    runs = list(client.list_runs(project_name=project_name, execution_order=1, limit=100))
-                    st.success(f"Traces registrados: {len(runs)}", icon="✅")
-                    if runs:
-                        last_run = max(runs, key=lambda r: r.start_time)
-                        st.info(f"Último trace: {last_run.start_time}")
-                        st.markdown("---")
-                        st.subheader(":rainbow[Métricas detalladas de prompts (LangSmith)]")
-
-                        df = pd.DataFrame(
-                            [
-                                {
-                                    "Prompt": str(run.inputs),
-                                    "Respuesta": str(run.outputs),
-                                    "Inicio": run.start_time,
-                                    "Duración (s)": (
-                                        (run.end_time - run.start_time).total_seconds() if run.end_time else None
-                                    ),
-                                    "Estado": run.status,
-                                }
-                                for run in runs
-                            ]
-                        )
-
-                        st.dataframe(
-                            df.style.applymap(
-                                lambda v: "background-color: #d4f7dc"
-                                if v == "completed"
-                                else ("background-color: #ffe6e6" if v == "failed" else ""),
-                                subset=["Estado"],
-                            ),
-                            use_container_width=True,
-                        )
-
-                        if not df.empty and df["Duración (s)"].notnull().any():
-                            fig = px.bar(
-                                df,
-                                x="Inicio",
-                                y="Duración (s)",
-                                color="Estado",
-                                title="Duración de cada prompt (LangSmith)",
-                                color_discrete_map={"completed": "#4CAF50", "failed": "#F44336"},
-                            )
-                            st.plotly_chart(fig, use_container_width=True)
-
-                        df_traces = df.copy().sort_values("Inicio")
-                        df_traces["N° Trace"] = range(1, len(df_traces) + 1)
-                        if not df_traces.empty:
-                            fig2 = px.line(df_traces, x="Inicio", y="N° Trace", title="Evolución de traces", markers=True)
-                            st.plotly_chart(fig2, use_container_width=True)
-                    else:
-                        st.info("No hay traces registrados aún en LangSmith.")
-                else:
-                    st.caption(":red[Proyecto LangSmith no encontrado.]")
-            except Exception as e:
-                st.caption(f"Error al consultar LangSmith: {e}")
-
-        st.markdown("---")
-        st.subheader(":blue[Precisión y Consistencia]")
-        st.info("Precisión estimada: 92% (basado en revisión manual de respuestas correctas vs. totales)")
-        st.info(
-            "Consistencia: El sistema entrega respuestas similares ante consultas repetidas, validado en pruebas de regresión."
-        )
-
-    elif menu == "Logs":
-        st.header("🛡️ Observabilidad y Logs")
-        try:
-            with open("logs_agentes.log", "r", encoding="utf-8") as flog:
-                logs = flog.readlines()[-30:]
-            for logline in logs:
-                st.code(logline.strip(), language="text")
-        except Exception:
-            st.info("No hay logs disponibles aún.")
+                st.info("Sin historial aún")
+        st.session_state["_show_memory_stats"] = False
+        st.divider()
+    
+    if st.session_state.get("_show_agent_info"):
+        st.header("🤖 Información de Agentes")
+        if not st.session_state.get("orquestador"):
+            st.warning("⚠️ Sistema no inicializado. Presiona 'Aplicar' en la configuración del sidebar.")
+        else:
+            st.session_state.orquestador.initialize_all_allowed_agents()
+            color_map = {
+                "hardware": "#e3f2fd", "software": "#fce4ec", "redes": "#e8f5e9",
+                "seguridad": "#fff3e0", "excel": "#e8eaf6", "general": "#ede7f6"
+            }
+            icon_map = {
+                "hardware": "🔧", "software": "💻", "redes": "🌐",
+                "seguridad": "🔒", "excel": "📊", "general": "⚙️"
+            }
+            cols = st.columns(2)
+            for idx, (nombre, agente) in enumerate(st.session_state.orquestador.get_initialized_agents().items()):
+                metricas = agente.metricas
+                color = color_map.get(nombre, "#f5f5f5")
+                icon = icon_map.get(nombre, "🤖")
+                with cols[idx % 2]:
+                    st.markdown(
+                        f"""
+                        <div style='background-color:{color}; border-radius:12px; padding:18px 18px 10px 18px; margin-bottom:18px; box-shadow:0 2px 8px #00000010;'>
+                            <h3 style='margin-bottom:0;'>{icon} {nombre.upper()}</h3>
+                            <ul style='list-style:none; padding-left:0;'>
+                                <li><b>Consultas:</b> {metricas['consultas_atendidas']}</li>
+                                <li><b>Promedio:</b> {metricas['tiempo_promedio']:.2f} s</li>
+                                <li><b>Resueltos:</b> {metricas['problemas_resueltos']}</li>
+                            </ul>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+        st.session_state["_show_agent_info"] = False
+        st.divider()
+    
+    if menu == "🤖 Agentes":
+        st.header("🤖 Panel de Agentes")
+        if not st.session_state.get("orquestador"):
+            st.warning("⚠️ Sistema no inicializado. Presiona 'Aplicar' en la configuración del sidebar para inicializar el orquestador.")
+        else:
+            st.session_state.orquestador.initialize_all_allowed_agents()
+            st.subheader("Información de Agentes Activos")
+            color_map = {
+                "hardware": "#e3f2fd", "software": "#fce4ec", "redes": "#e8f5e9",
+                "seguridad": "#fff3e0", "excel": "#e8eaf6", "general": "#ede7f6"
+            }
+            icon_map = {
+                "hardware": "🔧", "software": "💻", "redes": "🌐",
+                "seguridad": "🔒", "excel": "📊", "general": "⚙️"
+            }
+            cols = st.columns(2)
+            for idx, (nombre, agente) in enumerate(st.session_state.orquestador.get_initialized_agents().items()):
+                metricas = agente.metricas
+                color = color_map.get(nombre, "#f5f5f5")
+                icon = icon_map.get(nombre, "🤖")
+                with cols[idx % 2]:
+                    st.markdown(
+                        f"""
+                        <div style='background-color:{color}; border-radius:12px; padding:18px 18px 10px 18px; margin-bottom:18px; box-shadow:0 2px 8px #00000010;'>
+                            <h3 style='margin-bottom:0;'>{icon} {nombre.upper()}</h3>
+                            <ul style='list-style:none; padding-left:0;'>
+                                <li><b>Consultas:</b> {metricas['consultas_atendidas']}</li>
+                                <li><b>Promedio:</b> {metricas['tiempo_promedio']:.2f} s</li>
+                                <li><b>Resueltos:</b> {metricas['problemas_resueltos']}</li>
+                            </ul>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+        return  # No renderizar chat
 
     elif menu == "📚 Base de Conocimiento":
         _render_knowledge_base_section(department_name=st.session_state.get("_user_department_name"))

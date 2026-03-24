@@ -1,0 +1,23 @@
+{
+  "infraestructura_58698": {
+    "id": "infraestructura_58698",
+    "name": "Infraestructura",
+    "parent_id": null,
+    "mapped_area_id": "infraestructura_58333",
+    "created_at": 1774358698.8662527
+  },
+  "cec_58717": {
+    "id": "cec_58717",
+    "name": "CEC",
+    "parent_id": "infraestructura_58698",
+    "mapped_area_id": "cec_58344",
+    "created_at": 1774358717.2387323
+  },
+  "informatica_58762": {
+    "id": "informatica_58762",
+    "name": "Informatica",
+    "parent_id": "cec_58717",
+    "mapped_area_id": "inform_tica_58360",
+    "created_at": 1774358762.1880841
+  }
+}

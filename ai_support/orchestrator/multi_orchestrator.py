@@ -42,26 +42,18 @@ class OrquestadorMultiagente:
         allowed_area_ids: Optional[List[str]] = None,
     ):
         self.user_id = user_id
+        self.llm_config = llm_config
+        self.embeddings_config = embeddings_config
         self.agentes: Dict[str, AgenteEspecializado] = {}
-
-        # Crear 15 agentes especializados por área FCFM
-        for area_id, (nombre_agente, especialidad) in self.AREAS_MAPA.items():
-            self.agentes[area_id] = AgenteEspecializado(
-                nombre=nombre_agente,
-                especialidad=especialidad,
-                llm_config=llm_config,
-                embeddings_config=embeddings_config,
-                user_id=user_id,
-            )
 
         self.herramientas = HerramientaSoporte()
         self.comunicacion_agentes: List[Dict[str, Any]] = []
 
         if allowed_area_ids:
-            normalized = [a for a in allowed_area_ids if a in self.agentes]
+            normalized = [a for a in allowed_area_ids if a in self.AREAS_MAPA]
             self.allowed_area_ids: set[str] = set(normalized)
         else:
-            self.allowed_area_ids = set(self.agentes.keys())
+            self.allowed_area_ids = set(self.AREAS_MAPA.keys())
 
         self.metricas_globales: Dict[str, Any] = {
             "total_consultas": 0,
@@ -69,6 +61,36 @@ class OrquestadorMultiagente:
             "colaboraciones": 0,
             "institucion": "FCFM - Facultad de Ciencias Físicas y Matemáticas",
         }
+
+    def _build_agent(self, area_id: str) -> AgenteEspecializado:
+        nombre_agente, especialidad = self.AREAS_MAPA[area_id]
+        return AgenteEspecializado(
+            nombre=nombre_agente,
+            especialidad=especialidad,
+            llm_config=self.llm_config,
+            embeddings_config=self.embeddings_config,
+            user_id=self.user_id,
+        )
+
+    def get_or_create_agent(self, area_id: str) -> AgenteEspecializado:
+        if area_id not in self.AREAS_MAPA:
+            raise ValueError(f"Área no soportada: {area_id}")
+        if area_id not in self.allowed_area_ids:
+            raise ValueError(f"Área fuera de alcance para este usuario: {area_id}")
+        if area_id not in self.agentes:
+            self.agentes[area_id] = self._build_agent(area_id)
+        return self.agentes[area_id]
+
+    def initialize_all_allowed_agents(self) -> Dict[str, AgenteEspecializado]:
+        for area_id in sorted(self.allowed_area_ids):
+            self.get_or_create_agent(area_id)
+        return self.agentes
+
+    def get_available_agent_ids(self) -> List[str]:
+        return sorted(self.allowed_area_ids)
+
+    def get_initialized_agents(self) -> Dict[str, AgenteEspecializado]:
+        return dict(self.agentes)
 
     def determinar_agente_principal(self, consulta: str) -> str:
         """Enrutamiento DETERMINISTA: analiza la consulta y devuelve el área (agente) responsable.
@@ -84,7 +106,7 @@ class OrquestadorMultiagente:
             # Fallback determinista dentro del alcance permitido para el usuario.
             return sorted(self.allowed_area_ids)[0]
 
-        return categoria if categoria in self.agentes else "decanato"
+        return categoria if categoria in self.AREAS_MAPA else "decanato"
 
     def procesar_consulta_compleja(
         self,
@@ -104,7 +126,7 @@ class OrquestadorMultiagente:
         try:
             from ai_support.core.knowledge_base import get_kb_manager
             kb = get_kb_manager()
-            agente_obj = self.agentes[agente_principal]
+            agente_obj = self.get_or_create_agent(agente_principal)
             embeddings = getattr(agente_obj, "embeddings", None)
             
             # Buscar en el área específica primero (si existe), luego en todas
@@ -123,7 +145,7 @@ class OrquestadorMultiagente:
         except Exception as kb_err:
             print(f"⚠️ KB search error (no interrumpe): {kb_err}")
 
-        resultado = self.agentes[agente_principal].procesar_consulta(
+        resultado = self.get_or_create_agent(agente_principal).procesar_consulta(
             consulta,
             contexto=contexto_kb,
             stream_callback=stream_callback,
@@ -229,8 +251,8 @@ class OrquestadorMultiagente:
         contexto_completo: List[str] = []
 
         for agente_id in colaboradores:
-            if agente_id in self.agentes:
-                agente = self.agentes[agente_id]
+            if agente_id in self.allowed_area_ids:
+                agente = self.get_or_create_agent(agente_id)
                 respuesta = agente.colaborar(f"Perspectiva sobre: {consulta[:100]}")
                 contexto_completo.append(respuesta)
 

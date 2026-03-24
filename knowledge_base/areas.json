@@ -1,23 +1,23 @@
 {
-  "infraestructura_90535": {
-    "id": "infraestructura_90535",
+  "infraestructura_58333": {
+    "id": "infraestructura_58333",
     "name": "Infraestructura",
     "description": "",
-    "created_at": 1774290535.3596284,
+    "created_at": 1774358333.377158,
     "parent_id": null
   },
-  "cec_90576": {
-    "id": "cec_90576",
+  "cec_58344": {
+    "id": "cec_58344",
     "name": "CEC",
     "description": "",
-    "created_at": 1774290576.4982388,
-    "parent_id": "infraestructura_90535"
+    "created_at": 1774358344.3595467,
+    "parent_id": "infraestructura_58333"
   },
-  "informatica_90600": {
-    "id": "informatica_90600",
-    "name": "Informatica",
+  "inform_tica_58360": {
+    "id": "inform_tica_58360",
+    "name": "Informática",
     "description": "",
-    "created_at": 1774290600.1590028,
-    "parent_id": "cec_90576"
+    "created_at": 1774358360.7419102,
+    "parent_id": "cec_58344"
   }
 }
